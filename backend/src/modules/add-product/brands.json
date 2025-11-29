@@ -1,0 +1,104 @@
+{
+  "categories": [
+    {
+      "id": "elektronik",
+      "name": "Elektronik",
+      "brands": [
+        { "id": "samsung", "name": "Samsung" },
+        { "id": "apple", "name": "Apple" },
+        { "id": "xiaomi", "name": "Xiaomi" },
+        { "id": "lg", "name": "LG" },
+        { "id": "sony", "name": "Sony" },
+        { "id": "huawei", "name": "Huawei" },
+        { "id": "philips", "name": "Philips" },
+        { "id": "vestel", "name": "Vestel" },
+        { "id": "arcelik", "name": "Arçelik" },
+        { "id": "asus", "name": "Asus" }
+      ]
+    },
+    {
+      "id": "giyim",
+      "name": "Giyim",
+      "brands": [
+        { "id": "lcwaikiki", "name": "LC Waikiki" },
+        { "id": "defacto", "name": "DeFacto" },
+        { "id": "koton", "name": "Koton" },
+        { "id": "mavi", "name": "Mavi" },
+        { "id": "zara", "name": "Zara" },
+        { "id": "hm", "name": "H&M" },
+        { "id": "nike", "name": "Nike" },
+        { "id": "adidas", "name": "Adidas" },
+        { "id": "puma", "name": "Puma" },
+        { "id": "levis", "name": "Levi's" }
+      ]
+    },
+    {
+      "id": "gida",
+      "name": "Gıda",
+      "brands": [
+        { "id": "ulker", "name": "Ülker" },
+        { "id": "eti", "name": "Eti" },
+        { "id": "pinar", "name": "Pınar" },
+        { "id": "sek", "name": "Sek" },
+        { "id": "nestle", "name": "Nestle" },
+        { "id": "coca-cola", "name": "Coca-Cola" },
+        { "id": "pepsi", "name": "Pepsi" },
+        { "id": "danone", "name": "Danone" },
+        { "id": "tadim", "name": "Tadım" },
+        { "id": "torku", "name": "Torku" }
+      ]
+    },
+    {
+      "id": "kozmetik",
+      "name": "Kozmetik",
+      "brands": [
+        { "id": "loreal", "name": "L'Oréal" },
+        { "id": "nivea", "name": "Nivea" },
+        { "id": "garnier", "name": "Garnier" },
+        { "id": "dove", "name": "Dove" },
+        { "id": "maybelline", "name": "Maybelline" },
+        { "id": "flormar", "name": "Flormar" },
+        { "id": "golden-rose", "name": "Golden Rose" },
+        { "id": "avon", "name": "Avon" },
+        { "id": "oriflame", "name": "Oriflame" },
+        { "id": "farmasi", "name": "Farmasi" }
+      ]
+    },
+    {
+      "id": "mobilya",
+      "name": "Mobilya & Ev",
+      "brands": [
+        { "id": "ikea", "name": "IKEA" },
+        { "id": "bellona", "name": "Bellona" },
+        { "id": "istikbal", "name": "İstikbal" },
+        { "id": "mondi", "name": "Mondi" },
+        { "id": "english-home", "name": "English Home" },
+        { "id": "karaca", "name": "Karaca" },
+        { "id": "tefal", "name": "Tefal" },
+        { "id": "korkmaz", "name": "Korkmaz" },
+        { "id": "bambum", "name": "Bambum" },
+        { "id": "madame-coco", "name": "Madame Coco" }
+      ]
+    },
+    {
+      "id": "otomotiv",
+      "name": "Otomotiv",
+      "brands": [
+        { "id": "toyota", "name": "Toyota" },
+        { "id": "volkswagen", "name": "Volkswagen" },
+        { "id": "ford", "name": "Ford" },
+        { "id": "renault", "name": "Renault" },
+        { "id": "fiat", "name": "Fiat" },
+        { "id": "bmw", "name": "BMW" },
+        { "id": "mercedes", "name": "Mercedes-Benz" },
+        { "id": "hyundai", "name": "Hyundai" },
+        { "id": "opel", "name": "Opel" },
+        { "id": "togg", "name": "TOGG" }
+      ]
+    }
+  ],
+  "brands_all": [
+    { "id": "diger", "name": "Diğer" },
+    { "id": "markasiz", "name": "Markasız" }
+  ]
+}

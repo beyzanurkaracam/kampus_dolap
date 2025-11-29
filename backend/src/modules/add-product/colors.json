@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "name": "Kırmızı",
+    "hex": "#FF0000"
+  },
+  {
+    "id": 2,
+    "name": "Mavi",
+    "hex": "#0000FF"
+  },
+  {
+    "id": 3,
+    "name": "Yeşil",
+    "hex": "#008000"
+  },
+  {
+    "id": 4,
+    "name": "Siyah",
+    "hex": "#000000"
+  },
+  {
+    "id": 5,
+    "name": "Beyaz",
+    "hex": "#FFFFFF"
+  },
+  {
+    "id": 6,
+    "name": "Sarı",
+    "hex": "#FFFF00"
+  },
+  {
+    "id": 7,
+    "name": "Mor",
+    "hex": "#800080"
+  },
+  {
+    "id": 8,
+    "name": "Turuncu",
+    "hex": "#FFA500"
+  },
+  {
+    "id": 9,
+    "name": "Pembe",
+    "hex": "#FFC0CB"
+  },
+  {
+    "id": 10,
+    "name": "Gri",
+    "hex": "#808080"
+  }
+]

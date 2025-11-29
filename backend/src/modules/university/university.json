@@ -1,0 +1,2230 @@
+[
+  {
+    "web_pages": [
+      "http://www.adu.edu.tr/"
+    ],
+    "name": "Adnan Menderes Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "adu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ahievran.edu.tr/"
+    ],
+    "name": "Ahi Evran Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ahievran.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.akdeniz.edu.tr/"
+    ],
+    "name": "Akdeniz Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "akdeniz.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.anadolu.edu.tr/"
+    ],
+    "name": "Anadolu Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "anadolu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ankara.edu.tr/"
+    ],
+    "name": "Ankara Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ankara.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.arel.edu.tr/"
+    ],
+    "name": "İstanbul Arel Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "arel.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.atauni.edu.tr/"
+    ],
+    "name": "Atatürk Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "atauni.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "name": "Girne Üniversitesi",
+    "domains": [
+      "std.kyrenia.edu.tr",
+      "kyrenia.edu.tr"
+    ],
+    "web_pages": [
+      "https://kyrenia.edu.tr"
+    ],
+    "country": "Turkiye",
+    "alpha_two_code": "TR",
+    "state-province": null
+  },
+  {
+    "web_pages": [
+      "http://www.atilim.edu.tr/"
+    ],
+    "name": "Atılım Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "atilim.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bahcesehir.edu.tr/"
+    ],
+    "name": "Bahçeşehir Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bahcesehir.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.balikesir.edu.tr/"
+    ],
+    "name": "Balıkesir Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "balikesir.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.baskent.edu.tr/"
+    ],
+    "name": "Başkent Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "baskent.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.mcbu.edu.tr/",
+      "http://www.cbu.edu.tr/"
+    ],
+    "name": "Celal Bayar Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "mcbu.edu.tr",
+      "cbu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.beykent.edu.tr/"
+    ],
+    "name": "Beykent Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "beykent.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bilecik.edu.tr/"
+    ],
+    "name": "Bilecik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bilecik.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bilgi.edu.tr/"
+    ],
+    "name": "İstanbul Bilgi Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bilgi.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bilkent.edu.tr/"
+    ],
+    "name": "Bilkent Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bilkent.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.boun.edu.tr/"
+    ],
+    "name": "Boğaziçi Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "boun.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.cag.edu.tr/"
+    ],
+    "name": "Çağ Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "cag.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.cankaya.edu.tr/"
+    ],
+    "name": "Çankaya Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "cankaya.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.comu.edu.tr/"
+    ],
+    "name": "Çanakkale Onsekiz Mart Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "comu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.cu.edu.tr/"
+    ],
+    "name": "Çukurova Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "cu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.cumhuriyet.edu.tr/"
+    ],
+    "name": "Cumhuriyet Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "cumhuriyet.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.deu.edu.tr/"
+    ],
+    "name": "Dokuz Eylül Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "deu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.dho.edu.tr/"
+    ],
+    "name": "Deniz Harp Okulu",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "dho.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.dicle.edu.tr/"
+    ],
+    "name": "Dicle Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "dicle.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.dogus.edu.tr/"
+    ],
+    "name": "Doğuş Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "dogus.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.dumlupinar.edu.tr/",
+      "http://www.dpu.edu.tr/"
+    ],
+    "name": "Dumlupınar Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "dumlupinar.edu.tr",
+      "dpu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ege.edu.tr/"
+    ],
+    "name": "Ege Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ege.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.erciyes.edu.tr/"
+    ],
+    "name": "Erciyes Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "erciyes.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.etu.edu.tr/"
+    ],
+    "name": "TOBB Ekonomi ve Teknoloji Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "etu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.firat.edu.tr/"
+    ],
+    "name": "Fırat Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "firat.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://fbu.edu.tr/"
+    ],
+    "name": "Fenerbahçe Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "fbu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gantep.edu.tr/"
+    ],
+    "name": "Gaziantep Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gantep.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gazi.edu.tr/"
+    ],
+    "name": "Gazi Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gazi.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gop.edu.tr/"
+    ],
+    "name": "Gaziosmanpaşa Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gop.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gsu.edu.tr/"
+    ],
+    "name": "Galatasaray Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gsu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gyte.edu.tr/"
+    ],
+    "name": "Gebze Yüksek Teknoloji Enstitüsü",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gyte.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.halic.edu.tr/"
+    ],
+    "name": "Haliç Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "halic.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.harran.edu.tr/"
+    ],
+    "name": "Harran Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "harran.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.hun.edu.tr/",
+      "http://www.hacettepe.edu.tr/"
+    ],
+    "name": "Hacettepe Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "hun.edu.tr",
+      "hacettepe.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ibu.edu.tr/"
+    ],
+    "name": "Abant İzzet Baysal Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ibu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.iku.edu.tr/"
+    ],
+    "name": "İstanbul Kültür Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "iku.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.inonu.edu.tr/"
+    ],
+    "name": "İnönü Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "inonu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.isikun.edu.tr/"
+    ],
+    "name": "Işık Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "isikun.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://ticaret.edu.tr/"
+    ],
+    "name": "İstanbul Ticaret Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": "Istanbul",
+    "domains": [
+      "ticaret.edu.tr",
+      "istanbulticaret.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.itu.edu.tr/"
+    ],
+    "name": "İstanbul Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "itu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.iyte.edu.tr/"
+    ],
+    "name": "İzmir Yüksek Teknoloji Enstitüsü",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "iyte.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.kafkas.edu.tr/"
+    ],
+    "name": "Kafkas Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "kafkas.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.karaelmas.edu.tr/"
+    ],
+    "name": "Zonguldak Karaelmas Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "karaelmas.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.khas.edu.tr/"
+    ],
+    "name": "Kadir Has Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "khas.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.kilis.edu.tr/"
+    ],
+    "name": "Kilis 7 Aralık Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "kilis.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.kku.edu.tr/"
+    ],
+    "name": "Kırıkkale Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "kku.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.konya.edu.tr/"
+    ],
+    "name": "Necmettin Erbakan Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "konya.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.kou.edu.tr/"
+    ],
+    "name": "Kocaeli Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "kou.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ksu.edu.tr/"
+    ],
+    "name": "Kahramanmaraş Sütçü İmam Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ksu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ktu.edu.tr/"
+    ],
+    "name": "Karadeniz Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ktu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ku.edu.tr/"
+    ],
+    "name": "Koç Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ku.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.maltepe.edu.tr/"
+    ],
+    "name": "Maltepe Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "maltepe.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.marmara.edu.tr/"
+    ],
+    "name": "Marmara Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "marmara.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.mersin.edu.tr/"
+    ],
+    "name": "Mersin Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "mersin.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.mku.edu.tr/"
+    ],
+    "name": "Mustafa Kemal Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "mku.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.msu.edu.tr/"
+    ],
+    "name": "Mimar Sinan Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "msu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.mu.edu.tr/",
+      "http://www.marun.edu.tr/"
+    ],
+    "name": "Muğla Sıtkı Koçman Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "mu.edu.tr",
+      "marun.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ohu.edu.tr/"
+    ],
+    "name": "Ömer Halisdemir Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ohu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.nku.edu.tr/"
+    ],
+    "name": "Namık Kemal Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "nku.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.metu.edu.tr/"
+    ],
+    "name": "Orta Doğu Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "metu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ogu.edu.tr/"
+    ],
+    "name": "Osmangazi Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ogu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.omu.edu.tr/"
+    ],
+    "name": "Ondokuz Mayıs Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "omu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.odu.edu.tr"
+    ],
+    "name": "Ordu Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "odu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ozyegin.edu.tr/",
+      "http://www.ozu.edu.tr/"
+    ],
+    "name": "Özyeğin Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ozyegin.edu.tr",
+      "ozu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.pamukkale.edu.tr/"
+    ],
+    "name": "Pamukkale Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "pamukkale.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.sabanciuniv.edu.tr/",
+      "http://www.sabanciuniv.edu/"
+    ],
+    "name": "Sabancı Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "sabanciuniv.edu.tr",
+      "sabanciuniv.edu"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.sau.edu.tr/"
+    ],
+    "name": "Sakarya Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "sau.edu.tr",
+      "sakarya.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.sdu.edu.tr/"
+    ],
+    "name": "Süleyman Demirel Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "sdu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.sehir.edu.tr/"
+    ],
+    "name": "İstanbul Şehir Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "sehir.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.selcuk.edu.tr/"
+    ],
+    "name": "Selçuk Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "selcuk.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.tarsus.edu.tr/"
+    ],
+    "name": "Tarsus Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "tarsus.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.tau.edu.tr/"
+    ],
+    "name": "Türk-Alman Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "tau.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.trakya.edu.tr/"
+    ],
+    "name": "Trakya Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "trakya.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ufuk.edu.tr/"
+    ],
+    "name": "Ufuk Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ufuk.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.uludag.edu.tr/"
+    ],
+    "name": "Uludağ Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "uludag.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.yalova.edu.tr/"
+    ],
+    "name": "Yalova Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "yalova.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.yasar.edu.tr/"
+    ],
+    "name": "Yaşar Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "yasar.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ybu.edu.tr/"
+    ],
+    "name": "Yıldırım Beyazıt Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ybu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.yeditepe.edu.tr/"
+    ],
+    "name": "Yeditepe Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "yeditepe.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.yildiz.edu.tr/"
+    ],
+    "name": "Yıldız Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "yildiz.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.yyu.edu.tr/"
+    ],
+    "name": "Yüzüncü Yıl Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "yyu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.agu.edu.tr/"
+    ],
+    "name": "Abdullah Gül Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "agu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.agu.edu.tr/"
+    ],
+    "name": "Adana Bilim ve Teknoloji Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "adanabtu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.adiyaman.edu.tr/"
+    ],
+    "name": "Adıyaman Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "adiyaman.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.agri.edu.tr/"
+    ],
+    "name": "Ağrı İbrahim Çeçen Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "agri.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.aksaray.edu.tr/"
+    ],
+    "name": "Aksaray Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "aksaray.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.alanyaaku.edu.tr/"
+    ],
+    "name": "Alanya Alaaddin Keykubat Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "alanyaaku.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.amasya.edu.tr/"
+    ],
+    "name": "Amasya Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "amasya.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.asbu.edu.tr/"
+    ],
+    "name": "Ankara Sosyal Bilimler Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "asbu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ardahan.edu.tr/"
+    ],
+    "name": "Ardahan Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ardahan.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.artvin.edu.tr/"
+    ],
+    "name": "Artvin Çoruh Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "artvin.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bamdirma.edu.tr/"
+    ],
+    "name": "Bandırma Onyedi Eylül Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bandirma.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bartin.edu.tr/"
+    ],
+    "name": "Bartın Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bartin.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.batman.edu.tr/"
+    ],
+    "name": "Batman Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "batman.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bayburt.edu.tr/"
+    ],
+    "name": "Bayburt Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bayburt.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bingol.edu.tr/"
+    ],
+    "name": "Bingöl Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bingol.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.beu.edu.tr/"
+    ],
+    "name": "Bitlis Eren Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "beu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bozok.edu.tr/"
+    ],
+    "name": "Bozok Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bozok.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.btu.edu.tr/"
+    ],
+    "name": "Bursa Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "btu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.karatekin.edu.tr/"
+    ],
+    "name": "Çankırı Karatekin Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "karatekin.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.duzce.edu.tr/"
+    ],
+    "name": "Düzce Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "duzce.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ebyu.edu.tr/"
+    ],
+    "name": "Erzincan Binali Yıldırım Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ebyu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.erzurum.edu.tr/"
+    ],
+    "name": "Erzurum Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "erzurum.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gtu.edu.tr/"
+    ],
+    "name": "Gebze Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gtu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gata.edu.tr/"
+    ],
+    "name": "Gülhane Askeri Tıp Akademisi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gata.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gumushane.edu.tr/"
+    ],
+    "name": "Gümüşhane Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gumushane.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.hakkari.edu.tr/"
+    ],
+    "name": "Hakkari Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "hakkari.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.hho.edu.tr/"
+    ],
+    "name": "Hava Harp Okulu",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "hho.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.hitit.edu.tr/"
+    ],
+    "name": "Hitit Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "hitit.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.igdir.edu.tr/"
+    ],
+    "name": "Iğdır Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "igdir.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.iste.edu.tr/"
+    ],
+    "name": "İskenderun Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "iste.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.medeniyet.edu.tr/"
+    ],
+    "name": "İstanbul Medeniyet Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "medeniyet.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.istanbul.edu.tr/"
+    ],
+    "name": "İstanbul Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "istanbul.edu.tr",
+      "ogr.iu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ikc.edu.tr/",
+      "http://www.ikcu.edu.tr/"
+    ],
+    "name": "İzmir Katip Çelebi Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ikc.edu.tr",
+      "ikcu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.karabuk.edu.tr/"
+    ],
+    "name": "Karabük Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "karabuk.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.kmu.edu.tr/"
+    ],
+    "name": "Karamanoğlu Mehmet Bey Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "kmu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.kastamonu.edu.tr/"
+    ],
+    "name": "Kastamonu Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "kastamonu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.kirklareli.edu.tr/"
+    ],
+    "name": "Kırklareli Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "kirklareli.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.artuklu.edu.tr/"
+    ],
+    "name": "Mardin Artuklu Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "artuklu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.mehmetakif.edu.tr/"
+    ],
+    "name": "Mehmet Akif Ersoy Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "mehmetakif.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.msgsu.edu.tr/"
+    ],
+    "name": "Mimar Sinan Güzel Sanatlar Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "msgsu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.alparslan.edu.tr/"
+    ],
+    "name": "Muş Alparslan Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "alparslan.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.nevsehir.edu.tr/"
+    ],
+    "name": "Nevşehir Hacı Bektaş Veli Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "nevsehir.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.osmaniye.edu.tr/"
+    ],
+    "name": "Osmaniye Korkut Ata Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "osmaniye.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.erdogan.edu.tr/"
+    ],
+    "name": "Recep Tayyip Erdoğan Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "erdogan.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.siirt.edu.tr/"
+    ],
+    "name": "Siirt Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "siirt.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.sinop.edu.tr/"
+    ],
+    "name": "Sinop Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "sinop.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.sirnak.edu.tr/"
+    ],
+    "name": "Şırnak Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "sirnak.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.tunceli.edu.tr/"
+    ],
+    "name": "Tunceli Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "tunceli.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.sbu.edu.tr/"
+    ],
+    "name": "Sağlık Bilimleri Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "sbu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.usak.edu.tr/"
+    ],
+    "name": "Uşak Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "usak.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.beun.edu.tr/"
+    ],
+    "name": "Bülent Ecevit Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "beun.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.acibadem.edu.tr/"
+    ],
+    "name": "Acıbadem Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "acibadem.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ahap.edu.tr/"
+    ],
+    "name": "Alanya Hamdullah Emin Paşa Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ahap.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.avrasya.edu.tr/"
+    ],
+    "name": "Avrasya Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "avrasya.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.bezmialem.edu.tr/"
+    ],
+    "name": "Bezmialem Vakıf Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bezmialem.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.biruni.edu.tr/"
+    ],
+    "name": "Biruni Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "biruni.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.fatihsultan.edu.tr/"
+    ],
+    "name": "Fatih Sultan Mehmet Vakıf Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "fatihsultan.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gedik.edu.tr/"
+    ],
+    "name": "Gedik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gedik.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.hku.edu.tr/"
+    ],
+    "name": "Hasan Kalyoncu Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "hku.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.29mayis.edu.tr/"
+    ],
+    "name": "İstanbul 29 Mayıs Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "29mayis.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.aydin.edu.tr/"
+    ],
+    "name": "İstanbul Aydın Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "aydin.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.esenyurt.edu.tr/"
+    ],
+    "name": "İstanbul Esenyurt Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "esenyurt.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gelisim.edu.tr/"
+    ],
+    "name": "İstanbul Gelişim Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gelisim.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.kemerburgaz.edu.tr/"
+    ],
+    "name": "İstanbul Kemerburgaz Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "kemerburgaz.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.medipol.edu.tr/"
+    ],
+    "name": "İstanbul Medipol Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "medipol.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.rumeli.edu.tr/"
+    ],
+    "name": "İstanbul Rumeli Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "rumeli.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.iszu.edu.tr/"
+    ],
+    "name": "İstanbul Sabahattin Zaim Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "iszu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ieu.edu.tr/",
+      "http://www.izmirekonomi.edu.tr/"
+    ],
+    "name": "İzmir Ekonomi Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ieu.edu.tr",
+      "izmirekonomi.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.karatay.edu.tr/"
+    ],
+    "name": "Karatay Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "karatay.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://aybu.edu.tr/"
+    ],
+    "name": "Ankara Yıldırım Beyazıt Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "aybu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.gidatarim.edu.tr/"
+    ],
+    "name": "Konya Gıda ve Tarım Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "gidatarim.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.mef.edu.tr/"
+    ],
+    "name": "MEF Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "mef.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.nisantasi.edu.tr/"
+    ],
+    "name": "Nişantaşı Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "nisantasi.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.nny.edu.tr/"
+    ],
+    "name": "Nuh Naci Yazgan Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "nny.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.okan.edu.tr/"
+    ],
+    "name": "Okan Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "okan.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.pirireis.edu.tr/"
+    ],
+    "name": "Piri Reis Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "pirireis.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.sanko.edu.tr/"
+    ],
+    "name": "Sanko Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "sanko.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.tedu.edu.tr/"
+    ],
+    "name": "TED Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "tedu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.toros.edu.tr/"
+    ],
+    "name": "Toros Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "toros.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.thk.edu.tr/"
+    ],
+    "name": "Türk Hava Kurumu Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "thk.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.antalya.edu.tr/"
+    ],
+    "name": "Antalya Bilim Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "antalya.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.uskudar.edu.tr/"
+    ],
+    "name": "Üsküdar Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "uskudar.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.yeniyuzyil.edu.tr/"
+    ],
+    "name": "Yeni Yüzyıl Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "yeniyuzyil.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.yuksekihtisasuniversitesi.edu.tr/"
+    ],
+    "name": "Yüksek İhtisas Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "yuksekihtisasuniversitesi.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "http://www.ktun.edu.tr/"
+    ],
+    "name": "Konya Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ktun.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://www.bakircay.edu.tr/"
+    ],
+    "name": "İzmir Bakırçay Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "bakircay.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://www.idu.edu.tr/"
+    ],
+    "name": "İzmir Demokrasi Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "idu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://www.tinaztepe.edu.tr/"
+    ],
+    "name": "İzmir Tınaztepe Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "tinaztepe.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://thk.edu.tr/"
+    ],
+    "name": "Türk Hava Kurumu Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "thk.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://www.ostimteknik.edu.tr"
+    ],
+    "name": "OSTIM Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ostimteknik.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://ankaramedipol.edu.tr"
+    ],
+    "name": "Ankara Medipol Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ankaramedipol.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://ankarabilim.edu.tr"
+    ],
+    "name": "Ankara Bilim Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ankarabilim.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://www.thk.edu.tr"
+    ],
+    "name": "Türk Hava Kurumu Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "thk.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://www.omu.edu.tr"
+    ],
+    "name": "Ondokuz Mayıs Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "omu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://www.ieu.edu.tr"
+    ],
+    "name": "İzmir Ekonomi Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "ieu.edu.tr"
+    ],
+    "country": "Turkiye"
+  },
+  {
+    "web_pages": [
+      "https://www.eskisehir.edu.tr/"
+    ],
+    "name": "Eskişehir Teknik Üniversitesi",
+    "alpha_two_code": "TR",
+    "state-province": null,
+    "domains": [
+      "eskisehir.edu.tr"
+    ],
+    "country": "Turkiye"
+  }
+]

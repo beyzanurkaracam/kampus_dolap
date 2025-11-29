@@ -1,0 +1,18 @@
+node_modules/
+.env
+.DS_Store
+node_modules
+# React Native & iOS Dependencies
+node_modules/
+ios/Pods/
+ios/build/
+*.xcworkspace
+*.xcuserdatad
+# Android yasakli listesi
+android/app/build/
+android/build/
+android/.gradle/
+*.apk
+*.so
+*.ap_
+*.dex

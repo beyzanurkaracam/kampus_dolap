@@ -122,6 +122,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth,
   };
 
+  console.log('AuthContext - token:', token ? 'Var (ilk 20: ' + token.substring(0, 20) + ')' : 'YOK', 'loading:', loading);
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

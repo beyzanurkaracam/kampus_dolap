@@ -9,15 +9,23 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
 import { Admin } from 'src/entities/admin.entity';
 import { UniversityModule } from '../university/university.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     ConfigModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-super-secret-key-change-this',
-      signOptions: { expiresIn: '7d' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get('JWT_SECRET') || 'your-super-secret-key-change-this';
+        console.log('JwtModule configured with secret:', secret);
+        return {
+          secret: secret,
+          signOptions: { expiresIn: '7d' },
+        };
+      },
+      inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([User, Admin]),
     UniversityModule,

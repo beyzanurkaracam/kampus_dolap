@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const BASE_URL = Platform.OS === 'android' 
   ? 'http://10.0.2.2:3000' 
@@ -30,6 +31,7 @@ interface UserProfile {
 }
 
 export const ProfileScreen = ({ navigation }: any) => {
+  const { token, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [productCount, setProductCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,6 @@ export const ProfileScreen = ({ navigation }: any) => {
 
   const fetchProductCount = async () => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
       if (!token) return;
 
       // URL artık dinamik olarak config dosyasından geliyor

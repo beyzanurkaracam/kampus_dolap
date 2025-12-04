@@ -253,17 +253,17 @@ export class AuthService {
       throw new UnauthorizedException('Email veya şifre hatalı');
     }
 
+    console.log('Login - JWT_SECRET:', process.env.JWT_SECRET);
     const token = this.jwtService.sign(
       { 
         sub: user.id, 
         email: user.email, 
         role: user.role,
         universityId: user.universityId 
-      },
-      { expiresIn: '7d' },
+      }
     );
 
-    console.log('Login token oluşturuldu:', { userId: user.id, email: user.email });
+    console.log('Login token oluşturuldu:', { userId: user.id, email: user.email, tokenPreview: token.substring(0, 50) });
 
     return {
       access_token: token,

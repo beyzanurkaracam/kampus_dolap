@@ -12,9 +12,9 @@ import {
   Platform,
   StatusBar, // StatusBar eklendi
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../context/AuthContext';
 
 // Platforma göre URL belirleme
 const BASE_URL = Platform.OS === 'android' 
@@ -35,6 +35,7 @@ interface Product {
 }
 
 export const MyProductsScreen = ({ navigation }: any) => {
+  const { token } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,8 +49,6 @@ export const MyProductsScreen = ({ navigation }: any) => {
 
   const fetchProducts = async () => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
-      
       if (!token) {
         navigation.replace('Login');
         return;
@@ -85,7 +84,6 @@ export const MyProductsScreen = ({ navigation }: any) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const token = await AsyncStorage.getItem('userToken');
               await axios.delete(`${API_URL}/${productId}`, {
                 headers: { Authorization: `Bearer ${token}` },
               });

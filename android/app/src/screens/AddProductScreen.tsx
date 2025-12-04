@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 
 
@@ -44,6 +45,10 @@ interface Color {
 }
 
 export const AddProductScreen = ({ navigation }: any) => {
+  const { token } = useAuth();
+  
+  console.log('AddProductScreen - token:', token ? 'Var (ilk 20 karakter: ' + token.substring(0, 20) + ')' : 'YOK!!!');
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -141,7 +146,6 @@ export const AddProductScreen = ({ navigation }: any) => {
     setLoading(true);
 
     try {
-      const token = await AsyncStorage.getItem('userToken');
       if (!token) {
         navigation.replace('Login');
         return;

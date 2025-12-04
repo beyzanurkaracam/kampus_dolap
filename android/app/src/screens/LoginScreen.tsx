@@ -25,6 +25,10 @@ export const LoginScreen = ({ navigation }: any) => {
 
     setLoading(true);
     try {
+      // Tüm eski verileri temizle
+      await AsyncStorage.clear();
+      console.log('AsyncStorage temizlendi');
+      
       console.log('Login başlatılıyor...');
       const response = await api.login({ email, password });
       

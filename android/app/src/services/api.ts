@@ -30,7 +30,7 @@ export interface AuthResponse {
 
 class ApiService {
   private async getAuthHeaders() {
-    const token = await AsyncStorage.getItem('userToken');
+    const token = await AsyncStorage.getItem('token');
     console.log('getAuthHeaders - Token alındı:', token ? `${token.substring(0, 20)}...` : 'YOK');
     return {
       'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ class ApiService {
 
     const result = await response.json();
     console.log('api.ts login - Token kaydediliyor:', result.access_token ? `${result.access_token.substring(0, 20)}...` : 'YOK');
-    await AsyncStorage.setItem('userToken', result.access_token);
+    await AsyncStorage.setItem('token', result.access_token);
     await AsyncStorage.setItem('user', JSON.stringify(result.user));
     console.log('api.ts login - Token kaydedildi');
     return result;
@@ -75,7 +75,7 @@ class ApiService {
     }
 
     const result = await response.json();
-    await AsyncStorage.setItem('userToken', result.access_token);
+    await AsyncStorage.setItem('token', result.access_token);
     await AsyncStorage.setItem('user', JSON.stringify(result.user));
     return result;
   }
@@ -98,8 +98,9 @@ class ApiService {
   }
 
   async logout() {
-    await AsyncStorage.removeItem('userToken');
+    await AsyncStorage.removeItem('token');
     await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('userType');
     console.log('api.ts logout - Token silindi');
   }
 

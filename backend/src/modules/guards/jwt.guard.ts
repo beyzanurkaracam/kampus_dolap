@@ -6,7 +6,13 @@ export class JwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
     console.log('JwtGuard canActivate çağrıldı');
     const request = context.switchToHttp().getRequest();
-    console.log('Authorization header:', request.headers.authorization);
+    const authHeader = request.headers.authorization;
+    console.log('Authorization header:', authHeader);
+    if (authHeader) {
+      const token = authHeader.split(' ')[1];
+      console.log('Token (ilk 50 karakter):', token?.substring(0, 50));
+      console.log('JWT_SECRET:', process.env.JWT_SECRET);
+    }
     return super.canActivate(context);
   }
 

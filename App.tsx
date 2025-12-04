@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
+import { AuthProvider } from './android/app/src/context/AuthContext';
 
 // Screens
 import LoginScreen from './android/app/src/screens/LoginScreen';
@@ -19,9 +20,10 @@ const Stack = createNativeStackNavigator();
 
 function App() {
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" />
-      <NavigationContainer>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <StatusBar barStyle="dark-content" />
+        <NavigationContainer>
         <Stack.Navigator initialRouteName="Login">
           <Stack.Screen 
             name="Login" 
@@ -82,6 +84,7 @@ function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+    </AuthProvider>
   );
 }
 

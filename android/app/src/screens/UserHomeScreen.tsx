@@ -9,6 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -23,18 +24,19 @@ const UserHomeScreen = ({ navigation }: any) => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchListings();
+    fetchFavorites();
   }, []);
 
   const fetchListings = async () => {
     try {
       setLoading(true);
-      // Backend'den ürünleri çek (henüz oluşturulmadı)
-      const response = await axios.get(`${API_URL}/listings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Sadece aktif (admin onaylı) ürünleri getir
+      const response = await axios.get(`${API_URL}/products`);
+      console.log('Aktif ürünler yüklendi:', response.data.length);
       setListings(response.data);
     } catch (error) {
       console.log('Ürünler yüklenemedi:', error);
@@ -43,9 +45,52 @@ const UserHomeScreen = ({ navigation }: any) => {
     }
   };
 
+  const fetchFavorites = async () => {
+    try {
+      if (!token) return;
+      const response = await axios.get(`${API_URL}/products/favorites`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const ids = new Set(response.data.map((p: any) => p.id));
+      setFavoriteIds(ids);
+    } catch (error) {
+      console.log('Favoriler yüklenemedi:', error);
+    }
+  };
+
+  const toggleFavorite = async (productId: string) => {
+    try {
+      if (!token) {
+        Alert.alert('Uyarı', 'Favori eklemek için giriş yapmalısınız');
+        return;
+      }
+
+      const isFavorite = favoriteIds.has(productId);
+      
+      if (isFavorite) {
+        await axios.delete(`${API_URL}/products/favorites/${productId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setFavoriteIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(productId);
+          return newSet;
+        });
+      } else {
+        await axios.post(`${API_URL}/products/favorites/${productId}`, {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setFavoriteIds(prev => new Set(prev).add(productId));
+      }
+    } catch (error: any) {
+      Alert.alert('Hata', error.response?.data?.message || 'Favori işlemi başarısız');
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchListings();
+    await fetchFavorites();
     setRefreshing(false);
   };
 
@@ -57,24 +102,40 @@ const UserHomeScreen = ({ navigation }: any) => {
     });
   };
 
-  const renderListing = ({ item }: { item: Listing }) => (
-    <TouchableOpacity style={styles.card}>
-      {item.images[0] && (
+  const renderListing = ({ item }: { item: Listing }) => {
+    const isFavorite = favoriteIds.has(item.id);
+    
+    return (
+      <TouchableOpacity style={styles.card}>
         <Image
-          source={{ uri: item.images[0] }}
+          source={{
+            uri: (item.images && item.images.length > 0) 
+              ? item.images[0].imageUrl 
+              : 'https://via.placeholder.com/150'
+          }}
           style={styles.image}
         />
-      )}
-      <View style={styles.cardContent}>
-        <Text style={styles.title} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <Text style={styles.price}>₺{item.price.toLocaleString('tr-TR')}</Text>
-        <Text style={styles.seller}>{item.user.fullName}</Text>
-        <Text style={styles.category}>{item.category}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+        <View style={styles.cardContent}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.title} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <TouchableOpacity 
+              style={styles.favoriteButton}
+              onPress={() => toggleFavorite(item.id)}
+            >
+              <Text style={[styles.heartIcon, isFavorite && styles.heartIconActive]}>
+                {isFavorite ? '❤️' : '🤍'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.price}>₺{item.price.toLocaleString('tr-TR')}</Text>
+          <Text style={styles.seller}>{item.seller?.fullName || 'Bilinmeyen'}</Text>
+          <Text style={styles.category}>{item.category?.name || 'Diğer'}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading && listings.length === 0) {
     return (
@@ -202,11 +263,27 @@ const styles = StyleSheet.create({
   cardContent: {
     padding: 10,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 5,
+  },
+  favoriteButton: {
+    padding: 4,
+  },
+  heartIcon: {
+    fontSize: 20,
+  },
+  heartIconActive: {
+    transform: [{ scale: 1.1 }],
+  },
   title: {
+    flex: 1,
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
+    marginRight: 8,
   },
   price: {
     fontSize: 16,

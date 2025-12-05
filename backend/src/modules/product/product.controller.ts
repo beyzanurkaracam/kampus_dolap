@@ -16,6 +16,18 @@ import { JwtGuard } from '../guards/jwt.guard';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
+  // Tüm aktif ürünleri getir (user home screen için)
+  @Get()
+  async getAllProducts() {
+    const products = await this.productService.getAllActiveProducts();
+    // Decimal to number conversion
+    const transformed = products.map(p => ({
+      ...p,
+      price: p.price ? parseFloat(p.price.toString()) : 0
+    }));
+    return transformed;
+  }
+
   // Kategorileri getir
   @Get('categories')
   getCategories() {
@@ -93,5 +105,32 @@ export class ProductController {
   @Delete(':id')
   deleteProduct(@Param('id') id: string, @Request() req) {
     return this.productService.deleteProduct(id, req.user.userId);
+  }
+
+  // Favorilere ekle
+  @UseGuards(JwtGuard)
+  @Post('favorites/:productId')
+  async addToFavorites(@Param('productId') productId: string, @Request() req) {
+    return this.productService.addToFavorites(req.user.userId, productId);
+  }
+
+  // Favorilerden çıkar
+  @UseGuards(JwtGuard)
+  @Delete('favorites/:productId')
+  async removeFromFavorites(@Param('productId') productId: string, @Request() req) {
+    return this.productService.removeFromFavorites(req.user.userId, productId);
+  }
+
+  // Kullanıcının favorilerini getir
+  @UseGuards(JwtGuard)
+  @Get('favorites')
+  async getFavorites(@Request() req) {
+    const favorites = await this.productService.getFavorites(req.user.userId);
+    // Decimal to number conversion
+    const transformed = favorites.map(p => ({
+      ...p,
+      price: p.price ? parseFloat(p.price.toString()) : 0
+    }));
+    return transformed;
   }
 }

@@ -26,29 +26,87 @@ const AdminDashboardScreen = ({ navigation }: any) => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingProducts, setPendingProducts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchPendingProducts();
   }, []);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // Backend'den dashboard verilerini çek (henüz oluşturulmadı)
+      console.log('Dashboard fetch başladı, token:', token ? 'var' : 'YOK');
+      console.log('URL:', `${API_URL}/admin/dashboard`);
+      
       const response = await axios.get(`${API_URL}/admin/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      console.log('Dashboard response:', response.data);
       setData(response.data);
-    } catch (error) {
-      Alert.alert('Hata', 'Dashboard verileri yüklenemedi');
+    } catch (error: any) {
+      console.error('Dashboard hatası:', error.response?.data || error.message);
+      Alert.alert('Hata', `Dashboard verileri yüklenemedi: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchPendingProducts = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/admin/pending-products`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPendingProducts(response.data);
+    } catch (error: any) {
+      console.error('Onay bekleyen ürünler yüklenemedi:', error);
+    }
+  };
+
+  const handleApproveProduct = async (productId: string) => {
+    try {
+      await axios.post(`${API_URL}/admin/approve-product/${productId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      Alert.alert('Başarılı', 'Ürün onaylandı');
+      fetchPendingProducts();
+      fetchDashboardData();
+    } catch (error: any) {
+      Alert.alert('Hata', 'Ürün onaylanamadı');
+    }
+  };
+
+  const handleRejectProduct = async (productId: string) => {
+    Alert.alert(
+      'Ürünü Reddet',
+      'Bu ürünü reddetmek istediğinizden emin misiniz?',
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Reddet',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await axios.post(`${API_URL}/admin/reject-product/${productId}`, {}, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              Alert.alert('Başarılı', 'Ürün reddedildi');
+              fetchPendingProducts();
+              fetchDashboardData();
+            } catch (error: any) {
+              Alert.alert('Hata', 'Ürün reddedilemedi');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchDashboardData();
+    await fetchPendingProducts();
     setRefreshing(false);
   };
 
@@ -103,13 +161,18 @@ const AdminDashboardScreen = ({ navigation }: any) => {
           </View>
 
           <View style={[styles.statCard, styles.statCard2]}>
-            <Text style={styles.statNumber}>{data.stats.totalListings}</Text>
-            <Text style={styles.statLabel}>Ürün İlanı</Text>
+            <Text style={styles.statNumber}>{data.stats.totalProducts}</Text>
+            <Text style={styles.statLabel}>Toplam Ürün</Text>
           </View>
 
           <View style={[styles.statCard, styles.statCard3]}>
-            <Text style={styles.statNumber}>{data.stats.totalReviews}</Text>
-            <Text style={styles.statLabel}>Değerlendirme</Text>
+            <Text style={styles.statNumber}>{data.stats.pendingProducts}</Text>
+            <Text style={styles.statLabel}>Onay Bekleyen</Text>
+          </View>
+          
+          <View style={[styles.statCard, styles.statCard1]}>
+            <Text style={styles.statNumber}>{data.stats.activeProducts}</Text>
+            <Text style={styles.statLabel}>Aktif Ürün</Text>
           </View>
         </View>
       )}
@@ -129,6 +192,44 @@ const AdminDashboardScreen = ({ navigation }: any) => {
         <TouchableOpacity style={styles.actionButton}>
           <Text style={styles.actionButtonText}>📊 Raporları İndir</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Pending Products - Onay Bekleyen Ürünler */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          Onay Bekleyen Ürünler ({pendingProducts.length})
+        </Text>
+        {pendingProducts.length > 0 ? (
+          pendingProducts.map((product: any) => (
+            <View key={product.id} style={styles.pendingProductCard}>
+              <View style={styles.productInfo}>
+                <Text style={styles.productTitle}>{product.title}</Text>
+                <Text style={styles.productDetails}>
+                  {product.seller?.fullName} • ₺{product.price}
+                </Text>
+                <Text style={styles.productDetails}>
+                  {product.category?.name} • {product.condition}
+                </Text>
+              </View>
+              <View style={styles.productActions}>
+                <TouchableOpacity
+                  style={styles.approveButton}
+                  onPress={() => handleApproveProduct(product.id)}
+                >
+                  <Text style={styles.approveButtonText}>✓ Onayla</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.rejectButton}
+                  onPress={() => handleRejectProduct(product.id)}
+                >
+                  <Text style={styles.rejectButtonText}>✕ Reddet</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyText}>Onay bekleyen ürün yok</Text>
+        )}
       </View>
 
       {/* Recent Users */}
@@ -151,25 +252,25 @@ const AdminDashboardScreen = ({ navigation }: any) => {
         )}
       </View>
 
-      {/* Recent Listings */}
+      {/* Recent Products */}
       <View style={[styles.section, { marginBottom: 30 }]}>
-        <Text style={styles.sectionTitle}>Son Eklenen İlanlar</Text>
-        {data && data.recentListings.length > 0 ? (
-          data.recentListings.map((listing: any) => (
-            <View key={listing.id} style={styles.listItem}>
+        <Text style={styles.sectionTitle}>Son Eklenen Ürünler</Text>
+        {data && data.recentProducts.length > 0 ? (
+          data.recentProducts.map((product: any) => (
+            <View key={product.id} style={styles.listItem}>
               <View style={styles.listItemContent}>
-                <Text style={styles.listItemTitle}>{listing.title}</Text>
+                <Text style={styles.listItemTitle}>{product.title}</Text>
                 <Text style={styles.listItemSubtitle}>
-                  {listing.user.fullName} • ₺{listing.price}
+                  {product.seller?.fullName || 'Bilinmeyen'} • ₺{product.price}
                 </Text>
               </View>
-              <TouchableOpacity style={styles.deleteButton}>
-                <Text style={styles.deleteButtonText}>Sil</Text>
-              </TouchableOpacity>
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusText}>{product.status}</Text>
+              </View>
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>Henüz ilan yok</Text>
+          <Text style={styles.emptyText}>Henüz ürün yok</Text>
         )}
       </View>
     </ScrollView>
@@ -315,6 +416,69 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: '#fff',
     fontSize: 12,
+    fontWeight: '600',
+  },
+  statusBadge: {
+    backgroundColor: '#e0e0e0',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    marginLeft: 10,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#666',
+    textTransform: 'capitalize',
+  },
+  pendingProductCard: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#ff9500',
+  },
+  productInfo: {
+    marginBottom: 12,
+  },
+  productTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  productDetails: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
+  },
+  productActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  approveButton: {
+    flex: 1,
+    backgroundColor: '#34c759',
+    padding: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  approveButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  rejectButton: {
+    flex: 1,
+    backgroundColor: '#ff3b30',
+    padding: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  rejectButtonText: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '600',
   },
   emptyText: {

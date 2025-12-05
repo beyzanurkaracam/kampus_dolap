@@ -54,7 +54,7 @@ export class Product {
   @Column({ type: 'enum', enum: ['new', 'like_new', 'good', 'fair', 'poor'] })
   condition: string;
 
-  @Column({ type: 'enum', enum: ['active', 'sold', 'reserved', 'removed'], default: 'active' })
+  @Column({ type: 'enum', enum: ['pending', 'active', 'sold', 'reserved', 'removed'], default: 'pending' })
   status: string;
 
   @Column({ default: 0 })

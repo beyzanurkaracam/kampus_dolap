@@ -1,26 +1,37 @@
 export interface Stats {
   totalUsers: number;
-  totalListings: number;
-  totalReviews: number;
+  totalProducts: number;
+  activeProducts: number;
+  totalAdmins: number;
+  pendingProducts: number;
+  recentProducts: number;
 }
 
 export interface RecentUser {
-  id: string;
+  id: number;
   email: string;
   fullName: string;
   createdAt: string;
 }
 
-export interface RecentListing {
-  id: string;
+export interface RecentProduct {
+  id: number;
   title: string;
   price: number;
-  category: string;
+  status: string;
   createdAt: string;
+  category?: {
+    id: number;
+    name: string;
+  };
+  seller?: {
+    id: number;
+    fullName: string;
+  };
 }
 
 export interface DashboardData {
   stats: Stats;
   recentUsers: RecentUser[];
-  recentListings: RecentListing[];
+  recentProducts: RecentProduct[];
 }

@@ -283,23 +283,24 @@ export class AuthService {
   }
 
   async loginAdmin(loginDto: LoginDto) {
-    // Sadece beyzanur.karacam@sakarya.edu.tr ve admin123
-    if (loginDto.email !== 'beyzanur.karacam@sakarya.edu.tr') {
-      throw new UnauthorizedException('Admin email hatalı');
-    }
-
+    console.log('loginAdmin çağrıldı, email:', loginDto.email);
+    
     const admin = await this.adminRepository.findOne({ where: { email: loginDto.email } });
 
     if (!admin) {
+      console.log('Admin bulunamadı');
       throw new UnauthorizedException('Admin bulunamadı');
     }
 
+    console.log('Admin bulundu:', admin.email);
     const isPasswordValid = await bcrypt.compare(loginDto.password, admin.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Admin şifresi hatalı');
+      console.log('Şifre hatalı');
+      throw new UnauthorizedException('Şifre hatalı');
     }
 
+    console.log('Admin login başarılı');
     const token = this.jwtService.sign(
       { sub: admin.id, email: admin.email, role: 'ADMIN' },
       { expiresIn: '7d' },

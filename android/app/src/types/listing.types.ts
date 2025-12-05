@@ -4,16 +4,32 @@ export interface User {
   fullName: string;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface ProductImage {
+  id: string;
+  imageUrl: string;
+  isPrimary: boolean;
+}
+
 export interface Listing {
   id: string;
   title: string;
   price: number;
-  category: string;
-  images: string[];
+  category?: Category;
+  categoryName?: string;
+  images: ProductImage[];
   createdAt: string;
-  user: User;
+  seller?: User;
   description?: string;
   condition?: string;
+  status?: string;
+  brand?: string;
+  color?: string;
 }
 
 export interface ListingFormData {

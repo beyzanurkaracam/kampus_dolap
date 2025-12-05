@@ -8,10 +8,10 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export const LoginScreen = ({ navigation }: any) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,22 +25,17 @@ export const LoginScreen = ({ navigation }: any) => {
 
     setLoading(true);
     try {
-      // Tüm eski verileri temizle
-      await AsyncStorage.clear();
-      console.log('AsyncStorage temizlendi');
+      console.log('Login başlatılıyor, userType:', userType);
       
-      console.log('Login başlatılıyor...');
-      const response = await api.login({ email, password });
+      // AuthContext'teki login fonksiyonunu kullan (userType parametresi ile)
+      await login(email, password, userType);
       
-      console.log('Login başarılı, userType kaydediliyor:', userType);
-      await AsyncStorage.setItem('userType', userType);
-      
-      console.log('Navigation yapılıyor...');
+      console.log('Login başarılı, navigation yapılıyor...');
 
       if (userType === 'admin') {
-        navigation.navigate('AdminDashboard');
+        navigation.replace('AdminDashboard');
       } else {
-        navigation.navigate('UserHome');
+        navigation.replace('UserHome');
       }
     } catch (error: any) {
       console.log('Login hatası:', error);

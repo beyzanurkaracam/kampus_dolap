@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Product } from 'src/entities/product.entity';
 import { ProductImage } from 'src/entities/product-image.entity';
 import { Category } from 'src/entities/category.entity';
+import { Favorite } from 'src/entities/favorite.entity';
 import * as brandsData from '../add-product/brands.json';
 import * as colorsData from '../add-product/colors.json';
 
@@ -30,7 +31,18 @@ export class ProductService {
     private productImageRepository: Repository<ProductImage>,
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
+    @InjectRepository(Favorite)
+    private favoriteRepository: Repository<Favorite>,
   ) {}
+
+  // Tüm aktif ürünleri getir (admin onaylamış olanlar)
+  async getAllActiveProducts(): Promise<Product[]> {
+    return this.productRepository.find({
+      where: { status: 'active' },
+      relations: ['images', 'category', 'university', 'seller'],
+      order: { createdAt: 'DESC' },
+    });
+  }
 
   // Kullanıcının ürünlerini getir
   async getMyProducts(userId: string): Promise<Product[]> {
@@ -90,7 +102,7 @@ export class ProductService {
     newProduct.condition = createProductDto.condition;
     newProduct.sellerId = sellerId;
     newProduct.universityId = universityId;
-    newProduct.status = 'active';
+    newProduct.status = 'pending'; // Admin onayı gerekli
 
     const savedProduct = await this.productRepository.save(newProduct);
 
@@ -192,5 +204,63 @@ export class ProductService {
     // Frontend'den gelen brandCategory kullanılacak
     // Bu durumda genel markaları döndür
     return brandsData.brands_all;
+  }
+
+  // Favorilere ekle
+  async addToFavorites(userId: string, productId: string): Promise<{ message: string }> {
+    // Zaten favorilerde mi kontrol et
+    const existing = await this.favoriteRepository.findOne({
+      where: { 
+        user: { id: userId },
+        product: { id: productId }
+      }
+    });
+
+    if (existing) {
+      return { message: 'Bu ürün zaten favorilerinizde' };
+    }
+
+    // Ürünün varlığını kontrol et
+    const product = await this.productRepository.findOne({ where: { id: productId } });
+    if (!product) {
+      throw new NotFoundException('Ürün bulunamadı');
+    }
+
+    // Favoriye ekle
+    const favorite = this.favoriteRepository.create({
+      user: { id: userId } as any,
+      product: { id: productId } as any,
+    });
+
+    await this.favoriteRepository.save(favorite);
+    return { message: 'Ürün favorilere eklendi' };
+  }
+
+  // Favorilerden çıkar
+  async removeFromFavorites(userId: string, productId: string): Promise<{ message: string }> {
+    const favorite = await this.favoriteRepository.findOne({
+      where: { 
+        user: { id: userId },
+        product: { id: productId }
+      }
+    });
+
+    if (!favorite) {
+      throw new NotFoundException('Bu ürün favorilerinizde değil');
+    }
+
+    await this.favoriteRepository.remove(favorite);
+    return { message: 'Ürün favorilerden çıkarıldı' };
+  }
+
+  // Kullanıcının favorilerini getir
+  async getFavorites(userId: string): Promise<Product[]> {
+    const favorites = await this.favoriteRepository.find({
+      where: { user: { id: userId } },
+      relations: ['product', 'product.images', 'product.category', 'product.university'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return favorites.map(fav => fav.product);
   }
 }

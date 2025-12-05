@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { UniversityModule } from './modules/university/university.module';
 import { ProductModule } from './modules/product/product.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 // Entities
 import { User } from './entities/user.entity';
@@ -14,6 +15,7 @@ import { University } from './entities/university.entity';
 import { Category } from './entities/category.entity';
 import { Product } from './entities/product.entity';
 import { ProductImage } from './entities/product-image.entity';
+import { Favorite } from './entities/favorite.entity';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { ProductImage } from './entities/product-image.entity';
           Category,
           Product,
           ProductImage,
+          Favorite,
         ],
         synchronize: configService.get('NODE_ENV') === 'development',
       }),
@@ -45,6 +48,7 @@ import { ProductImage } from './entities/product-image.entity';
     AuthModule,
     UniversityModule,
     ProductModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

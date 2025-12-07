@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UniversityModule } from './modules/university/university.module';
 import { ProductModule } from './modules/product/product.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 // Entities
 import { User } from './entities/user.entity';
@@ -49,6 +50,7 @@ import { Favorite } from './entities/favorite.entity';
     UniversityModule,
     ProductModule,
     AdminModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

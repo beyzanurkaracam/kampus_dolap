@@ -63,7 +63,8 @@ export class ProductController {
         id: products[0].id,
         title: products[0].title,
         price: products[0].price,
-        priceType: typeof products[0].price
+        images: products[0].images,
+        imagesCount: products[0].images?.length
       });
     }
     // Decimal to number conversion

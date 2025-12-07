@@ -14,6 +14,7 @@ import {
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { AvatarPicker } from '../components/AvatarPicker';
 
 const BASE_URL = Platform.OS === 'android' 
   ? 'http://10.0.2.2:3000' 
@@ -27,6 +28,7 @@ interface UserProfile {
   fullName: string;
   email: string;
   department: string;
+  profilePhoto?: string;
   university: {
     name: string;
   };
@@ -41,6 +43,7 @@ interface Product {
   status: string;
   images: Array<{ imageUrl: string; isPrimary: boolean }>;
   category: { name: string };
+  seller?: { fullName: string };
 }
 
 type TabType = 'products' | 'favorites';
@@ -73,7 +76,8 @@ export const ProfileScreen = ({ navigation }: any) => {
     console.log('fetchProfile başladı');
     try {
       const profileData = await api.getProfile();
-      console.log('Profile yanıtı alındı:', profileData);
+      console.warn('✅ Profile yanıtı:', JSON.stringify(profileData));
+      console.warn('📸 profilePhoto:', profileData.profilePhoto);
       setProfile(profileData as any);
     } catch (error: any) {
       console.error('Profil yüklenirken hata:', error);
@@ -90,27 +94,6 @@ export const ProfileScreen = ({ navigation }: any) => {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchProductCount = async () => {
-    try {
-      if (!token) return;
-
-      // URL artık dinamik olarak config dosyasından geliyor
-      const response = await fetch(`${API_URL}/products/my-products`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const products = await response.json();
-        setProductCount(products.length);
-      }
-    } catch (error) {
-      console.error('Ürün sayısı alınırken hata:', error);
     }
   };
 
@@ -260,16 +243,15 @@ export const ProfileScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       {/* Header - Profil Fotoğrafı ve İsim */}
       <View style={styles.header}>
-        <View style={styles.profileImageContainer}>
-          <Image
-            source={{
-              uri: 'https://via.placeholder.com/100', // TODO: Backend'den profil fotoğrafı gelecek
-            }}
-            style={styles.profileImage}
-          />
-        </View>
+        <AvatarPicker
+          avatarUrl={profile?.profilePhoto}
+          token={token!}
+          onUploadSuccess={(url) => setProfile(prev => prev ? {...prev, profilePhoto: url} : null)}
+          size={100}
+        />
         <Text style={styles.userName}>{profile?.fullName || 'Kullanıcı'}</Text>
         <Text style={styles.userEmail}>{profile?.email}</Text>
+        <Text style={styles.editPhotoHint}>Fotoğrafı değiştirmek için dokunun</Text>
       </View>
 
       {/* Tab Buttons */}
@@ -389,6 +371,11 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 14,
     color: '#666',
+  },
+  editPhotoHint: {
+    fontSize: 12,
+    color: '#007AFF',
+    marginTop: 8,
   },
   tabContainer: {
     flexDirection: 'row',

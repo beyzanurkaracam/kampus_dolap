@@ -27,6 +27,7 @@ const AdminDashboardScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingProducts, setPendingProducts] = useState<any[]>([]);
+  const [activeSection, setActiveSection] = useState<'pending' | 'users' | 'products'>('pending');
 
   useEffect(() => {
     fetchDashboardData();
@@ -177,102 +178,121 @@ const AdminDashboardScreen = ({ navigation }: any) => {
         </View>
       )}
 
-      {/* Quick Actions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Hızlı İşlemler</Text>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>👥 Kullanıcıları Görüntüle</Text>
+      {/* Section Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tabButton, activeSection === 'pending' && styles.activeTabButton]}
+          onPress={() => setActiveSection('pending')}
+        >
+          <Text style={[styles.tabButtonText, activeSection === 'pending' && styles.activeTabButtonText]}>
+            📦 Onay Bekleyen ({pendingProducts.length})
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>📋 Tüm İlanları Görüntüle</Text>
+        
+        <TouchableOpacity 
+          style={[styles.tabButton, activeSection === 'users' && styles.activeTabButton]}
+          onPress={() => setActiveSection('users')}
+        >
+          <Text style={[styles.tabButtonText, activeSection === 'users' && styles.activeTabButtonText]}>
+            👥 Kullanıcılar ({data?.recentUsers.length || 0})
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>⭐ Değerlendirmeleri Yönet</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>📊 Raporları İndir</Text>
+        
+        <TouchableOpacity 
+          style={[styles.tabButton, activeSection === 'products' && styles.activeTabButton]}
+          onPress={() => setActiveSection('products')}
+        >
+          <Text style={[styles.tabButtonText, activeSection === 'products' && styles.activeTabButtonText]}>
+            📋 Ürünler ({data?.recentProducts.length || 0})
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Pending Products - Onay Bekleyen Ürünler */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          Onay Bekleyen Ürünler ({pendingProducts.length})
-        </Text>
-        {pendingProducts.length > 0 ? (
-          pendingProducts.map((product: any) => (
-            <View key={product.id} style={styles.pendingProductCard}>
-              <View style={styles.productInfo}>
-                <Text style={styles.productTitle}>{product.title}</Text>
-                <Text style={styles.productDetails}>
-                  {product.seller?.fullName} • ₺{product.price}
-                </Text>
-                <Text style={styles.productDetails}>
-                  {product.category?.name} • {product.condition}
-                </Text>
+      {activeSection === 'pending' && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            Onay Bekleyen Ürünler
+          </Text>
+          {pendingProducts.length > 0 ? (
+            pendingProducts.map((product: any) => (
+              <View key={product.id} style={styles.pendingProductCard}>
+                <View style={styles.productInfo}>
+                  <Text style={styles.productTitle}>{product.title}</Text>
+                  <Text style={styles.productDetails}>
+                    {product.seller?.fullName} • ₺{product.price}
+                  </Text>
+                  <Text style={styles.productDetails}>
+                    {product.category?.name} • {product.condition}
+                  </Text>
+                </View>
+                <View style={styles.productActions}>
+                  <TouchableOpacity
+                    style={styles.approveButton}
+                    onPress={() => handleApproveProduct(product.id)}
+                  >
+                    <Text style={styles.approveButtonText}>✓ Onayla</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.rejectButton}
+                    onPress={() => handleRejectProduct(product.id)}
+                  >
+                    <Text style={styles.rejectButtonText}>✕ Reddet</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View style={styles.productActions}>
-                <TouchableOpacity
-                  style={styles.approveButton}
-                  onPress={() => handleApproveProduct(product.id)}
-                >
-                  <Text style={styles.approveButtonText}>✓ Onayla</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.rejectButton}
-                  onPress={() => handleRejectProduct(product.id)}
-                >
-                  <Text style={styles.rejectButtonText}>✕ Reddet</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>Onay bekleyen ürün yok</Text>
-        )}
-      </View>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>Onay bekleyen ürün yok</Text>
+          )}
+        </View>
+      )}
 
       {/* Recent Users */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Son Kayıt Olan Kullanıcılar</Text>
-        {data && data.recentUsers.length > 0 ? (
-          data.recentUsers.map((user: any) => (
-            <View key={user.id} style={styles.listItem}>
-              <View style={styles.listItemContent}>
-                <Text style={styles.listItemTitle}>{user.fullName}</Text>
-                <Text style={styles.listItemSubtitle}>{user.email}</Text>
-              </View>
-              <Text style={styles.listItemDate}>
-                {new Date(user.createdAt).toLocaleDateString('tr-TR')}
-              </Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>Henüz kullanıcı yok</Text>
-        )}
-      </View>
-
-      {/* Recent Products */}
-      <View style={[styles.section, { marginBottom: 30 }]}>
-        <Text style={styles.sectionTitle}>Son Eklenen Ürünler</Text>
-        {data && data.recentProducts.length > 0 ? (
-          data.recentProducts.map((product: any) => (
-            <View key={product.id} style={styles.listItem}>
-              <View style={styles.listItemContent}>
-                <Text style={styles.listItemTitle}>{product.title}</Text>
-                <Text style={styles.listItemSubtitle}>
-                  {product.seller?.fullName || 'Bilinmeyen'} • ₺{product.price}
+      {activeSection === 'users' && data && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Son Kayıt Olan Kullanıcılar</Text>
+          {data.recentUsers.length > 0 ? (
+            data.recentUsers.map((user: any) => (
+              <View key={user.id} style={styles.listItem}>
+                <View style={styles.listItemContent}>
+                  <Text style={styles.listItemTitle}>{user.fullName}</Text>
+                  <Text style={styles.listItemSubtitle}>{user.email}</Text>
+                </View>
+                <Text style={styles.listItemDate}>
+                  {new Date(user.createdAt).toLocaleDateString('tr-TR')}
                 </Text>
               </View>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusText}>{product.status}</Text>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>Henüz kullanıcı yok</Text>
+          )}
+        </View>
+      )}
+
+      {/* Recent Products */}
+      {activeSection === 'products' && data && (
+        <View style={[styles.section, { marginBottom: 30 }]}>
+          <Text style={styles.sectionTitle}>Son Eklenen Ürünler</Text>
+          {data.recentProducts.length > 0 ? (
+            data.recentProducts.map((product: any) => (
+              <View key={product.id} style={styles.listItem}>
+                <View style={styles.listItemContent}>
+                  <Text style={styles.listItemTitle}>{product.title}</Text>
+                  <Text style={styles.listItemSubtitle}>
+                    {product.seller?.fullName || 'Bilinmeyen'} • ₺{product.price}
+                  </Text>
+                </View>
+                <View style={styles.statusBadge}>
+                  <Text style={styles.statusText}>{product.status}</Text>
+                </View>
               </View>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>Henüz ürün yok</Text>
-        )}
-      </View>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>Henüz ürün yok</Text>
+          )}
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -320,6 +340,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 14,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+  },
+  activeTabButton: {
+    backgroundColor: '#007AFF',
+  },
+  tabButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    textAlign: 'center',
+  },
+  activeTabButtonText: {
+    color: '#fff',
   },
   statsContainer: {
     flexDirection: 'row',

@@ -62,4 +62,10 @@ export class AuthController {
     console.log('req.user:', req.user);
     return this.authService.getUserProfile(req.user.userId);
   }
+
+  @UseGuards(JwtGuard)
+  @Post('profile/update')
+  async updateProfile(@Request() req, @Body() updateData: { fullName?: string; phone?: string; profilePhoto?: string }) {
+    return this.authService.updateUserProfile(req.user.userId, updateData);
+  }
 }

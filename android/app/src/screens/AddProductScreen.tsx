@@ -12,10 +12,13 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import * as ImagePicker from 'react-native-image-picker';
+import type { ImagePickerResponse, Asset } from 'react-native-image-picker';
 
 
 
@@ -24,7 +27,14 @@ const BASE_URL = Platform.OS === 'android'
   : 'http://localhost:3000';
 
 
-export const API_URL = `${BASE_URL}/products`;
+export const API_URL = BASE_URL;
+
+interface SelectedImage {
+  uri: string;
+  name: string;
+  type: string;
+}
+
 interface Category {
   id: number; // Number olarak değiştirdik
   name: string;
@@ -70,6 +80,9 @@ export const AddProductScreen = ({ navigation }: any) => {
   const [selectedColor, setSelectedColor] = useState<Color | null>(null);
   const [showColorModal, setShowColorModal] = useState(false);
   
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -100,8 +113,8 @@ export const AddProductScreen = ({ navigation }: any) => {
   const fetchInitialData = async () => {
     try {
       const [categoriesRes, colorsRes] = await Promise.all([
-        axios.get(`${API_URL}/categories`),
-        axios.get(`${API_URL}/colors`),
+        axios.get(`${API_URL}/products/categories`),
+        axios.get(`${API_URL}/products/colors`),
       ]);
       
       const cats = categoriesRes.data.categories || [];
@@ -124,10 +137,81 @@ export const AddProductScreen = ({ navigation }: any) => {
     try {
       // Seçili kategorinin brandCategory'sini kullan
       const brandCategoryId = selectedCategory?.brandCategory || 'giyim';
-      const response = await axios.get(`${API_URL}/brands/${brandCategoryId}`);
-      setBrands(response.data || []);
+      const response = await axios.get(`${API_URL}/products/brands/${brandCategoryId}`);
+      setBrands(response.data.brands || []);
     } catch (error) {
       console.error('Markalar yüklenirken hata:', error);
+    }
+  };
+
+  const selectImages = () => {
+    ImagePicker.launchImageLibrary(
+      {
+        mediaType: 'photo',
+        selectionLimit: 5, // Maksimum 5 resim
+        quality: 0.8,
+      },
+      (response: ImagePickerResponse) => {
+        if (response.didCancel) {
+          console.log('Kullanıcı resim seçmeyi iptal etti');
+        } else if (response.errorCode) {
+          Alert.alert('Hata', response.errorMessage || 'Resim seçilirken hata oluştu');
+        } else if (response.assets) {
+          const images: SelectedImage[] = response.assets.map((asset: Asset) => ({
+            uri: asset.uri!,
+            name: asset.fileName || `image_${Date.now()}.jpg`,
+            type: asset.type || 'image/jpeg',
+          }));
+          setSelectedImages(images);
+        }
+      }
+    );
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    if (selectedImages.length === 0) return [];
+
+    setUploadingImages(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const image of selectedImages) {
+        console.log('📤 Resim yükleniyor:', image.name);
+        const formData = new FormData();
+        formData.append('file', {
+          uri: image.uri,
+          name: image.name,
+          type: image.type,
+        } as any);
+
+        console.log('🔗 Upload URL:', `${API_URL}/upload/image`);
+        console.log('🔑 Token:', token ? 'Mevcut' : 'YOK');
+
+        const response = await axios.post(`${API_URL}/upload/image`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log('✅ Resim yüklendi:', response.data.imageUrl);
+        uploadedUrls.push(response.data.imageUrl);
+      }
+
+      return uploadedUrls;
+    } catch (error: any) {
+      console.error('❌ Resimler yüklenirken hata:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      throw new Error('Resimler yüklenemedi');
+    } finally {
+      setUploadingImages(false);
     }
   };
 
@@ -151,8 +235,20 @@ export const AddProductScreen = ({ navigation }: any) => {
         return;
       }
 
+      // Önce resimleri yükle
+      let imageUrls: string[] = [];
+      if (selectedImages.length > 0) {
+        try {
+          imageUrls = await uploadImages();
+        } catch (error) {
+          Alert.alert('Hata', 'Resimler yüklenemedi');
+          setLoading(false);
+          return;
+        }
+      }
+
       await axios.post(
-        `${API_URL}/create`,
+        `${API_URL}/products/create`,
         {
           title: title.trim(),
           description: description.trim(),
@@ -164,7 +260,7 @@ export const AddProductScreen = ({ navigation }: any) => {
           condition,
           brand: selectedBrand?.name,
           color: selectedColor?.name,
-          images: [], // Şimdilik resim yok, sonra ekleyeceğiz
+          images: imageUrls, // S3'e yüklenmiş resim URL'leri
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -253,6 +349,38 @@ export const AddProductScreen = ({ navigation }: any) => {
           />
         </View>
 
+        {/* Resim Seçimi */}
+        <View style={styles.field}>
+          <Text style={styles.label}>Ürün Resimleri (Maksimum 5)</Text>
+          <TouchableOpacity
+            style={styles.imagePickerButton}
+            onPress={selectImages}>
+            <Text style={styles.imagePickerText}>
+              {selectedImages.length > 0
+                ? `${selectedImages.length} resim seçildi`
+                : '📷 Resim Seç'}
+            </Text>
+          </TouchableOpacity>
+          
+          {selectedImages.length > 0 && (
+            <ScrollView
+              horizontal
+              style={styles.imagePreviewContainer}
+              showsHorizontalScrollIndicator={false}>
+              {selectedImages.map((image, index) => (
+                <View key={index} style={styles.imagePreview}>
+                  <Image source={{ uri: image.uri }} style={styles.previewImage} />
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={() => removeImage(index)}>
+                    <Text style={styles.removeImageText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
         <View style={styles.field}>
           <Text style={styles.label}>Ana Kategori *</Text>
           <TouchableOpacity
@@ -330,11 +458,18 @@ export const AddProductScreen = ({ navigation }: any) => {
         </View>
 
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          style={[styles.submitButton, (loading || uploadingImages) && styles.submitButtonDisabled]}
           onPress={handleSubmit}
-          disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
+          disabled={loading || uploadingImages}>
+          {(loading || uploadingImages) ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ActivityIndicator color="#fff" />
+              {uploadingImages && (
+                <Text style={[styles.submitButtonText, { marginLeft: 10 }]}>
+                  Resimler yükleniyor...
+                </Text>
+              )}
+            </View>
           ) : (
             <Text style={styles.submitButtonText}>Ürünü Ekle</Text>
           )}
@@ -672,5 +807,47 @@ const styles = StyleSheet.create({
     marginRight: 15,
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  imagePickerButton: {
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  imagePickerText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  imagePreviewContainer: {
+    marginTop: 10,
+    maxHeight: 120,
+  },
+  imagePreview: {
+    marginRight: 10,
+    position: 'relative',
+  },
+  previewImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ff3b30',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeImageText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

@@ -1,6 +1,7 @@
 {
   "buildFiles": [
     "C:\\Users\\Beyza\\Desktop\\kampusumden\\kampus_dolap\\node_modules\\@react-native-async-storage\\async-storage\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
+    "C:\\Users\\Beyza\\Desktop\\kampusumden\\kampus_dolap\\node_modules\\react-native-image-picker\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\Users\\Beyza\\Desktop\\kampusumden\\kampus_dolap\\node_modules\\react-native-safe-area-context\\android\\src\\main\\jni\\CMakeLists.txt",
     "C:\\Users\\Beyza\\Desktop\\kampusumden\\kampus_dolap\\node_modules\\react-native-screens\\android\\src\\main\\jni\\CMakeLists.txt",
     "C:\\Users\\Beyza\\Desktop\\kampusumden\\kampus_dolap\\node_modules\\react-native\\ReactAndroid\\cmake-utils\\default-app-setup\\CMakeLists.txt"
@@ -29,6 +30,11 @@
         "C:\\Users\\Beyza\\.gradle\\caches\\8.13\\transforms\\5271a4ecc5dd3f742bc095ccbaa54b18\\transformed\\react-android-0.82.0-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
         "C:\\Users\\Beyza\\.gradle\\caches\\8.13\\transforms\\5271a4ecc5dd3f742bc095ccbaa54b18\\transformed\\react-android-0.82.0-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so"
       ]
+    },
+    "react_codegen_RNImagePickerSpec::@f66ee9a2efecfb28bee4": {
+      "artifactName": "react_codegen_RNImagePickerSpec",
+      "abi": "x86",
+      "runtimeFiles": []
     },
     "react_codegen_rnscreens::@25bcbd507e98d3a854ad": {
       "artifactName": "react_codegen_rnscreens",

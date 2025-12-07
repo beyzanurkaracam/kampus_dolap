@@ -4,6 +4,9 @@ C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/
 C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir
 C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/rnasyncstorage_autolinked_build/CMakeFiles/edit_cache.dir
 C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/rnasyncstorage_autolinked_build/CMakeFiles/rebuild_cache.dir
+C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir
+C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/edit_cache.dir
+C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/rebuild_cache.dir
 C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/safeareacontext_autolinked_build/CMakeFiles/react_codegen_safeareacontext.dir
 C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/safeareacontext_autolinked_build/CMakeFiles/edit_cache.dir
 C:/Users/Beyza/Desktop/kampusumden/kampus_dolap/android/app/.cxx/Debug/1u186h3e/x86/safeareacontext_autolinked_build/CMakeFiles/rebuild_cache.dir

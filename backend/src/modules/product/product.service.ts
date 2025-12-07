@@ -183,7 +183,7 @@ export class ProductService {
 
   // Markaları getir
   getBrands() {
-    return brandsData;
+    return { brands: brandsData.brands_all || [] };
   }
 
   // Renkleri getir
@@ -197,13 +197,13 @@ export class ProductService {
     // Eğer kategori direkt brands.json'daki bir kategori ise kullan
     const directCategory = brandsData.categories.find(cat => cat.id === categoryId);
     if (directCategory) {
-      return directCategory.brands;
+      return { brands: directCategory.brands };
     }
     
     // Kategori ID'si compound ise (women-clothing-tops gibi)
     // Frontend'den gelen brandCategory kullanılacak
     // Bu durumda genel markaları döndür
-    return brandsData.brands_all;
+    return { brands: brandsData.brands_all || [] };
   }
 
   // Favorilere ekle

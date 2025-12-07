@@ -36,7 +36,8 @@ const UserHomeScreen = ({ navigation }: any) => {
       setLoading(true);
       // Sadece aktif (admin onaylı) ürünleri getir
       const response = await axios.get(`${API_URL}/products`);
-      console.log('Aktif ürünler yüklendi:', response.data.length);
+      console.warn('✅ Aktif ürünler yüklendi:', response.data.length);
+      console.warn('📷 İlk ürünün resimleri:', JSON.stringify(response.data[0]?.images));
       setListings(response.data);
     } catch (error) {
       console.log('Ürünler yüklenemedi:', error);
@@ -51,7 +52,7 @@ const UserHomeScreen = ({ navigation }: any) => {
       const response = await axios.get(`${API_URL}/products/favorites`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const ids = new Set(response.data.map((p: any) => p.id));
+      const ids = new Set<string>(response.data.map((p: any) => p.id));
       setFavoriteIds(ids);
     } catch (error) {
       console.log('Favoriler yüklenemedi:', error);
@@ -105,6 +106,16 @@ const UserHomeScreen = ({ navigation }: any) => {
   const renderListing = ({ item }: { item: Listing }) => {
     const isFavorite = favoriteIds.has(item.id);
     
+    // Debug: İlk ürünün resimlerini kontrol et
+    if (item.id === listings[0]?.id) {
+      console.warn('🖼️ Render edilen ürün:', JSON.stringify({
+        id: item.id,
+        title: item.title,
+        images: item.images,
+        imageUrl: item.images?.[0]?.imageUrl
+      }));
+    }
+    
     return (
       <TouchableOpacity style={styles.card}>
         <Image
@@ -114,6 +125,7 @@ const UserHomeScreen = ({ navigation }: any) => {
               : 'https://via.placeholder.com/150'
           }}
           style={styles.image}
+          onError={(e) => console.warn('❌ Resim yüklenemedi:', e.nativeEvent.error)}
         />
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>

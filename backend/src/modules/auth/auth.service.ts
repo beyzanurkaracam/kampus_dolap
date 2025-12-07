@@ -344,10 +344,31 @@ export class AuthService {
       email: user.email,
       department: user.department,
       phone: user.phone,
+      profilePhoto: user.profilePhoto,
       university: {
         name: user.university.name,
         city: user.university.city,
       },
+    };
+  }
+
+  async updateUserProfile(userId: string, updateData: { fullName?: string; phone?: string; profilePhoto?: string }) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    
+    if (!user) {
+      throw new UnauthorizedException('Kullanıcı bulunamadı');
+    }
+
+    if (updateData.fullName) user.fullName = updateData.fullName;
+    if (updateData.phone) user.phone = updateData.phone;
+    if (updateData.profilePhoto) user.profilePhoto = updateData.profilePhoto;
+
+    await this.userRepository.save(user);
+
+    return {
+      success: true,
+      message: 'Profil güncellendi',
+      profilePhoto: user.profilePhoto,
     };
   }
 }

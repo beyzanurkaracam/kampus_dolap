@@ -106,18 +106,11 @@ const UserHomeScreen = ({ navigation }: any) => {
   const renderListing = ({ item }: { item: Listing }) => {
     const isFavorite = favoriteIds.has(item.id);
     
-    // Debug: İlk ürünün resimlerini kontrol et
-    if (item.id === listings[0]?.id) {
-      console.warn('🖼️ Render edilen ürün:', JSON.stringify({
-        id: item.id,
-        title: item.title,
-        images: item.images,
-        imageUrl: item.images?.[0]?.imageUrl
-      }));
-    }
-    
     return (
-      <TouchableOpacity style={styles.card}>
+      <TouchableOpacity 
+        style={styles.card}
+        onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+      >
         <Image
           source={{
             uri: (item.images && item.images.length > 0) 
@@ -134,7 +127,10 @@ const UserHomeScreen = ({ navigation }: any) => {
             </Text>
             <TouchableOpacity 
               style={styles.favoriteButton}
-              onPress={() => toggleFavorite(item.id)}
+              onPress={(e) => {
+                e.stopPropagation();
+                toggleFavorite(item.id);
+              }}
             >
               <Text style={[styles.heartIcon, isFavorite && styles.heartIconActive]}>
                 {isFavorite ? '❤️' : '🤍'}
@@ -166,6 +162,14 @@ const UserHomeScreen = ({ navigation }: any) => {
           <Text style={styles.userName}>{user?.fullName || user?.email}</Text>
         </View>
         <View style={styles.headerButtons}>
+          {/* Mesajlarım Butonu */}
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('Chats')}
+          >
+            <Text style={styles.headerButtonIcon}>💬</Text>
+            <Text style={styles.headerButtonText}>Mesajlar</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.profileButton}
             onPress={() => navigation.navigate('Profile')}

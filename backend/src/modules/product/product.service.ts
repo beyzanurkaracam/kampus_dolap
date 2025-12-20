@@ -53,6 +53,20 @@ export class ProductService {
     });
   }
 
+  // Tek ürün detayı getir
+  async getProductById(id: string): Promise<Product> {
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: ['images', 'category', 'university', 'seller'],
+    });
+
+    if (!product) {
+      throw new NotFoundException('Ürün bulunamadı');
+    }
+
+    return product;
+  }
+
   // Category'yi bul veya oluştur
   private async findOrCreateCategory(dto: CreateProductDto): Promise<Category> {
     // Önce name ile ara (çünkü frontend JSON'dan geçici ID gönderiyor)
@@ -262,5 +276,24 @@ export class ProductService {
     });
 
     return favorites.map(fav => fav.product);
+  }
+
+  // Ürün durumunu güncelle
+  async updateProductStatus(productId: string, userId: string, status: string): Promise<Product> {
+    const product = await this.productRepository.findOne({ 
+      where: { id: productId, sellerId: userId }
+    });
+
+    if (!product) {
+      throw new NotFoundException('Ürün bulunamadı veya size ait değil');
+    }
+
+    const validStatuses = ['active', 'pending', 'sold', 'rejected'];
+    if (!validStatuses.includes(status)) {
+      throw new BadRequestException('Geçersiz durum');
+    }
+
+    product.status = status;
+    return await this.productRepository.save(product);
   }
 }

@@ -76,8 +76,7 @@ export const ProfileScreen = ({ navigation }: any) => {
     console.log('fetchProfile başladı');
     try {
       const profileData = await api.getProfile();
-      console.warn('✅ Profile yanıtı:', JSON.stringify(profileData));
-      console.warn('📸 profilePhoto:', profileData.profilePhoto);
+      
       setProfile(profileData as any);
     } catch (error: any) {
       console.error('Profil yüklenirken hata:', error);
@@ -177,7 +176,10 @@ export const ProfileScreen = ({ navigation }: any) => {
     const statusInfo = getStatusInfo(item.status);
 
     return (
-      <TouchableOpacity style={styles.productItem}>
+      <TouchableOpacity 
+        style={styles.productItem}
+        onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+      >
         <Image
           source={{
             uri: item.images.find((img) => img.isPrimary)?.imageUrl || 

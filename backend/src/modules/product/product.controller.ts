@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -108,6 +109,17 @@ export class ProductController {
     return this.productService.deleteProduct(id, req.user.userId);
   }
 
+  // Ürün durumunu güncelle
+  @UseGuards(JwtGuard)
+  @Patch(':id/status')
+  async updateProductStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @Request() req
+  ) {
+    return this.productService.updateProductStatus(id, req.user.userId, status);
+  }
+
   // Favorilere ekle
   @UseGuards(JwtGuard)
   @Post('favorites/:productId')
@@ -133,5 +145,16 @@ export class ProductController {
       price: p.price ? parseFloat(p.price.toString()) : 0
     }));
     return transformed;
+  }
+
+  // Tek ürün detayı getir (EN SONA - dinamik route)
+  @UseGuards(JwtGuard)
+  @Get(':id')
+  async getProduct(@Param('id') id: string) {
+    const product = await this.productService.getProductById(id);
+    return {
+      ...product,
+      price: product.price ? parseFloat(product.price.toString()) : 0
+    };
   }
 }

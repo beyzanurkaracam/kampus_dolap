@@ -17,6 +17,10 @@ import { Category } from './entities/category.entity';
 import { Product } from './entities/product.entity';
 import { ProductImage } from './entities/product-image.entity';
 import { Favorite } from './entities/favorite.entity';
+import { ChatModule } from './modules/chat/chat.module';
+import { RedisModule } from './modules/redis/redis.module';
+import { Chat } from './entities/chat.entity'; // ✅ EKLE
+import { Message } from './entities/message.entity'; // ✅ EKLE
 
 @Module({
   imports: [
@@ -25,7 +29,7 @@ import { Favorite } from './entities/favorite.entity';
       envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule,RedisModule,],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get('DATABASE_HOST', 'localhost'),
@@ -41,6 +45,8 @@ import { Favorite } from './entities/favorite.entity';
           Product,
           ProductImage,
           Favorite,
+          Chat,
+          Message,
         ],
         synchronize: configService.get('NODE_ENV') === 'development',
       }),
@@ -51,6 +57,7 @@ import { Favorite } from './entities/favorite.entity';
     ProductModule,
     AdminModule,
     UploadModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

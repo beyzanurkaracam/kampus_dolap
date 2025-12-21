@@ -22,6 +22,7 @@ import { RedisModule } from './modules/redis/redis.module';
 import { Chat } from './entities/chat.entity'; // ✅ EKLE
 import { Message } from './entities/message.entity'; // ✅ EKLE
 import { PaymentModule } from './modules/payment/payment.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { PaymentModule } from './modules/payment/payment.module';
     UploadModule,
     ChatModule,
     PaymentModule,
+    TasksModule
   ],
   controllers: [AppController],
   providers: [AppService],

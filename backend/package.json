@@ -23,12 +23,12 @@
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:studio": "prisma studio",
     "prisma:reset": "prisma migrate reset",
-     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
     "migration:generate": "npm run typeorm -- migration:generate src/migrations/AddProductToChat -d src/config/typeorm.config.ts",
     "migration:create": "npm run typeorm -- migration:create src/migrations/AddProductToChat",
     "migration:run": "npm run typeorm -- migration:run -d src/config/typeorm.config.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d src/config/typeorm.config.ts"
- },
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.946.0",
     "@aws-sdk/s3-request-presigner": "^3.946.0",
@@ -38,6 +38,7 @@
     "@nestjs/jwt": "^11.0.1",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.20",
+    "@nestjs/schedule": "^6.1.0",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.0",
     "@prisma/client": "^5.4.1",

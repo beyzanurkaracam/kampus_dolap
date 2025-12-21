@@ -38,14 +38,57 @@ export class ProductService {
     private userRepository: Repository<User>,
   ) {}
 
-  // Tüm aktif ürünleri getir (admin onaylamış olanlar)
-  async getAllActiveProducts(): Promise<Product[]> {
-    return this.productRepository.find({
-      where: { status: 'active' },
-      relations: ['images', 'category', 'university', 'seller'],
-      order: { createdAt: 'DESC' },
-    });
+// getAllActiveProducts fonksiyonunu güncelle
+async getAllActiveProducts(query: any = {}): Promise<Product[]> {
+  const { search, categoryId, minPrice, maxPrice, sort } = query;
+
+  const queryBuilder = this.productRepository.createQueryBuilder('product')
+    .leftJoinAndSelect('product.images', 'images')
+    .leftJoinAndSelect('product.category', 'category')
+    .leftJoinAndSelect('product.university', 'university')
+    .leftJoinAndSelect('product.seller', 'seller')
+    .where('product.status = :status', { status: 'active' });
+
+  // 1. Arama (Başlık veya Açıklama)
+  if (search) {
+    queryBuilder.andWhere(
+      '(LOWER(product.title) LIKE LOWER(:search) OR LOWER(product.description) LIKE LOWER(:search))',
+      { search: `%${search}%` }
+    );
   }
+
+  // 2. Kategori Filtresi
+  if (categoryId) {
+    // String gelirse diye Number() ile çeviriyoruz
+    queryBuilder.andWhere('product.categoryId = :categoryId', { categoryId: Number(categoryId) });
+  }
+
+  // 3. Fiyat Aralığı
+  if (minPrice) {
+    queryBuilder.andWhere('product.price >= :minPrice', { minPrice: Number(minPrice) });
+  }
+  if (maxPrice) {
+    queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice: Number(maxPrice) });
+  }
+
+  // 4. Sıralama (Sorting)
+  // Önce Premium kullanıcılar
+  queryBuilder.addOrderBy('seller.isPremium', 'DESC');
+
+  if (sort === 'price_asc') {
+    queryBuilder.addOrderBy('product.price', 'ASC');
+  } else if (sort === 'price_desc') {
+    queryBuilder.addOrderBy('product.price', 'DESC');
+  } else {
+    // Varsayılan: En yeni
+    queryBuilder.addOrderBy('product.createdAt', 'DESC');
+  }
+
+  return await queryBuilder.getMany();
+}
+
+// ... (rest of the service methods remain the same)
+
 
   // Kullanıcının ürünlerini getir
   async getMyProducts(userId: string): Promise<Product[]> {

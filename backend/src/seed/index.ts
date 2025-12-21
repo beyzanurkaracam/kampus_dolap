@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { seedCategories } from './seed-categories';
 import { seedUniversities } from './seed-universities'; // <--- YENİ IMPORT
 import * as dotenv from 'dotenv';
+import { seedProducts } from './seed-products';
 
 // .env dosyasını yükle
 dotenv.config();
@@ -30,10 +31,18 @@ async function runSeed() {
     // 1. Kategorileri seed et
     await seedCategories(AppDataSource);
     
-    console.log('-'.repeat(30)); // Ayırıcı çizgi
+    console.log('-'.repeat(30));
 
-    // 2. Üniversiteleri seed et (YENİ EKLENEN KISIM)
+    // 2. Üniversiteleri seed et
     await seedUniversities(AppDataSource);
+
+    console.log('-'.repeat(30));
+
+    // 3. Ürünleri seed et (YENİ EKLENEN KISIM)
+    // NOT: Ürünler kullanıcıya ihtiyaç duyar. Eğer veritabanında hiç user yoksa 
+    // önce manuel bir user oluşturman veya buraya bir "seedUsers" eklemen gerekebilir.
+    // Şimdilik sistemde en az 1 kullanıcı olduğunu varsayıyoruz.
+    await seedProducts(AppDataSource); // <--- YENİ ÇAĞRI (2)
 
     console.log('\n🎉 Tüm seed işlemleri başarıyla tamamlandı!');
     process.exit(0);

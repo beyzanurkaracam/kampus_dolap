@@ -12,6 +12,7 @@ import {
 import { ProductService } from './product.service';
 import type { CreateProductDto } from './product.service';
 import { JwtGuard } from '../guards/jwt.guard';
+import { Query } from '@nestjs/common';
 
 @Controller('products')
 export class ProductController {
@@ -19,9 +20,14 @@ export class ProductController {
 
   // Tüm aktif ürünleri getir (user home screen için)
   @Get()
-  async getAllProducts() {
-    const products = await this.productService.getAllActiveProducts();
-    // Decimal to number conversion
+  async getAllProducts(@Query() query: any) { 
+    // @Query() query ekledik. Artık URL'deki ?search=... parametreleri buraya düşecek.
+    
+    console.log('Backend Gelen Filtreler:', query); // Konsoldan kontrol et
+
+    const products = await this.productService.getAllActiveProducts(query);
+    
+    // Decimal dönüşümü (Mevcut kodun)
     const transformed = products.map(p => ({
       ...p,
       price: p.price ? parseFloat(p.price.toString()) : 0

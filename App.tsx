@@ -64,7 +64,8 @@ function App() {
                 options={{ 
                   title: 'Ana Sayfa',
                   headerLeft: () => null,
-                  gestureEnabled: false
+                  gestureEnabled: false,
+                  headerShown: false
                 }}
               />
               <Stack.Screen 

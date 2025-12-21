@@ -24,11 +24,13 @@ export const API_URL = `${BASE_URL}`;
 export const AUTH_URL = `${BASE_URL}/auth`;
 export const UNIVERSITY_URL = `${BASE_URL}/university`;
 
+// Mevcut UserProfile interface'ini bul ve isPremium ekle
 interface UserProfile {
   fullName: string;
   email: string;
   department: string;
   profilePhoto?: string;
+  isPremium?: boolean; 
   university: {
     name: string;
   };
@@ -243,19 +245,31 @@ export const ProfileScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      {/* Header - Profil Fotoğrafı ve İsim */}
-      <View style={styles.header}>
-        <AvatarPicker
-          avatarUrl={profile?.profilePhoto}
-          token={token!}
-          onUploadSuccess={(url) => setProfile(prev => prev ? {...prev, profilePhoto: url} : null)}
-          size={100}
-        />
+    {/* Header - Profil Fotoğrafı ve İsim */}
+    <View style={styles.header}>
+      <AvatarPicker
+        avatarUrl={profile?.profilePhoto}
+        token={token!}
+        onUploadSuccess={(url) => setProfile(prev => prev ? {...prev, profilePhoto: url} : null)}
+        size={100}
+      />
+      
+      {/* ✅ DEĞİŞİKLİK 1: İsim ve Premium Rozeti */}
+      <View style={styles.nameContainer}>
         <Text style={styles.userName}>{profile?.fullName || 'Kullanıcı'}</Text>
-        <Text style={styles.userEmail}>{profile?.email}</Text>
-        <Text style={styles.editPhotoHint}>Fotoğrafı değiştirmek için dokunun</Text>
+        {profile?.isPremium && (
+          <View style={styles.proBadge}>
+            <Text style={styles.proText}>PRO</Text>
+          </View>
+        )}
       </View>
 
+      <Text style={styles.userEmail}>{profile?.email}</Text>
+      <Text style={styles.editPhotoHint}>Fotoğrafı değiştirmek için dokunun</Text>
+    </View>
+
+ 
+    {!profile?.isPremium && (
       <View style={styles.premiumBannerContainer}>
         <TouchableOpacity 
           style={styles.premiumButton}
@@ -270,6 +284,7 @@ export const ProfileScreen = ({ navigation }: any) => {
           </View>
         </TouchableOpacity>
       </View>
+    )}
 
       {/* Tab Buttons */}
       <View style={styles.tabContainer}>
@@ -383,7 +398,26 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 5,
+    gap: 8, // İsim ile rozet arası boşluk
+  },
+  proBadge: {
+    backgroundColor: '#FFD700', // Altın sarısı
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E6C200',
+  },
+  proText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000',
   },
   userEmail: {
     fontSize: 14,

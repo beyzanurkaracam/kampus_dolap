@@ -10,12 +10,15 @@ import {
   Alert,
   Dimensions,
   Linking,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
 const { width } = Dimensions.get('window');
-const API_URL = 'http://10.0.2.2:3000';
+const API_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
 
 interface Product {
   id: string;

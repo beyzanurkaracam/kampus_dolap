@@ -14,18 +14,15 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import * as ImagePicker from 'react-native-image-picker';
 import type { ImagePickerResponse, Asset } from 'react-native-image-picker';
-
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // ✅ 1. IMPORT ADDED
 
 const BASE_URL = Platform.OS === 'android' 
   ? 'http://10.0.2.2:3000' 
   : 'http://localhost:3000';
-
 
 export const API_URL = BASE_URL;
 
@@ -54,10 +51,15 @@ interface Color {
   hex: string;
 }
 
+// ... (Interfaces remain the same) ...
+interface SelectedImage { uri: string; name: string; type: string; }
+interface Category { id: number; name: string; brandCategory?: string; mainCategory?: string; subCategory?: string; }
+interface Brand { id: string; name: string; }
+interface Color { id: string; name: string; hex: string; }
+
 export const AddProductScreen = ({ navigation }: any) => {
   const { token } = useAuth();
-  
-  console.log('AddProductScreen - token:', token ? 'Var (ilk 20 karakter: ' + token.substring(0, 20) + ')' : 'YOK!!!');
+  const insets = useSafeAreaInsets(); // ✅ 2. HOOK ADDED
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -92,10 +94,9 @@ export const AddProductScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     if (selectedMainCategory) {
-      // Ana kategori seçildiğinde alt kategorileri filtrele
       const filtered = allCategories.filter(cat => cat.mainCategory === selectedMainCategory);
       setSubCategories(filtered);
-      setSelectedCategory(null); // Alt kategori seçimini sıfırla
+      setSelectedCategory(null);
     } else {
       setSubCategories([]);
     }
@@ -120,7 +121,6 @@ export const AddProductScreen = ({ navigation }: any) => {
       const cats = categoriesRes.data.categories || [];
       setAllCategories(cats);
       
-      // Ana kategorileri çıkar (unique)
       const mains = [...new Set(cats.map((cat: Category) => cat.mainCategory))];
       setMainCategories(mains as string[]);
       
@@ -135,7 +135,6 @@ export const AddProductScreen = ({ navigation }: any) => {
 
   const fetchBrands = async () => {
     try {
-      // Seçili kategorinin brandCategory'sini kullan
       const brandCategoryId = selectedCategory?.brandCategory || 'giyim';
       const response = await axios.get(`${API_URL}/products/brands/${brandCategoryId}`);
       setBrands(response.data.brands || []);
@@ -148,7 +147,7 @@ export const AddProductScreen = ({ navigation }: any) => {
     ImagePicker.launchImageLibrary(
       {
         mediaType: 'photo',
-        selectionLimit: 5, // Maksimum 5 resim
+        selectionLimit: 5,
         quality: 0.8,
       },
       (response: ImagePickerResponse) => {
@@ -180,7 +179,6 @@ export const AddProductScreen = ({ navigation }: any) => {
 
     try {
       for (const image of selectedImages) {
-        console.log('📤 Resim yükleniyor:', image.name);
         const formData = new FormData();
         formData.append('file', {
           uri: image.uri,
@@ -188,27 +186,17 @@ export const AddProductScreen = ({ navigation }: any) => {
           type: image.type,
         } as any);
 
-        console.log('🔗 Upload URL:', `${API_URL}/upload/image`);
-        console.log('🔑 Token:', token ? 'Mevcut' : 'YOK');
-
         const response = await axios.post(`${API_URL}/upload/image`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`,
           },
         });
-
-        console.log('Resim yüklendi:', response.data.imageUrl);
         uploadedUrls.push(response.data.imageUrl);
       }
-
       return uploadedUrls;
     } catch (error: any) {
-      console.error(' Resimler yüklenirken hata:', error);
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-      }
+      console.error('Resimler yüklenirken hata:', error);
       throw new Error('Resimler yüklenemedi');
     } finally {
       setUploadingImages(false);
@@ -220,22 +208,21 @@ export const AddProductScreen = ({ navigation }: any) => {
       Alert.alert('Hata', 'Lütfen tüm zorunlu alanları doldurun');
       return;
     }
-  
+   
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum <= 0) {
       Alert.alert('Hata', 'Lütfen geçerli bir fiyat girin');
       return;
     }
-  
+   
     setLoading(true);
-  
+   
     try {
       if (!token) {
         navigation.replace('Login');
         return;
       }
-  
-      // Önce resimleri yükle
+   
       let imageUrls: string[] = [];
       if (selectedImages.length > 0) {
         try {
@@ -246,7 +233,7 @@ export const AddProductScreen = ({ navigation }: any) => {
           return;
         }
       }
-  
+   
       await axios.post(
         `${API_URL}/products/create`,
         {
@@ -254,27 +241,26 @@ export const AddProductScreen = ({ navigation }: any) => {
           description: description.trim(),
           price: priceNum,
           categoryId: selectedCategory.id,
-          categoryName: selectedCategory.name, // "Women - Sweaters"
-          mainCategory: selectedCategory.mainCategory, // "Women"
-          subCategory: selectedCategory.subCategory, // "Sweaters"
+          categoryName: selectedCategory.name,
+          mainCategory: selectedCategory.mainCategory,
+          subCategory: selectedCategory.subCategory,
           condition,
           brand: selectedBrand?.name,
           color: selectedColor?.name,
-          images: imageUrls, // S3'e yüklenmiş resim URL'leri
+          images: imageUrls,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-  
+   
       Alert.alert('Başarılı', 'Ürün eklendi', [
         { text: 'Tamam', onPress: () => navigation.goBack() },
       ]);
-  
+   
     } catch (error: any) {
       console.error('Ürün eklenirken hata:', error);
       
-      // ✅ YENİ: Premium Limiti Hatası Kontrolü
       if (error.response && error.response.status === 403) {
         Alert.alert(
           'Limit Aşıldı 🔒',
@@ -289,7 +275,6 @@ export const AddProductScreen = ({ navigation }: any) => {
           ]
         );
       } else {
-        // Diğer hatalar için genel mesaj
         Alert.alert('Hata', error.response?.data?.message || 'Ürün eklenemedi');
       }
       
@@ -297,6 +282,7 @@ export const AddProductScreen = ({ navigation }: any) => {
       setLoading(false);
     }
   };
+
   const conditionOptions = [
     { value: 'new', label: 'Sıfır' },
     { value: 'like_new', label: 'Sıfır Gibi' },
@@ -315,8 +301,9 @@ export const AddProductScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+      {/* ✅ 3. FIXED HEADER STYLE */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
           <Text style={styles.backButton}>‹ Geri</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Ürün Ekle</Text>
@@ -326,13 +313,14 @@ export const AddProductScreen = ({ navigation }: any) => {
       <KeyboardAvoidingView 
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={100}>
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
         <ScrollView 
           style={styles.form} 
           contentContainerStyle={styles.formContent}
           showsVerticalScrollIndicator={true}
           keyboardShouldPersistTaps="handled"
           bounces={true}>
+          
           <View style={styles.field}>
             <Text style={styles.label}>Başlık *</Text>
             <TextInput
@@ -648,17 +636,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    paddingHorizontal: 15,
+    paddingBottom: 15,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   backButton: {
-    fontSize: 30,
+    fontSize: 18, // ✅ 4. REDUCED FONT SIZE
     color: '#007AFF',
+    fontWeight: '500',
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },

@@ -26,7 +26,7 @@ export class User {
   isPremium: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
-  premiumExpiresAt: Date; // Üyelik ne zaman bitiyor?
+  premiumExpiresAt: Date | null;
 
   @ManyToOne(() => University, (university) => university.users)
   @JoinColumn({ name: 'universityId' })

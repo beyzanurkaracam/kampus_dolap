@@ -17,7 +17,7 @@ import { ProfileScreen } from './android/app/src/screens/ProfileScreen';
 import { MyProductsScreen } from './android/app/src/screens/MyProductsScreen';
 import { AddProductScreen } from './android/app/src/screens/AddProductScreen';
 import { ProductDetailScreen } from './android/app/src/screens/ProductDetailScreen';
-import { ChatsScreen } from './android/app/src/screens/ChatScreen';
+import { ChatScreen } from './android/app/src/screens/ChatScreen';
 import { ChatDetailScreen } from './android/app/src/screens/ChatDetailScreen';
 
 const Stack = createNativeStackNavigator();
@@ -95,7 +95,7 @@ function App() {
               {/* Chat Screens */}
               <Stack.Screen 
                 name="Chats" 
-                component={ChatsScreen}
+                component={ChatScreen}
                 options={{ 
                   title: 'Mesajlarım',
                   headerBackTitle: 'Geri'

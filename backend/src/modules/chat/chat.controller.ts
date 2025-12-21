@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, BadRequestException, Req } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtGuard } from '../guards/jwt.guard';
 
@@ -7,11 +7,25 @@ import { JwtGuard } from '../guards/jwt.guard';
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  // Kullanıcının sohbetlerini getir
   @Get()
-  async getUserChats(@Request() req) {
-    return this.chatService.getUserChats(req.user.userId);
-  }
+async getUserChats(@Req() req: any) {
+  const chats = await this.chatService.getUserChats(req.user.id);
+  
+  // ✅ DEBUG: Response'u konsola yazdır
+  console.log('📤 API Response:', JSON.stringify(chats.map(c => ({
+    id: c.id,
+    product: c.product ? {
+      id: c.product.id,
+      title: c.product.title,
+      images: c.product.images?.map(img => ({
+        imageUrl: img.imageUrl,
+        isPrimary: img.isPrimary
+      }))
+    } : null
+  })), null, 2));
+  
+  return chats;
+}
 
   // Yeni sohbet başlat
  @Post()

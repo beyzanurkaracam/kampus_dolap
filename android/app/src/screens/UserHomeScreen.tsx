@@ -105,21 +105,27 @@ const UserHomeScreen = ({ navigation }: any) => {
 
   const renderListing = ({ item }: { item: Listing }) => {
     const isFavorite = favoriteIds.has(item.id);
+    const primaryImage = item.images && item.images.length > 0 
+      ? item.images[0].imageUrl 
+      : null;
     
     return (
       <TouchableOpacity 
         style={styles.card}
         onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
       >
-        <Image
-          source={{
-            uri: (item.images && item.images.length > 0) 
-              ? item.images[0].imageUrl 
-              : 'https://via.placeholder.com/150'
-          }}
-          style={styles.image}
-          onError={(e) => console.warn('❌ Resim yüklenemedi:', e.nativeEvent.error)}
-        />
+        {primaryImage ? (
+          <Image
+            source={{ uri: primaryImage }}
+            style={styles.image}
+            onError={(e) => console.warn('❌ Resim yüklenemedi:', e.nativeEvent.error, primaryImage)}
+          />
+        ) : (
+          <View style={[styles.image, styles.imagePlaceholder]}>
+            <Text style={styles.placeholderIcon}>📦</Text>
+            <Text style={styles.placeholderText}>Resim Yok</Text>
+          </View>
+        )}
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
             <Text style={styles.title} numberOfLines={2}>
@@ -276,6 +282,19 @@ const styles = StyleSheet.create({
     height: 150,
     backgroundColor: '#e0e0e0',
   },
+  imagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderIcon: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  placeholderText: {
+    fontSize: 12,
+    color: '#8E8E93',
+    fontWeight: '600',
+  },
   cardContent: {
     padding: 10,
   },
@@ -340,6 +359,24 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#999',
     fontSize: 16,
+  },
+  headerButton: {
+    backgroundColor: '#34C759', // Mesajlar için yeşil renk (WhatsApp gibi)
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5, // İkon ve yazı arası boşluk
+  },
+  headerButtonIcon: {
+    fontSize: 14,
+    color: '#fff',
+  },
+  headerButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
 

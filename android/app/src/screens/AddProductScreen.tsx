@@ -198,13 +198,13 @@ export const AddProductScreen = ({ navigation }: any) => {
           },
         });
 
-        console.log('✅ Resim yüklendi:', response.data.imageUrl);
+        console.log('Resim yüklendi:', response.data.imageUrl);
         uploadedUrls.push(response.data.imageUrl);
       }
 
       return uploadedUrls;
     } catch (error: any) {
-      console.error('❌ Resimler yüklenirken hata:', error);
+      console.error(' Resimler yüklenirken hata:', error);
       if (error.response) {
         console.error('Response status:', error.response.status);
         console.error('Response data:', error.response.data);
@@ -220,21 +220,21 @@ export const AddProductScreen = ({ navigation }: any) => {
       Alert.alert('Hata', 'Lütfen tüm zorunlu alanları doldurun');
       return;
     }
-
+  
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum <= 0) {
       Alert.alert('Hata', 'Lütfen geçerli bir fiyat girin');
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       if (!token) {
         navigation.replace('Login');
         return;
       }
-
+  
       // Önce resimleri yükle
       let imageUrls: string[] = [];
       if (selectedImages.length > 0) {
@@ -246,7 +246,7 @@ export const AddProductScreen = ({ navigation }: any) => {
           return;
         }
       }
-
+  
       await axios.post(
         `${API_URL}/products/create`,
         {
@@ -266,18 +266,37 @@ export const AddProductScreen = ({ navigation }: any) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+  
       Alert.alert('Başarılı', 'Ürün eklendi', [
         { text: 'Tamam', onPress: () => navigation.goBack() },
       ]);
+  
     } catch (error: any) {
       console.error('Ürün eklenirken hata:', error);
-      Alert.alert('Hata', error.response?.data?.message || 'Ürün eklenemedi');
+      
+      // ✅ YENİ: Premium Limiti Hatası Kontrolü
+      if (error.response && error.response.status === 403) {
+        Alert.alert(
+          'Limit Aşıldı 🔒',
+          'Ücretsiz üyelik ile en fazla 3 ürün yükleyebilirsiniz. Sınırsız ilan için Premium\'a geçin!',
+          [
+            { text: 'İptal', style: 'cancel' },
+            { 
+              text: 'Premium\'a Geç', 
+              onPress: () => navigation.navigate('Premium'),
+              style: 'default'
+            }
+          ]
+        );
+      } else {
+        // Diğer hatalar için genel mesaj
+        Alert.alert('Hata', error.response?.data?.message || 'Ürün eklenemedi');
+      }
+      
     } finally {
       setLoading(false);
     }
   };
-
   const conditionOptions = [
     { value: 'new', label: 'Sıfır' },
     { value: 'like_new', label: 'Sıfır Gibi' },

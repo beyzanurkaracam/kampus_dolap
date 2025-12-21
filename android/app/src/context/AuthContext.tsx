@@ -1,8 +1,13 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import api from '../services/api'; // API servisinin olduğu yer
+import { Platform } from 'react-native';
+const BASE_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
 
-const API_URL = 'http://10.0.2.2:3000/auth';
+const API_URL = `${BASE_URL}/auth`;
 
 export interface User {
   id: string;
@@ -51,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           headers: { Authorization: `Bearer ${savedToken}` },
         });
         if (response.data.valid) {
-          setUser(response.data.user);
+          setUser({ ...response.data.user, role: response.data.user.role.toUpperCase() as 'USER' | 'ADMIN' });
         }
       }
     } catch (error) {
@@ -78,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userData = response.data.user || response.data.admin;
 
       setToken(newToken);
-      setUser(userData);
+      setUser({ ...userData, role: userData.role.toUpperCase() as 'USER' | 'ADMIN' });
 
       await AsyncStorage.setItem('token', newToken);
       await AsyncStorage.setItem('userType', userType);
@@ -86,6 +91,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [],
   );
 
+// AuthContext.tsx dosyanın içi
+
+const refreshProfile = useCallback(async () => {
+  try {
+    console.log("Profil yenileniyor...");
+    
+    // 1. Senin ApiService sınıfındaki getProfile fonksiyonunu çağırıyoruz
+    // (api.ts içinde zaten /auth/profile'a istek atıyor)
+    const updatedUserData = await api.getProfile();
+    
+    // 2. React State'ini güncelle (Anlık görünüm için)
+    setUser({ ...updatedUserData, role: updatedUserData.role.toUpperCase() as 'USER' | 'ADMIN' }); 
+    
+    // 3. EKSİK OLAN PARÇA: AsyncStorage'ı güncelle (Kalıcılık için)
+    // Bunu yapmazsan uygulama yeniden başlatıldığında eski profil yüklenir!
+    await AsyncStorage.setItem('user', JSON.stringify(updatedUserData));
+    
+    console.log("Profil başarıyla yenilendi ve kaydedildi:", updatedUserData);
+    return updatedUserData;
+  } catch (error) {
+    console.error("Profil güncellenemedi:", error);
+    // İsteğe bağlı: Kullanıcıya hata mesajı (Toast) gösterebilirsin
+    throw error; 
+  }
+}, []);
   const register = useCallback(
     async (email: string, password: string, fullName: string) => {
       const response = await axios.post(`${API_URL}/register`, {

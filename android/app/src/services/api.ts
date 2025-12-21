@@ -21,6 +21,7 @@ export interface User {
   firstName: string;
   lastName: string;
   role: 'admin' | 'user';
+  isPremium?: boolean; 
 }
 
 export interface AuthResponse {

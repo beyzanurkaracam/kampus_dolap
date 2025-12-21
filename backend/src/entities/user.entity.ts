@@ -22,6 +22,12 @@ export class User {
   @Column({ nullable: true })
   profilePhoto: string;
 
+  @Column({ default: false })
+  isPremium: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  premiumExpiresAt: Date; // Üyelik ne zaman bitiyor?
+
   @ManyToOne(() => University, (university) => university.users)
   @JoinColumn({ name: 'universityId' })
   university: University;
@@ -68,4 +74,6 @@ export class User {
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
+
+  
 }

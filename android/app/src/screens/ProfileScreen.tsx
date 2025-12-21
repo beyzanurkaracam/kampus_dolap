@@ -256,6 +256,21 @@ export const ProfileScreen = ({ navigation }: any) => {
         <Text style={styles.editPhotoHint}>Fotoğrafı değiştirmek için dokunun</Text>
       </View>
 
+      <View style={styles.premiumBannerContainer}>
+        <TouchableOpacity 
+          style={styles.premiumButton}
+          onPress={() => navigation.navigate('Premium')}
+        >
+          <View style={styles.premiumContent}>
+            <View>
+              <Text style={styles.premiumTitle}>Premium'a Geç 👑</Text>
+              <Text style={styles.premiumSubtitle}>Ayrıcalıklı özellikleri keşfet</Text>
+            </View>
+            <Text style={styles.premiumArrow}>→</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       {/* Tab Buttons */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -530,4 +545,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  premiumBannerContainer: {
+    paddingHorizontal: 10,
+    marginTop: 15,
+    marginBottom: 5,
+  },
+  premiumButton: {
+    backgroundColor: '#000', // Siyah arka plan
+    borderRadius: 12,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#FFD700', // Altın rengi kenar
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  premiumContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  premiumTitle: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  premiumSubtitle: {
+    color: '#e0e0e0',
+    fontSize: 12,
+  },
+  premiumArrow: {
+    color: '#FFD700',
+    fontSize: 20,
+    fontWeight: 'bold',
+  }
 });

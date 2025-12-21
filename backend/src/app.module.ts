@@ -19,8 +19,9 @@ import { ProductImage } from './entities/product-image.entity';
 import { Favorite } from './entities/favorite.entity';
 import { ChatModule } from './modules/chat/chat.module';
 import { RedisModule } from './modules/redis/redis.module';
-import { Chat } from './entities/chat.entity';
-import { Message } from './entities/message.entity';
+import { Chat } from './entities/chat.entity'; // ✅ EKLE
+import { Message } from './entities/message.entity'; // ✅ EKLE
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { Message } from './entities/message.entity';
     AdminModule,
     UploadModule,
     ChatModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

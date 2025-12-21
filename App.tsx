@@ -19,6 +19,7 @@ import { AddProductScreen } from './android/app/src/screens/AddProductScreen';
 import { ProductDetailScreen } from './android/app/src/screens/ProductDetailScreen';
 import { ChatScreen } from './android/app/src/screens/ChatScreen';
 import { ChatDetailScreen } from './android/app/src/screens/ChatDetailScreen';
+import { PremiumScreen } from './android/app/src/screens/PremiumScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -99,6 +100,16 @@ function App() {
                 options={{ 
                   title: 'Mesajlarım',
                   headerBackTitle: 'Geri'
+                }}
+              />
+              <Stack.Screen 
+                name="Premium" 
+                component={PremiumScreen}
+                options={{ 
+                  title: 'Premium Üyelik',
+                  headerStyle: { backgroundColor: '#1a1a1a' }, // Header rengi siyah
+                  headerTintColor: '#FFD700', // Altın rengi yazı/ikon
+                  headerTitleStyle: { fontWeight: 'bold' }
                 }}
               />
               <Stack.Screen 

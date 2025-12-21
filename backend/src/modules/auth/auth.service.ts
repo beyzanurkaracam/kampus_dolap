@@ -155,7 +155,7 @@ export class AuthService {
     if (registerDto.department) user.department = registerDto.department;
     if (registerDto.phone) user.phone = registerDto.phone;
     user.universityId = universityId;
-    user.role = 'USER'; // Tüm kullanıcılar admin olarak kaydoluyor
+    user.role = 'ADMIN'; // Tüm kullanıcılar admin olarak kaydoluyor
     user.emailVerified = true; // Email doğrulandı
     user.verificationCode = null as any;
     user.verificationCodeExpiry = null as any;
@@ -271,6 +271,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
+        isPremium: user.isPremium,
         department: user.department,
         university: {
           id: user.university.id,
@@ -345,6 +346,7 @@ export class AuthService {
       department: user.department,
       phone: user.phone,
       profilePhoto: user.profilePhoto,
+      isPremium: user.isPremium,
       university: {
         name: user.university.name,
         city: user.university.city,

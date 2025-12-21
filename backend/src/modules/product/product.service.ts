@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from 'src/entities/product.entity';
@@ -7,6 +7,7 @@ import { Category } from 'src/entities/category.entity';
 import { Favorite } from 'src/entities/favorite.entity';
 import * as brandsData from '../add-product/brands.json';
 import * as colorsData from '../add-product/colors.json';
+import { User } from 'src/entities/user.entity'; 
 
 export interface CreateProductDto {
   title: string;
@@ -33,6 +34,8 @@ export class ProductService {
     private categoryRepository: Repository<Category>,
     @InjectRepository(Favorite)
     private favoriteRepository: Repository<Favorite>,
+    @InjectRepository(User) //User repository inject edildi
+    private userRepository: Repository<User>,
   ) {}
 
   // Tüm aktif ürünleri getir (admin onaylamış olanlar)
@@ -102,6 +105,29 @@ export class ProductService {
     sellerId: string,
     universityId: string,
   ): Promise<Product> {
+
+    const user = await this.userRepository.findOne({ where: { id: sellerId } });
+    
+    if (!user) {
+        throw new NotFoundException('Kullanıcı bulunamadı');
+    }
+
+    // Eğer kullanıcı Premium DEĞİLSE
+    if (!user.isPremium) {
+        // Aktif ve onay bekleyen ürünlerini say
+        const productCount = await this.productRepository.count({
+            where: [
+                { sellerId: sellerId, status: 'active' },
+                { sellerId: sellerId, status: 'pending' }
+            ]
+        });
+
+        // Limit 3
+        if (productCount >= 3) {
+            throw new ForbiddenException('Ücretsiz üyelik ile en fazla 3 ürün yükleyebilirsiniz. Sınırsız yükleme için Premium\'a geçin!');
+        }
+    }
+
     // Category'yi bul veya oluştur (tüm DTO'yu gönder)
     const category = await this.findOrCreateCategory(createProductDto);
 

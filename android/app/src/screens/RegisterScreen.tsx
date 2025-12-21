@@ -150,9 +150,11 @@ export const RegisterScreen = ({ navigation }: any) => {
         placeholderTextColor="#999"
         value={fullName}
         onChangeText={setFullName}
+        textContentType="none"
       />
 
       <TextInput
+      textContentType="none"
         style={styles.input}
         placeholder="Email (üniversite maili)"
         placeholderTextColor="#999"
@@ -184,6 +186,7 @@ export const RegisterScreen = ({ navigation }: any) => {
 
       {!departments.length && detectedUniversity && (
         <TextInput
+          textContentType="none"
           style={styles.input}
           placeholder="Bölüm (manuel giriş)"
           placeholderTextColor="#999"
@@ -193,6 +196,7 @@ export const RegisterScreen = ({ navigation }: any) => {
       )}
 
       <TextInput
+        textContentType="none"
         style={styles.input}
         placeholder="Telefon (opsiyonel)"
         placeholderTextColor="#999"
@@ -202,6 +206,7 @@ export const RegisterScreen = ({ navigation }: any) => {
       />
 
       <TextInput
+        textContentType="oneTimeCode"
         style={styles.input}
         placeholder="Şifre"
         placeholderTextColor="#999"
@@ -211,6 +216,7 @@ export const RegisterScreen = ({ navigation }: any) => {
       />
 
       <TextInput
+        textContentType="oneTimeCode"
         style={styles.input}
         placeholder="Şifreyi Onayla"
         placeholderTextColor="#999"

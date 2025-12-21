@@ -40,7 +40,7 @@ export const EmailVerificationScreen = ({ route, navigation }: any) => {
       });
 
       // Token'ı kaydet
-      await AsyncStorage.setItem('userToken', response.data.access_token);
+      await AsyncStorage.setItem('token', response.data.access_token);
       await AsyncStorage.setItem('userType', 'user');
 
       const userName = response.data.user?.fullName || fullName;

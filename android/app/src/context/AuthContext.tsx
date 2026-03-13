@@ -1,8 +1,10 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import api from '../services/api'; // API servisinin olduğu yer
+import api from '../services/api';
 import { Platform } from 'react-native';
+
+
 const BASE_URL = Platform.OS === 'android' 
   ? 'http://10.0.2.2:3000' 
   : 'http://localhost:3000';
@@ -45,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Uygulama açıldığında token kontrol et
+  // Uygulama açıldığında token kontrol et (Auto Login)
   const checkAuth = useCallback(async () => {
     try {
       const savedToken = await AsyncStorage.getItem('token');
@@ -57,6 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         if (response.data.valid) {
           setUser({ ...response.data.user, role: response.data.user.role.toUpperCase() as 'USER' | 'ADMIN' });
+          
+          
         }
       }
     } catch (error) {
@@ -71,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, [checkAuth]);
 
+  // Kullanıcı Manuel Giriş Yaptığında
   const login = useCallback(
     async (email: string, password: string, userType: 'user' | 'admin') => {
       const endpoint = userType === 'admin' ? 'admin-login' : 'login';
@@ -87,35 +92,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       await AsyncStorage.setItem('token', newToken);
       await AsyncStorage.setItem('userType', userType);
+
+      // ✅ 3. EKLEME: Manuel girişte FCM Token'ı al ve kaydet
+      console.log("🔓 Login Başarılı: Bildirim izni isteniyor...");
     },
     [],
   );
 
-// AuthContext.tsx dosyanın içi
+  const refreshProfile = useCallback(async () => {
+    try {
+      console.log("Profil yenileniyor...");
+      const updatedUserData = await api.getProfile();
+      setUser({ ...updatedUserData, role: updatedUserData.role.toUpperCase() as 'USER' | 'ADMIN' }); 
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUserData));
+      return updatedUserData;
+    } catch (error) {
+      console.error("Profil güncellenemedi:", error);
+      throw error; 
+    }
+  }, []);
 
-const refreshProfile = useCallback(async () => {
-  try {
-    console.log("Profil yenileniyor...");
-    
-    // 1. Senin ApiService sınıfındaki getProfile fonksiyonunu çağırıyoruz
-    // (api.ts içinde zaten /auth/profile'a istek atıyor)
-    const updatedUserData = await api.getProfile();
-    
-    // 2. React State'ini güncelle (Anlık görünüm için)
-    setUser({ ...updatedUserData, role: updatedUserData.role.toUpperCase() as 'USER' | 'ADMIN' }); 
-    
-    // 3. EKSİK OLAN PARÇA: AsyncStorage'ı güncelle (Kalıcılık için)
-    // Bunu yapmazsan uygulama yeniden başlatıldığında eski profil yüklenir!
-    await AsyncStorage.setItem('user', JSON.stringify(updatedUserData));
-    
-    console.log("Profil başarıyla yenilendi ve kaydedildi:", updatedUserData);
-    return updatedUserData;
-  } catch (error) {
-    console.error("Profil güncellenemedi:", error);
-    // İsteğe bağlı: Kullanıcıya hata mesajı (Toast) gösterebilirsin
-    throw error; 
-  }
-}, []);
   const register = useCallback(
     async (email: string, password: string, fullName: string) => {
       const response = await axios.post(`${API_URL}/register`, {
@@ -132,6 +128,9 @@ const refreshProfile = useCallback(async () => {
 
       await AsyncStorage.setItem('token', newToken);
       await AsyncStorage.setItem('userType', 'user');
+
+      // (Opsiyonel) Kayıt sonrası otomatik girişte de token alınabilir
+      // NotificationService.getFCMToken(newToken);
     },
     [],
   );
@@ -141,6 +140,7 @@ const refreshProfile = useCallback(async () => {
     setToken(null);
     await AsyncStorage.removeItem('token');
     await AsyncStorage.removeItem('userType');
+    console.log('api.ts logout - Token silindi');
   }, []);
 
   const value: AuthContextType = {
@@ -155,12 +155,9 @@ const refreshProfile = useCallback(async () => {
     checkAuth,
   };
 
-  console.log('AuthContext - token:', token ? 'Var (ilk 20: ' + token.substring(0, 20) + ')' : 'YOK', 'loading:', loading);
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook: Auth context'i kolay kullanmak için
 export const useAuth = () => {
   const context = React.useContext(AuthContext);
   if (!context) {

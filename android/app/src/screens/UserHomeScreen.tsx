@@ -250,9 +250,9 @@ const UserHomeScreen = ({ navigation }: any) => {
           <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Chats')}>
             <Text style={styles.headerButtonIcon}>💬</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Profile')}>
-            <Text style={styles.headerButtonIcon}>👤</Text>
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('UserProfile')}>
+          <Text style={styles.headerButtonIcon}>👤</Text>
+        </TouchableOpacity>
         </View>
       </View>
 

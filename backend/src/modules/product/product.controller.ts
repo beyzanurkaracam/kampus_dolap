@@ -156,11 +156,18 @@ export class ProductController {
   // Tek ürün detayı getir (EN SONA - dinamik route)
   @UseGuards(JwtGuard)
   @Get(':id')
-  async getProduct(@Param('id') id: string) {
-    const product = await this.productService.getProductById(id);
+  async getProduct(@Param('id') id: string, @Request() req) {
+    // 👇 req.user.userId parametresini ekledik
+    const product = await this.productService.getProductById(id, req.user.userId);
+    
     return {
       ...product,
-      price: product.price ? parseFloat(product.price.toString()) : 0
+      price: product.price ? parseFloat(product.price.toString()) : 0,
+      // Eğer acceptedOfferPrice varsa onu da float'a çevir
+      acceptedOfferPrice: product.acceptedOfferPrice 
+        ? parseFloat(product.acceptedOfferPrice.toString()) 
+        : null
     };
   }
+  
 }

@@ -47,7 +47,6 @@ PODS:
     - React-RCTText (= 0.82.0)
     - React-RCTVibration (= 0.82.0)
   - React-callinvoker (0.82.0)
-  - React-Codegen (0.1.0)
   - React-Core (0.82.0):
     - boost
     - DoubleConversion
@@ -2465,13 +2464,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNIap (12.15.2):
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Codegen
-    - React-Core
-    - ReactCommon/turbomodule/core
   - RNScreens (4.19.0):
     - boost
     - DoubleConversion
@@ -2611,14 +2603,12 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
-  - RNIap (from `../node_modules/react-native-iap`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - SocketRocket (~> 0.7.1)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
   trunk:
-    - React-Codegen
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -2773,8 +2763,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
-  RNIap:
-    :path: "../node_modules/react-native-iap"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   Yoga:
@@ -2794,7 +2782,6 @@ SPEC CHECKSUMS:
   RCTTypeSafety: 59a046ff1e602409a86b89fcd6edff367a5b14af
   React: ade831e2e38887292c2c7d40f2f4098826a9dda4
   React-callinvoker: fb097304922c5da47152147a5fb0712713438575
-  React-Codegen: 4b8b4817cea7a54b83851d4c1f91f79aa73de30a
   React-Core: 60e3adb5af2863587d4a0650a0bbf8d5b1327502
   React-CoreModules: 8647d480cf788eb0e0ae353db836dbb5edb98eb0
   React-cxxreact: 2be8c8494b345bd1896f542bafc18dff72335c55
@@ -2857,11 +2844,10 @@ SPEC CHECKSUMS:
   ReactCodegen: 374f1c9242fbdd673b460d358b33860c0cc9d926
   ReactCommon: 25c7f94aee74ddd93a8287756a8ac0830a309544
   RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
-  RNIap: ef595c69c322090ce28ccd94280cf1615a8dc48a
   RNScreens: ffbb0296608eb3560de641a711bbdb663ed1f6b4
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: edeb9900b9e5bb5b27b9a6a2d5914e4fe4033c1b
 
-PODFILE CHECKSUM: e98d5d4c3c54d2a1a950add2abe3e4055b31ffe6
+PODFILE CHECKSUM: 9751083af86bbcefa8fc95ff5e1bd711f4cd5aac
 
 COCOAPODS: 1.16.2

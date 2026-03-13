@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { Platform } from 'react-native';
 
-const API_URL = 'http://10.0.2.2:3000';
-
+const API_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
@@ -33,11 +35,12 @@ export const SocketProvider = ({ children }: any) => {
 
     // WebSocket bağlantısı oluştur
     const newSocket = io(`${API_URL}/chat`, {
-      transports: ['websocket'],
-      auth: { token }, // Token'ı gönder
+      transports: ['websocket'], // polling'i kaldırıyoruz, bazen çakışma yapar
+      auth: { token },
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
+      reconnectionAttempts: 10, // Deneme sayısını artırdık
+      reconnectionDelay: 2000,
+      timeout: 10000, // Timeout süresini artırdık
     });
 
     // Bağlantı başarılı

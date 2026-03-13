@@ -39,20 +39,20 @@ export class ChatService {
         })
       );
 
-      // ✅ Oluşturduktan sonra ilişkileri yükle
+      // Oluşturduktan sonra ilişkileri yükle
       const loadedChat = await this.chatRepository.findOne({
         where: { id: chat.id },
         relations: ['buyer', 'seller', 'product', 'product.images']
       });
 
-      // ✅ Null kontrolü ekle
+      // Null kontrolü ekle
       if (!loadedChat) {
         throw new NotFoundException('Sohbet oluşturulamadı');
       }
 
       chat = loadedChat;
     } else {
-      // ✅ Sohbet varsa ve yeni bir ürün bilgisi varsa, güncelle
+      //  Sohbet varsa ve yeni bir ürün bilgisi varsa, güncelle
       if (productId && chat.productId !== productId) {
         await this.chatRepository.update(chat.id, { productId });
         
@@ -76,7 +76,7 @@ export class ChatService {
       await this.sendAutomaticProductMessage(chat, buyerId, productId);
     }
 
-    return chat; // ✅ Artık chat kesinlikle Chat tipinde
+    return chat; // Artık chat kesinlikle Chat tipinde
   }
 
   private async sendAutomaticProductMessage(chat: Chat, senderId: string, productId: string) {
@@ -108,7 +108,7 @@ export class ChatService {
     await this.messageRepository.save(message);
 
     await this.chatRepository.update(chat.id, {
-      lastMessage: `📦 ${product.title} hakkında sordu`,
+      lastMessage: `${product.title} hakkında sordu`,
       updatedAt: new Date()
     });
   }

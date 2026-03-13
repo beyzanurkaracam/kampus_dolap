@@ -8,6 +8,7 @@ import { Favorite } from 'src/entities/favorite.entity';
 import * as brandsData from '../add-product/brands.json';
 import * as colorsData from '../add-product/colors.json';
 import { User } from 'src/entities/user.entity'; 
+import { Offer, OfferStatus } from 'src/entities/offer.entity';
 
 export interface CreateProductDto {
   title: string;
@@ -36,6 +37,8 @@ export class ProductService {
     private favoriteRepository: Repository<Favorite>,
     @InjectRepository(User) //User repository inject edildi
     private userRepository: Repository<User>,
+    @InjectRepository(Offer) 
+    private offerRepository: Repository<Offer>,
   ) {}
 
 // getAllActiveProducts fonksiyonunu güncelle
@@ -100,7 +103,7 @@ async getAllActiveProducts(query: any = {}): Promise<Product[]> {
   }
 
   // Tek ürün detayı getir
-  async getProductById(id: string): Promise<Product> {
+  async getProductById(id: string, viewerId?: string): Promise<any> {
     const product = await this.productRepository.findOne({
       where: { id },
       relations: ['images', 'category', 'university', 'seller'],
@@ -110,7 +113,26 @@ async getAllActiveProducts(query: any = {}): Promise<Product[]> {
       throw new NotFoundException('Ürün bulunamadı');
     }
 
-    return product;
+    // Ürün verisini normal objeye çevir (genişletmek için)
+    const productData: any = { ...product };
+
+    // Eğer ürünü görüntüleyen bir kullanıcı varsa, kabul edilmiş teklifi var mı bak
+    if (viewerId) {
+      const acceptedOffer = await this.offerRepository.findOne({
+        where: {
+          productId: id,
+          buyerId: viewerId,
+          status: OfferStatus.ACCEPTED
+        }
+      });
+
+      if (acceptedOffer) {
+        // ✅ Kabul edilmiş teklif fiyatını ekle
+        productData.acceptedOfferPrice = acceptedOffer.offerAmount;
+      }
+    }
+
+    return productData;
   }
 
   // Category'yi bul veya oluştur

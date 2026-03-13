@@ -157,6 +157,118 @@ class ApiService {
       throw new Error('Failed to delete user');
     }
   }
+
+  async followUser(targetUserId: string): Promise<{ message: string; isFollowing: boolean }> {
+    const response = await fetch(`${API_URL}/users/${targetUserId}/follow`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Takip etme işlemi başarısız');
+    }
+
+    return response.json();
+  }
+
+  // Takipten çık
+  async unfollowUser(targetUserId: string): Promise<{ message: string; isFollowing: boolean }> {
+    const response = await fetch(`${API_URL}/users/${targetUserId}/unfollow`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Takipten çıkma işlemi başarısız');
+    }
+
+    return response.json();
+  }
+
+  // Bir kullanıcının takipçilerini getir (Beni takip edenler)
+  async getFollowers(userId: string): Promise<User[]> {
+    const response = await fetch(`${API_URL}/users/${userId}/followers`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Takipçiler getirilemedi');
+    }
+
+    return response.json();
+  }
+
+  // Bir kullanıcının takip ettiklerini getir (Benim takip ettiklerim)
+  async getFollowing(userId: string): Promise<User[]> {
+    const response = await fetch(`${API_URL}/users/${userId}/following`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Takip edilenler getirilemedi');
+    }
+
+    return response.json();
+  }
+
+  // Ben bu kişiyi takip ediyor muyum? (Buton rengi için)
+  async checkIsFollowing(targetUserId: string): Promise<{ isFollowing: boolean }> {
+    const response = await fetch(`${API_URL}/users/${targetUserId}/is-following`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      // Hata durumunda false dönmek güvenli olabilir veya hata fırlatabilirsin
+      return { isFollowing: false };
+    }
+
+    return response.json();
+  }
+
+  // Takipçi ve Takip Edilen sayılarını getir (Profilde göstermek için)
+  async getFollowStats(userId: string): Promise<{ followers: number; following: number }> {
+    const response = await fetch(`${API_URL}/users/${userId}/follow-stats`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      // Hata olursa 0-0 dönelim ki ekran patlamasın
+      return { followers: 0, following: 0 };
+    }
+
+    return response.json();
+  }
+
+  async getPublicUserProfile(userId: string): Promise<User | null> {
+    try {
+      // Backend'de direkt public user endpoint'i olmadığı için
+      // şimdilik ürünleri çekip oradan kullanıcı bilgisini ayıklıyoruz.
+      // İleride backend'e GET /users/:id eklersen burayı güncellersin.
+      const response = await fetch(`${API_URL}/products?sellerId=${userId}`, {
+        headers: await this.getAuthHeaders(),
+      });
+      
+      if (!response.ok) return null;
+      
+      const products = await response.json();
+      if (products && products.length > 0) {
+        return products[0].seller; // İlk ürünün satıcısını döndür
+      }
+      return null;
+    } catch (error) {
+      console.error('Public profil çekilemedi:', error);
+      return null;
+    }
+  }
+
+  async getUserProducts(userId: string) {
+    const response = await fetch(`${API_URL}/products?sellerId=${userId}`, {
+       headers: await this.getAuthHeaders(),
+    });
+    return response.json();
+  }
 }
 
 export default new ApiService();

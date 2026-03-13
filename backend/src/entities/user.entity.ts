@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { University } from './university.entity';
 import { Product } from './product.entity';
+import { Follow } from './follow.entity';
 
 @Entity('users')
 export class User {
@@ -21,6 +22,10 @@ export class User {
 
   @Column({ nullable: true })
   profilePhoto: string;
+
+
+  @Column({ nullable: true })
+  fcmToken: string;
 
   @Column({ default: false })
   isPremium: boolean;
@@ -68,12 +73,16 @@ export class User {
   @OneToMany(() => Product, (product) => product.seller)
   products: Product[];
 
-
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 
-  
+  @OneToMany(() => Follow, (follow) => follow.following)
+  followers: Follow[];
+
+  // Benim takip ettiklerim (Following)
+  @OneToMany(() => Follow, (follow) => follow.follower)
+  following: Follow[];
 }

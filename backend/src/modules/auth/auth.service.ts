@@ -21,6 +21,7 @@ export class AuthService {
     private jwtService: JwtService,
     private universityService: UniversityService,
     private emailService: EmailService,
+    
   ) {}
 
   async validateUserEmail(email: string): Promise<boolean> {
@@ -372,5 +373,10 @@ export class AuthService {
       message: 'Profil güncellendi',
       profilePhoto: user.profilePhoto,
     };
+  }
+
+  async saveFcmToken(userId: string, token: string) {
+    await this.userRepository.update(userId, { fcmToken: token });
+    return { success: true, message: 'Bildirim tokenı güncellendi' };
   }
 }

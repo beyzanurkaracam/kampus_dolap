@@ -23,6 +23,10 @@ import { Chat } from './entities/chat.entity'; // ✅ EKLE
 import { Message } from './entities/message.entity'; // ✅ EKLE
 import { PaymentModule } from './modules/payment/payment.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { Offer } from './entities/offer.entity';
+import { OfferModule } from './modules/offer/offer.module';
+import { FollowModule } from './modules/follow/follow.module';
+import { Follow } from './entities/follow.entity';
 
 @Module({
   imports: [
@@ -49,9 +53,11 @@ import { TasksModule } from './modules/tasks/tasks.module';
           Favorite,
           Chat,
           Message,
-        ], // ✅ FIX: string array kaldırıldı
+          Offer,
+          Follow
+        ], 
        
-        synchronize: false,
+        synchronize: true,
         logging: true,
       }),
       inject: [ConfigService],
@@ -63,7 +69,9 @@ import { TasksModule } from './modules/tasks/tasks.module';
     UploadModule,
     ChatModule,
     PaymentModule,
-    TasksModule
+    TasksModule,
+    OfferModule,
+    FollowModule
   ],
   controllers: [AppController],
   providers: [AppService],

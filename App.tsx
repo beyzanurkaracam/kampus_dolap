@@ -12,14 +12,14 @@ import RegisterScreen from './android/app/src/screens/RegisterScreen';
 import { EmailVerificationScreen } from './android/app/src/screens/EmailVerificationScreen';
 import AdminDashboardScreen from './android/app/src/screens/AdminDashboardScreen';
 import UserHomeScreen from './android/app/src/screens/UserHomeScreen';
-import UserProfileScreen from './android/app/src/screens/UserProfileScreen';
-import { ProfileScreen } from './android/app/src/screens/ProfileScreen';
 import { MyProductsScreen } from './android/app/src/screens/MyProductsScreen';
 import { AddProductScreen } from './android/app/src/screens/AddProductScreen';
 import { ProductDetailScreen } from './android/app/src/screens/ProductDetailScreen';
 import { ChatScreen } from './android/app/src/screens/ChatScreen';
 import { ChatDetailScreen } from './android/app/src/screens/ChatDetailScreen';
 import { PremiumScreen } from './android/app/src/screens/PremiumScreen';
+import { MakeOfferScreen } from './android/app/src/screens/MakeOfferScreen';
+import { UserProfileScreen } from './android/app/src/screens/UserProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -68,16 +68,22 @@ function App() {
                   headerShown: false
                 }}
               />
+              
+              
               <Stack.Screen 
-                name="UserProfile" 
-                component={UserProfileScreen}
-                options={{ title: 'Profil' }}
-              />
-              <Stack.Screen 
-                name="Profile" 
-                component={ProfileScreen}
-                options={{ title: 'Hesabım' }}
-              />
+              name="UserProfile" 
+              component={UserProfileScreen} 
+              options={{ 
+                // headerShown: false,  <-- BUNU SİLİYORUZ (veya true yapıyoruz)
+                title: 'Profil',         // Varsayılan başlık
+                headerBackTitle: 'Geri', // Sol üstteki geri tuşunda ne yazsın?
+                headerTintColor: '#007AFF', // Geri tuşu rengi (iOS Mavisi)
+                headerTitleStyle: { color: '#000' } // Başlık rengi
+              }} 
+/>
+
+              {/* 👇 ProfileScreen yerine artık UserProfile kullanıyoruz, o yüzden eskisini kaldırdım */}
+              
               <Stack.Screen 
                 name="MyProducts" 
                 component={MyProductsScreen}
@@ -108,8 +114,8 @@ function App() {
                 component={PremiumScreen}
                 options={{ 
                   title: 'Premium Üyelik',
-                  headerStyle: { backgroundColor: '#1a1a1a' }, // Header rengi siyah
-                  headerTintColor: '#FFD700', // Altın rengi yazı/ikon
+                  headerStyle: { backgroundColor: '#1a1a1a' },
+                  headerTintColor: '#FFD700',
                   headerTitleStyle: { fontWeight: 'bold' }
                 }}
               />
@@ -120,6 +126,14 @@ function App() {
                   title: 'Sohbet',
                   headerBackTitle: 'Geri'
                 }}
+              />
+              <Stack.Screen 
+                name="MakeOffer" 
+                component={MakeOfferScreen} 
+                options={{ 
+                  headerShown: false,
+                  presentation: 'modal'
+                }} 
               />
             </Stack.Navigator>
           </NavigationContainer>

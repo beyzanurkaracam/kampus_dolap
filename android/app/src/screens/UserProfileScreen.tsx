@@ -1,391 +1,360 @@
-// src/screens/UserProfileScreen.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  Image,
   TouchableOpacity,
-  Alert,
-  TextInput,
   ActivityIndicator,
-  Platform,
+  FlatList,
+  Alert,
+  RefreshControl,
 } from 'react-native';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+import { AvatarPicker } from '../components/AvatarPicker';
 
-const API_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:3000' 
-  : 'http://localhost:3000';
+export const UserProfileScreen = ({ navigation, route }: any) => {
+  const { user: currentUser, token, logout, userId: myId } = useAuth();
+  
+  // Parametre gelmediyse kendi profilimi aç
+  const targetUserId = route?.params?.userId || myId;
+  const isOwner = targetUserId === myId;
 
-const UserProfileScreen = ({ navigation }: any) => {
-  const { user, token, logout } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [fullName, setFullName] = useState(user?.fullName || '');
-  const [loading, setLoading] = useState(false);
+  // --- State'ler ---
+  const [profile, setProfile] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleUpdateProfile = async () => {
-    if (!fullName.trim()) {
-      Alert.alert('Hata', 'Ad soyad boş olamaz');
-      return;
-    }
+  // Takip State'leri
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
+  const [followLoading, setFollowLoading] = useState(false);
 
-    setLoading(true);
+  // Sekmeler
+  const [activeTab, setActiveTab] = useState<'products' | 'favorites'>('products');
+
+  // --- 1. Header Ayarları (Native Header İçin) ---
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      // Sayfa başlığı: Eğer veri geldiyse Kullanıcı Adı, yoksa 'Profil'
+      title: profile?.fullName || 'Profil',
+      
+      // Sağ üst köşe: Sadece kendi profilimse "Çıkış" butonu koy
+      headerRight: () => isOwner ? (
+        <TouchableOpacity onPress={handleLogout} style={{ marginRight: 10 }}>
+            <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Çıkış</Text>
+        </TouchableOpacity>
+      ) : null,
+    });
+  }, [navigation, isOwner, profile]); // Profile güncellenince başlık da güncellenir
+
+  // --- Veri Çekme ---
+  const fetchAllData = useCallback(async () => {
     try {
-      // Backend'e profil güncelleme isteği gönder (henüz oluşturulmadı)
-      await axios.put(
-        `${API_URL}/users/profile`,
-        { fullName },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      Alert.alert('Başarılı', 'Profiliz güncellendi');
-      setIsEditing(false);
+      if (isOwner) {
+        const myProfile = await api.getProfile();
+        setProfile(myProfile);
+      } else {
+        const userProfile = await api.getPublicUserProfile(targetUserId);
+        setProfile(userProfile);
+      }
+
+      const stats = await api.getFollowStats(targetUserId);
+      setFollowStats(stats);
+
+      if (!isOwner) {
+        const followStatus = await api.checkIsFollowing(targetUserId);
+        setIsFollowing(followStatus.isFollowing);
+      }
+
+      const userProducts = await api.getUserProducts(targetUserId);
+      setProducts(userProducts);
+
     } catch (error) {
-      Alert.alert('Hata', 'Profil güncellenemedi');
+      console.error('Profil verileri alınamadı:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  }, [targetUserId, isOwner]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+        fetchAllData();
+    });
+    return unsubscribe;
+  }, [navigation, fetchAllData]);
+
+  // --- Aksiyonlar ---
+  const handleFollowToggle = async () => {
+    if (followLoading) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await api.unfollowUser(targetUserId);
+        setIsFollowing(false);
+        setFollowStats(prev => ({ ...prev, followers: Math.max(0, prev.followers - 1) }));
+      } else {
+        await api.followUser(targetUserId);
+        setIsFollowing(true);
+        setFollowStats(prev => ({ ...prev, followers: prev.followers + 1 }));
+      }
+    } catch (error: any) {
+      Alert.alert('Hata', 'İşlem gerçekleştirilemedi');
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleMessage = async () => {
+    Alert.alert('Mesaj', 'Bu özellik yakında eklenecek!');
   };
 
   const handleLogout = () => {
-    Alert.alert('Çıkış Yap', 'Çıkmak istediğinizden emin misiniz?', [
-      { text: 'İptal', onPress: () => {} },
-      {
-        text: 'Evet',
+    Alert.alert('Çıkış Yap', 'Emin misiniz?', [
+      { text: 'İptal', style: 'cancel' },
+      { 
+        text: 'Çıkış', 
+        style: 'destructive', 
         onPress: async () => {
-          await logout();
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Login' }],
-          });
-        },
-        style: 'destructive',
-      },
+            await logout();
+            navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+        }
+      }
     ]);
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* Profile Header */}
-      <View style={styles.profileHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user?.fullName?.[0] || user?.email?.[0] || 'U'}
-          </Text>
-        </View>
-        <View style={styles.profileInfo}>
-          <Text style={styles.name}>{user?.fullName || 'Kullanıcı'}</Text>
-          <Text style={styles.email}>{user?.email}</Text>
-          <Text style={styles.role}>📧 Kullanıcı Hesabı</Text>
-        </View>
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
       </View>
+    );
+  }
 
-      {/* Edit Profile Section */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Profil Bilgileri</Text>
-          <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
-            <Text style={styles.editLink}>
-              {isEditing ? 'İptal' : 'Düzenle'}
-            </Text>
-          </TouchableOpacity>
+  // --- Profil İçeriği (Artık Header değil, listenin bir parçası) ---
+  const renderProfileHeader = () => (
+    <View style={styles.profileContainer}>
+        
+        {/* Profil Resmi */}
+        <View style={styles.avatarWrapper}>
+            {isOwner ? (
+                 <AvatarPicker 
+                    avatarUrl={profile?.profilePhoto}
+                    token={token!}
+                    onUploadSuccess={(url) => setProfile((prev:any) => ({...prev, profilePhoto: url}))}
+                    size={90}
+                 />
+            ) : (
+                profile?.profilePhoto ? (
+                    <Image source={{ uri: profile.profilePhoto }} style={styles.avatar} />
+                ) : (
+                    <View style={[styles.avatar, styles.placeholderAvatar]}>
+                        <Text style={styles.avatarText}>{profile?.fullName?.charAt(0) || 'U'}</Text>
+                    </View>
+                )
+            )}
+            {profile?.isPremium && (
+                <View style={styles.premiumBadge}>
+                    <Text style={styles.premiumText}>PRO</Text>
+                </View>
+            )}
         </View>
 
-        {isEditing ? (
-          <>
-            <View style={styles.editContainer}>
-              <Text style={styles.label}>Ad Soyad</Text>
-              <TextInput
-                style={styles.input}
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Ad soyadınız"
-              />
-
-              <Text style={styles.label}>Email</Text>
-              <Text style={styles.staticField}>{user?.email}</Text>
-              <Text style={styles.note}>Email değiştirilemiyor</Text>
+        <Text style={styles.fullName}>{profile?.fullName || 'Kullanıcı'}</Text>
+        <Text style={styles.universityText}>
+            {profile?.university?.name || 'Sakarya Üniversitesi'}
+        </Text>
+        
+        {/* İstatistikler */}
+        <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{products.length}</Text>
+                <Text style={styles.statLabel}>İlanlar</Text>
             </View>
+            <View style={styles.verticalDivider} />
+            <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{followStats.followers}</Text>
+                <Text style={styles.statLabel}>Takipçi</Text>
+            </View>
+            <View style={styles.verticalDivider} />
+            <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{followStats.following}</Text>
+                <Text style={styles.statLabel}>Takip</Text>
+            </View>
+        </View>
 
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleUpdateProfile}
-              disabled={loading}
+        {/* Butonlar */}
+        <View style={styles.actionButtons}>
+            {isOwner ? (
+                <>
+                    <TouchableOpacity style={[styles.button, styles.editButton]}>
+                        <Text style={styles.buttonTextBlack}>Profili Düzenle</Text>
+                    </TouchableOpacity>
+                    {!profile?.isPremium && (
+                        <TouchableOpacity 
+                            style={[styles.button, styles.premiumButton]}
+                            onPress={() => navigation.navigate('Premium')}
+                        >
+                            <Text style={styles.buttonTextWhite}>Premium'a Geç</Text>
+                        </TouchableOpacity>
+                    )}
+                </>
+            ) : (
+                <>
+                    <TouchableOpacity 
+                        style={[styles.button, isFollowing ? styles.followingButton : styles.followButton]}
+                        onPress={handleFollowToggle}
+                        disabled={followLoading}
+                    >
+                        {followLoading ? (
+                            <ActivityIndicator color={isFollowing ? "#007AFF" : "#fff"} />
+                        ) : (
+                            <Text style={isFollowing ? styles.followingButtonText : styles.buttonTextWhite}>
+                                {isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.button, styles.messageButton]}
+                        onPress={handleMessage}
+                    >
+                        <Text style={styles.buttonTextBlack}>Mesaj</Text>
+                    </TouchableOpacity>
+                </>
+            )}
+        </View>
+
+        {/* Tablar */}
+        <View style={styles.tabContainer}>
+            <TouchableOpacity 
+                style={[styles.tab, activeTab === 'products' && styles.activeTab]}
+                onPress={() => setActiveTab('products')}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>Kaydet</Text>
-              )}
+                <Text style={[styles.tabText, activeTab === 'products' && styles.activeTabText]}>
+                    İlanlar
+                </Text>
             </TouchableOpacity>
-          </>
-        ) : (
-          <View style={styles.infoContainer}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Ad Soyad:</Text>
-              <Text style={styles.infoValue}>
-                {user?.fullName || 'Belirtilmemiş'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email:</Text>
-              <Text style={styles.infoValue}>{user?.email}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Hesap Türü:</Text>
-              <Text style={styles.infoValue}>Kullanıcı</Text>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* User Stats */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>İstatistiklerim</Text>
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Ürün İlanı</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Değerlendirme</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>⭐ 5.0</Text>
-            <Text style={styles.statLabel}>Puan</Text>
-          </View>
+            
+            {isOwner && (
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'favorites' && styles.activeTab]}
+                    onPress={() => setActiveTab('favorites')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'favorites' && styles.activeTabText]}>
+                        Favoriler
+                    </Text>
+                </TouchableOpacity>
+            )}
         </View>
-      </View>
+    </View>
+  );
 
-      {/* Actions */}
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>📋 Satışlarım</Text>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>❤️ Favorilerim</Text>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>💬 Mesajlarım</Text>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>⚙️ Ayarlar</Text>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-      </View>
+  const renderProduct = ({ item }: { item: any }) => (
+    <TouchableOpacity 
+        style={styles.productCard}
+        onPress={() => navigation.push('ProductDetail', { productId: item.id })}
+    >
+        <Image 
+            source={{ uri: item.images?.[0]?.imageUrl || 'https://via.placeholder.com/150' }} 
+            style={styles.productImage} 
+        />
+        <View style={styles.productInfo}>
+            <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
+            <Text style={styles.productPrice}>₺{item.price}</Text>
+        </View>
+    </TouchableOpacity>
+  );
 
-      {/* Danger Zone */}
-      <View style={[styles.section, { marginBottom: 30 }]}>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutButtonText}>🚪 Çıkış Yap</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteAccountButton}>
-          <Text style={styles.deleteAccountButtonText}>🗑️ Hesabı Sil</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={activeTab === 'products' ? products : []}
+        keyExtractor={(item) => item.id}
+        renderItem={renderProduct}
+        numColumns={2}
+        ListHeaderComponent={renderProfileHeader}
+        ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                    {activeTab === 'products' ? 'Henüz ilan yok.' : 'Favori ürün yok.'}
+                </Text>
+            </View>
+        }
+        columnWrapperStyle={styles.listColumnWrapper}
+        contentContainerStyle={{ paddingBottom: 50 }}
+        refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAllData(); }} />
+        }
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
+  container: { flex: 1, backgroundColor: '#fff' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  
+  // Profil Alanı (Header değil, sayfa içeriği)
+  profileContainer: { 
+      alignItems: 'center', 
+      paddingTop: 20, 
+      paddingHorizontal: 20, 
+      backgroundColor: '#fff' 
   },
-  profileHeader: {
-    backgroundColor: '#fff',
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 20,
-  },
-  avatarText: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  email: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  role: {
-    fontSize: 12,
-    color: '#999',
-  },
-  section: {
-    backgroundColor: '#fff',
-    marginHorizontal: 10,
-    marginVertical: 10,
-    borderRadius: 10,
-    padding: 15,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-  },
-  editLink: {
-    color: '#007AFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  editContainer: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
-  },
-  staticField: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: '#999',
-    backgroundColor: '#f5f5f5',
-  },
-  note: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 6,
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  infoContainer: {
-    gap: 12,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '600',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 15,
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#007AFF',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  menuItemText: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '500',
-  },
-  arrow: {
-    fontSize: 16,
-    color: '#ccc',
-  },
-  logoutButton: {
-    backgroundColor: '#ff9500',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  deleteAccountButton: {
-    backgroundColor: '#ff3b30',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-  },
-  deleteAccountButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
-export default UserProfileScreen;
+  avatarWrapper: { position: 'relative', marginBottom: 10 },
+  avatar: { width: 90, height: 90, borderRadius: 45 },
+  placeholderAvatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#E0E0E0', justifyContent: 'center', alignItems: 'center' },
+  avatarText: { fontSize: 36, color: '#666', fontWeight: 'bold' },
+  
+  premiumBadge: { 
+    position: 'absolute', bottom: 0, right: 0, 
+    backgroundColor: '#FFD700', paddingHorizontal: 6, paddingVertical: 2, 
+    borderRadius: 10, borderWidth: 2, borderColor: '#fff' 
+  },
+  premiumText: { fontSize: 10, fontWeight: 'bold', color: '#000' },
+
+  fullName: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  universityText: { fontSize: 14, color: '#666', marginBottom: 15 },
+
+  // İstatistikler
+  statsRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-around', marginBottom: 20 },
+  statItem: { alignItems: 'center', flex: 1 },
+  statNumber: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  statLabel: { fontSize: 12, color: '#888' },
+  verticalDivider: { width: 1, height: '100%', backgroundColor: '#E5E5EA' },
+
+  // Butonlar
+  actionButtons: { flexDirection: 'row', gap: 10, width: '100%', marginBottom: 20 },
+  button: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  editButton: { backgroundColor: '#F2F2F7', borderWidth: 1, borderColor: '#D1D1D6' },
+  premiumButton: { backgroundColor: '#000' },
+  followButton: { backgroundColor: '#007AFF' },
+  followingButton: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#007AFF' },
+  messageButton: { backgroundColor: '#F2F2F7', borderWidth: 1, borderColor: '#D1D1D6' },
+  
+  buttonTextWhite: { color: '#fff', fontWeight: '600' },
+  buttonTextBlack: { color: '#333', fontWeight: '600' },
+  followingButtonText: { color: '#007AFF', fontWeight: '600' },
+
+  // Tablar
+  tabContainer: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', width: '100%' },
+  tab: { flex: 1, paddingVertical: 15, alignItems: 'center' },
+  activeTab: { borderBottomWidth: 2, borderBottomColor: '#333' },
+  tabText: { fontSize: 14, color: '#888', fontWeight: '600' },
+  activeTabText: { color: '#333' },
+
+  // Liste
+  listColumnWrapper: { justifyContent: 'space-between', paddingHorizontal: 10, marginTop: 10 },
+  productCard: { width: '48%', backgroundColor: '#fff', borderRadius: 8, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  productImage: { width: '100%', height: 160, borderTopLeftRadius: 8, borderTopRightRadius: 8, backgroundColor: '#f0f0f0' },
+  productInfo: { padding: 8 },
+  productTitle: { fontSize: 13, fontWeight: '500', color: '#333', marginBottom: 4 },
+  productPrice: { fontSize: 15, fontWeight: 'bold', color: '#007AFF' },
+
+  emptyContainer: { padding: 40, alignItems: 'center' },
+  emptyText: { color: '#999', fontSize: 16 },
+});

@@ -8,27 +8,51 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Get()
-async getUserChats(@Req() req: any) {
-  const chats = await this.chatService.getUserChats(req.user.id);
-  
-  // ✅ DEBUG: Response'u konsola yazdır
-  console.log('📤 API Response:', JSON.stringify(chats.map(c => ({
-    id: c.id,
-    product: c.product ? {
-      id: c.product.id,
-      title: c.product.title,
-      images: c.product.images?.map(img => ({
-        imageUrl: img.imageUrl,
-        isPrimary: img.isPrimary
-      }))
-    } : null
-  })), null, 2));
-  
-  return chats;
-}
+  async getUserChats(@Req() req: any) {
+    const chats = await this.chatService.getUserChats(req.user.id);
+    
+    const sanitizedChats = chats.map(chat => ({
+      id: chat.id,
+      buyerId: chat.buyerId,
+      sellerId: chat.sellerId,
+      lastMessage: chat.lastMessage,
+      updatedAt: chat.updatedAt,
+      createdAt: chat.createdAt,
+      
+      // İlişkileri sadece gerekli verilerle sınırla
+      buyer: {
+        id: chat.buyer.id,
+        fullName: chat.buyer.fullName,
+        email: chat.buyer.email,
+        profilePhoto: chat.buyer.profilePhoto
+      },
+      seller: {
+        id: chat.seller.id,
+        fullName: chat.seller.fullName,
+        email: chat.seller.email,
+        profilePhoto: chat.seller.profilePhoto
+      },
+      product: chat.product ? {
+        id: chat.product.id,
+        title: chat.product.title,
+        price: chat.product.price,
+        // Resimleri de sadeleştir
+        images: chat.product.images?.map(img => ({
+            id: img.id,
+            imageUrl: img.imageUrl,
+            isPrimary: img.isPrimary
+        })) || []
+      } : null
+    }));
+
+    // Konsola basıp kontrol edelim
+    // console.log('📤 API Response Hazırlandı:', sanitizedChats.length, 'adet sohbet.');
+    
+    return sanitizedChats;
+  }
 
   // Yeni sohbet başlat
- @Post()
+  @Post()
   async createChat(
     @Body('sellerId') sellerId: string,
     @Body('productId') productId: string,
@@ -38,17 +62,18 @@ async getUserChats(@Req() req: any) {
       throw new BadRequestException('sellerId ve productId gerekli');
     }
 
-    // Kendisiyle sohbet başlatmaya çalışıyor mu?
     if (sellerId === req.user.userId) {
       throw new BadRequestException('Kendi ürününüzle mesajlaşamazsınız');
     }
 
     return this.chatService.createOrGetChat(req.user.userId, sellerId, productId);
   }
- @Get('unread-count')
+
+  @Get('unread-count')
   async getUnreadCount(@Request() req) {
     return this.chatService.getUnreadCount(req.user.userId);
   }
+
   // Sohbet mesajlarını getir
   @Get(':id/messages')
   async getChatMessages(@Param('id') chatId: string, @Request() req) {

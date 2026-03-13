@@ -10,14 +10,16 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Image
+  Image,
+  
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import axios from 'axios';
 
-const API_URL = 'http://10.0.2.2:3000';
-
+const API_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
 interface Message {
   id: string;
   sender: {

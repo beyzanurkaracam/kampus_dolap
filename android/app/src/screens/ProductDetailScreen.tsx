@@ -25,6 +25,7 @@ interface Product {
   title: string;
   description: string;
   price: number;
+  acceptedOfferPrice?: number;
   condition: string;
   size: string;
   brand: string;
@@ -71,6 +72,9 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
+ 
+  
+
   const handleDeleteProduct = () => {
     Alert.alert(
       'Ürünü Kaldır',
@@ -115,9 +119,11 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
   };
 
   const handleMakeOffer = () => {
-    navigation.navigate('MakeOffer', { productId, sellerId: product?.seller.id });
+    // Ürün bilgilerini MakeOffer sayfasına taşıyoruz
+    navigation.navigate('MakeOffer', { 
+      product: product // Tüm ürün objesini gönderiyoruz
+    });
   };
-
  /* const handleContactSeller = () => {
     if (product?.seller.phone) {
       Alert.alert(
@@ -253,7 +259,24 @@ const handleContactSeller = async () => {
       {/* Product Info */}
       <View style={styles.infoContainer}>
         <Text style={styles.title}>{product.title}</Text>
-        <Text style={styles.price}>₺{product.price.toLocaleString('tr-TR')}</Text>
+        {product.acceptedOfferPrice ? (
+          <View style={styles.priceContainer}>
+             <View>
+                <Text style={styles.oldPriceLabel}>Liste Fiyatı</Text>
+                <Text style={styles.oldPrice}>
+                  ₺{product.price.toLocaleString('tr-TR')}
+                </Text>
+             </View>
+             <View style={styles.acceptedPriceBadge}>
+                <Text style={styles.acceptedPriceLabel}>Kabul Edilen Teklif 🎉</Text>
+                <Text style={styles.acceptedPrice}>
+                  ₺{product.acceptedOfferPrice.toLocaleString('tr-TR')}
+                </Text>
+             </View>
+          </View>
+        ) : (
+          <Text style={styles.price}>₺{product.price.toLocaleString('tr-TR')}</Text>
+        )}
         
         <View style={styles.detailsGrid}>
           <View style={styles.detailItem}>
@@ -287,24 +310,31 @@ const handleContactSeller = async () => {
         {!isOwner && (
           <View style={styles.sellerContainer}>
             <Text style={styles.sectionTitle}>Satıcı Bilgileri</Text>
-            <View style={styles.sellerInfo}>
-              {product.seller.profilePhoto ? (
-                <Image
-                  source={{ uri: product.seller.profilePhoto }}
-                  style={styles.sellerAvatar}
-                />
-              ) : (
-                <View style={[styles.sellerAvatar, styles.sellerAvatarPlaceholder]}>
-                  <Text style={styles.sellerAvatarText}>
-                    {product.seller.fullName.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.sellerDetails}>
-                <Text style={styles.sellerName}>{product.seller.fullName}</Text>
-                <Text style={styles.sellerEmail}>{product.seller.email}</Text>
+            <TouchableOpacity 
+              style={styles.sellerInfo}
+              onPress={() => navigation.navigate('UserProfile', { userId: product.seller.id })}
+            >
+            {product.seller.profilePhoto ? (
+              <Image
+                source={{ uri: product.seller.profilePhoto }}
+                style={styles.sellerAvatar}
+              />
+            ) : (
+              <View style={[styles.sellerAvatar, styles.sellerAvatarPlaceholder]}>
+                <Text style={styles.sellerAvatarText}>
+                  {product.seller.fullName.charAt(0).toUpperCase()}
+                </Text>
               </View>
+            )}
+            <View style={styles.sellerDetails}>
+              <Text style={styles.sellerName}>{product.seller.fullName}</Text>
+              <Text style={styles.sellerEmail}>{product.seller.email}</Text>
+              
+              {/* İpucu ekleyelim */}
+              <Text style={{ fontSize: 12, color: '#007AFF', marginTop: 2 }}>Profili Gör &rsaquo;</Text>
             </View>
+          </TouchableOpacity>
+           
           </View>
         )}
       </View>
@@ -561,5 +591,41 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  priceContainer: {
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  oldPriceLabel: {
+    fontSize: 12,
+    color: '#8E8E93',
+    textDecorationLine: 'line-through',
+  },
+  oldPrice: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#8E8E93',
+    textDecorationLine: 'line-through', // Üstünü çiz
+  },
+  acceptedPriceBadge: {
+    backgroundColor: '#E8F5E9', // Açık yeşil arka plan
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  acceptedPriceLabel: {
+    fontSize: 10,
+    color: '#2E7D32',
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  acceptedPrice: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2E7D32', // Koyu yeşil
   },
 });

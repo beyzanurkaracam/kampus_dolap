@@ -27,7 +27,6 @@ export const LoginScreen = ({ navigation }: any) => {
     try {
       console.log('Login başlatılıyor, userType:', userType);
       
-      // AuthContext'teki login fonksiyonunu kullan (userType parametresi ile)
       await login(email, password, userType);
       
       console.log('Login başarılı, navigation yapılıyor...');
@@ -46,6 +45,13 @@ export const LoginScreen = ({ navigation }: any) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ TEST VERİLERİNİ DOLDURAN FONKSİYON
+  const fillTestUser = (testEmail: string, testPass: string) => {
+    setEmail(testEmail);
+    setPassword(testPass);
+    setUserType('user'); // Genelde testler user ile yapılır
   };
 
   return (
@@ -110,11 +116,28 @@ export const LoginScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       )}
 
-      {userType === 'admin' && (
-        <Text style={styles.adminHint}>
-          Admin: beyzanur.karacam@sakarya.edu.tr / admin123
-        </Text>
+      {/* SADECE GELİŞTİRME MODUNDA GÖRÜNEN HIZLI GİRİŞ PANELİ */}
+      {__DEV__ && (
+        <View style={styles.debugContainer}>
+            <Text style={styles.debugTitle}> Hızlı Test Girişi</Text>
+            <View style={styles.debugButtons}>
+                <TouchableOpacity 
+                    style={[styles.debugButton, { backgroundColor: '#FF9500' }]}
+                    onPress={() => fillTestUser('tarik.kalyoncu@ogr.sakarya.edu.tr', '267453')}
+                >
+                    <Text style={styles.debugButtonText}>Tarık (Alıcı)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    style={[styles.debugButton, { backgroundColor: '#5856D6' }]}
+                    onPress={() => fillTestUser('beyzanur.karacam@ogr.sakarya.edu.tr', '267453')}
+                >
+                    <Text style={styles.debugButtonText}>Beyza (Satıcı)</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
       )}
+
     </View>
   );
 };
@@ -180,12 +203,40 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 14,
   },
-  adminHint: {
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 15,
-    fontSize: 12,
+  
+  // ✅ DEBUG STİLLERİ
+  debugContainer: {
+    marginTop: 40,
+    padding: 15,
+    backgroundColor: '#e1e1e1',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderStyle: 'dashed'
   },
+  debugTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#666',
+    marginBottom: 10,
+    textAlign: 'center'
+  },
+  debugButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10
+  },
+  debugButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 6,
+    alignItems: 'center'
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12
+  }
 });
 
 export default LoginScreen;

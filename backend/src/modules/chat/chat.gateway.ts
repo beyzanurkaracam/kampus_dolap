@@ -23,7 +23,7 @@ interface AuthenticatedSocket extends Socket {
 
 @WebSocketGateway({ 
   cors: { 
-    origin: ['http://10.0.2.2:8081', 'http://localhost:8081'],
+    origin: '*', 
     credentials: true 
   },
   namespace: '/chat'
@@ -59,18 +59,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.redisService.hset(`user:${client.userId}`, 'lastSeen', Date.now().toString());
       await this.redisService.hset(`user:${client.userId}`, 'socketId', client.id);
 
-      console.log(`✅ Client authenticated: ${client.id} (User: ${client.userId})`);
+      console.log(` Client authenticated: ${client.id} (User: ${client.userId})`);
     } catch (error) {
-      console.error('❌ Authentication failed:', error.message);
+      console.error(' Authentication failed:', error.message);
       client.disconnect();
     }
   }
 
   async handleDisconnect(client: AuthenticatedSocket) {
-    console.log(`❌ Client disconnected: ${client.id}`);
+    console.log(` Client disconnected: ${client.id}`);
     
     if (client.userId) {
-      // ✅ Redis'te offline status güncelle
+      //  Redis'te offline status güncelle
       await this.redisService.hset(`user:${client.userId}`, 'status', 'offline');
       await this.redisService.hset(`user:${client.userId}`, 'lastSeen', Date.now().toString());
       await this.redisService.hdel(`user:${client.userId}`, 'socketId');
@@ -92,7 +92,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  // ✅ Redis ile Rate Limiting
+  //  Redis ile Rate Limiting
   private async checkRateLimit(userId: string): Promise<void> {
     const key = `rate_limit:${userId}`;
     const count = await this.redisService.incr(key);
@@ -138,13 +138,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.validateChatAccess(chatId, client.userId);
       client.join(chatId);
 
-      // ✅ Redis'te aktif sohbeti kaydet
+      //  Redis'te aktif sohbeti kaydet
       await this.redisService.sadd(`user:${client.userId}:chats`, chatId);
 
-      console.log(`✅ User ${client.userId} joined chat ${chatId}`);
+      console.log(` User ${client.userId} joined chat ${chatId}`);
       return { success: true, message: 'Sohbete katıldınız' };
     } catch (error) {
-      console.error('❌ Join chat error:', error.message);
+      console.error(' Join chat error:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -156,7 +156,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     client.leave(chatId);
     
-    // ✅ Redis'ten aktif sohbeti kaldır
+    //  Redis'ten aktif sohbeti kaldır
     if (client.userId) {
       await this.redisService.srem(`user:${client.userId}:chats`, chatId);
     }
@@ -174,7 +174,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new UnauthorizedException('Kimlik doğrulaması gerekli');
       }
 
-      // ✅ Redis rate limiting
+      //  Redis rate limiting
       await this.checkRateLimit(client.userId);
 
       const sanitizedContent = this.validateMessage(data.content);
@@ -196,7 +196,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         },
       };
 
-      // ✅ Redis'e son mesajı cache'le
+      //  Redis'e son mesajı cache'le
       await this.redisService.setex(
         `chat:${data.chatId}:lastMessage`,
         3600, // 1 saat
@@ -208,7 +208,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       return { success: true };
     } catch (error) {
-      console.error('❌ Send message error:', error.message);
+      console.error(' Send message error:', error.message);
       
       client.emit('chat:error', { 
         message: error.message,
@@ -229,7 +229,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       await this.validateChatAccess(data.chatId, client.userId);
 
-      // ✅ Redis'e typing status kaydet (5 saniye TTL)
+      //  Redis'e typing status kaydet (5 saniye TTL)
       const typingKey = `chat:${data.chatId}:typing:${client.userId}`;
       await this.redisService.setex(typingKey, 5, '1');
 
@@ -238,7 +238,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         userEmail: client.userEmail,
       });
     } catch (error) {
-      console.error('❌ Typing indicator error:', error.message);
+      console.error(' Typing indicator error:', error.message);
     }
   }
 
@@ -253,7 +253,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.validateChatAccess(data.chatId, client.userId);
       await this.chatService.markAsRead(data.chatId, client.userId);
 
-      // ✅ Redis'ten unread count'u temizle
+      //  Redis'ten unread count'u temizle
       await this.redisService.hdel(`unread:${client.userId}`, data.chatId);
 
       client.to(data.chatId).emit('chat:messagesRead', {
@@ -262,12 +262,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       return { success: true };
     } catch (error) {
-      console.error('❌ Mark as read error:', error.message);
+      console.error(' Mark as read error:', error.message);
       return { success: false, error: error.message };
     }
   }
 
-  // ✅ Yeni: Online status kontrolü
+  //  Yeni: Online status kontrolü
   @SubscribeMessage('user:status')
   async handleGetUserStatus(
     @ConnectedSocket() client: AuthenticatedSocket,

@@ -68,4 +68,13 @@ export class AuthController {
   async updateProfile(@Request() req, @Body() updateData: { fullName?: string; phone?: string; profilePhoto?: string }) {
     return this.authService.updateUserProfile(req.user.userId, updateData);
   }
+
+  @UseGuards(JwtGuard) // Sadece giriş yapmış kullanıcılar token kaydedebilir
+  @Post('fcm-token')
+  async saveFcmToken(@Request() req, @Body() body: { token: string }) {
+    console.log(`FCM Token Kaydı İsteği: User ${req.user.userId}`);
+    return this.authService.saveFcmToken(req.user.userId, body.token);
+  }
+
+  
 }

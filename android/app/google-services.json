@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "782945716510",
+    "project_id": "kampusumden",
+    "storage_bucket": "kampusumden.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782945716510:android:81dff4a961c973d34d610f",
+        "android_client_info": {
+          "package_name": "com.dolapkampus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsQakej81EwDGQ_VXEgUfXS6OFPwcSN0A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782945716510:android:97f148e441c17da84d610f",
+        "android_client_info": {
+          "package_name": "com.kampusum"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsQakej81EwDGQ_VXEgUfXS6OFPwcSN0A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

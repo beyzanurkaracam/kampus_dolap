@@ -11,87 +11,37 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import * as RNIap from 'react-native-iap';
-// Device info almamıza gerek yok, hatayı catch bloğunda yöneteceğiz.
 
-// Mağaza Ürün ID'leri
-const itemSkus = Platform.select({
-  ios: ['com.dolapkampus.premium.monthly'],
-  android: ['com.dolapkampus.premium.monthly'],
-}) || [];
+// 🚨 DİKKAT: RNIap kütüphanesi kaldırıldığı için tüm mağaza işlemleri SİMÜLE edilmektedir.
 
 const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
 
 export const PremiumScreen = ({ navigation }: any) => {
   const { token, checkAuth } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [products, setProducts] = useState<any[]>([]); // Tip hatasını önlemek için 'any'
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    let purchaseUpdateSubscription: any = null;
-    let purchaseErrorSubscription: any = null;
-
-    const initIAP = async () => {
-      try {
-        // 1. Bağlantıyı başlat
-        const connection = await RNIap.initConnection();
-        
-        // Simülatörde veya IAP kapalıysa connection false dönebilir veya hata fırlatabilir.
-        if (!connection) {
-           console.log("IAP bağlantısı kurulamadı (Muhtemelen Simülatör)");
-           return;
+    // 🛠️ SİMÜLASYON: Sanki mağazadan ürün çekmişiz gibi davranıyoruz
+    const loadMockProducts = () => {
+      setProducts([
+        {
+          productId: 'com.dolapkampus.premium.monthly',
+          price: '29.99', // Mock fiyat
+          title: 'Aylık Premium Üyelik',
         }
-
-        // 2. Android flush
-        if (Platform.OS === 'android') {
-           try {
-             await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
-           } catch(e) {}
-        }
-
-        // 3. Ürünleri çek
-        const res = await RNIap.getProducts({ skus: itemSkus });
-        setProducts(res);
-        console.log('Mağaza Ürünleri:', res);
-
-      } catch (err: any) {
-        // Simülatör hatası buraya düşer
-        console.log('IAP Init Error (Beklenen):', err.code || err.message);
-      }
+      ]);
     };
 
-    initIAP();
-
-    // Listener'lar (Sadece gerçek cihazda çalışır)
-    purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(async (purchase: any) => {
-      const receipt = purchase.transactionReceipt;
-      if (receipt) {
-        try {
-          await verifyPurchaseBackend(receipt, purchase.productId);
-          await RNIap.finishTransaction({ purchase, isConsumable: false });
-        } catch (ackErr) {
-          console.warn('Ack Error', ackErr);
-        }
-      }
-    });
-
-    purchaseErrorSubscription = RNIap.purchaseErrorListener((error: any) => {
-      if (error.code !== 'E_USER_CANCELLED') {
-         Alert.alert('Hata', 'Satın alma işlemi tamamlanmadı.');
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
-      if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
-      RNIap.endConnection();
-    };
+    loadMockProducts();
   }, []);
 
+  // Backend Doğrulama Fonksiyonu (Hala gerçek çalışır, backend'e istek atar)
   const verifyPurchaseBackend = async (receipt: string, productId: string) => {
     try {
-      console.log('Backend doğrulama...');
+      console.log('🔄 Backend doğrulama (Simülasyon)...');
+      
+      // Backend'e sahte makbuz gönderiyoruz
       await axios.post(
         `${API_URL}/payment/verify`,
         {
@@ -104,45 +54,34 @@ export const PremiumScreen = ({ navigation }: any) => {
 
       Alert.alert(
         'Tebrikler! 🎉',
-        'Premium üyeliğiniz başarıyla aktif edildi.',
+        'Premium üyeliğiniz başarıyla aktif edildi! (Test Modu)',
         [{ 
-            text: 'Harika', 
+            text: 'Süper!', 
             onPress: async () => {
-                if(checkAuth) await checkAuth(); 
+                if(checkAuth) await checkAuth(); // Token'ı yenile
                 navigation.goBack();
             } 
         }]
       );
     } catch (error: any) {
-      console.error('Backend Verify Error:', error);
-      Alert.alert('Hata', 'Aktivasyon sırasında hata oluştu.');
+      console.error('❌ Backend Verify Error:', error);
+      Alert.alert('Hata', 'Ödeme simülasyonu sırasında hata oluştu.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Satın Alma Butonu (IAP Kütüphanesi olmadan)
   const handlePurchase = async () => {
     setLoading(true);
-    try {
-      // --- SİMÜLATÖR / TEST MODU ---
-      // Eğer ürün listesi boşsa (Simülatörde boş döner), Mock işlem yap
-      if (products.length === 0) {
-         console.log("⚠️ Simülatör Modu: Sahte satın alma yapılıyor...");
-         // 2 saniye bekle (gerçekçilik için)
-         setTimeout(async () => {
-            await verifyPurchaseBackend('MOCK_RECEIPT_TOKEN_SIMULATOR', 'com.dolapkampus.premium.monthly');
-         }, 1000);
-         return;
-      }
-
-      // --- GERÇEK CİHAZ ---
-      await RNIap.requestPurchase({ sku: itemSkus[0] });
-      
-    } catch (err: any) {
-      setLoading(false);
-      console.warn('Purchase Request Error:', err);
-      Alert.alert('Hata', 'Satın alma başlatılamadı. (Simülatörde misiniz?)');
-    }
+    
+    // 🛠️ Gerçek mağaza yerine doğrudan simülasyonu başlatıyoruz
+    console.log("⚠️ IAP Kütüphanesi Yok: Doğrudan backend onayı deneniyor...");
+    
+    // Gerçekçilik için 1.5 saniye bekle
+    setTimeout(async () => {
+        await verifyPurchaseBackend('MOCK_RECEIPT_WITHOUT_LIB', 'com.dolapkampus.premium.monthly');
+    }, 1500);
   };
 
   const FeatureItem = ({ icon, title, desc }: { icon: string; title: string; desc: string }) => (
@@ -159,7 +98,6 @@ export const PremiumScreen = ({ navigation }: any) => {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* ... Header ve Features aynı ... */}
        <View style={styles.header}>
         <Text style={styles.crownIcon}>👑</Text>
         <Text style={styles.headerTitle}>Dolap Kampüs Premium</Text>
@@ -180,9 +118,8 @@ export const PremiumScreen = ({ navigation }: any) => {
           <Text style={styles.period}>Aylık Üyelik</Text>
           <View style={styles.priceRow}>
             <Text style={styles.currency}>₺</Text>
-            {/* Ürün çekilemezse varsayılan fiyatı göster */}
             <Text style={styles.amount}>
-                {products.length > 0 ? products[0].price : '29.99'}
+                {products.length > 0 ? products[0].price : '...'}
             </Text>
           </View>
           <Text style={styles.cancelAnytime}>İstediğin zaman iptal et</Text>
@@ -193,9 +130,9 @@ export const PremiumScreen = ({ navigation }: any) => {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#000" />
             ) : (
-              <Text style={styles.buyButtonText}>Premium'a Geç</Text>
+              <Text style={styles.buyButtonText}>Premium'a Geç (Test)</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -203,7 +140,7 @@ export const PremiumScreen = ({ navigation }: any) => {
 
       <Text style={styles.legalText}>
         Ödeme {Platform.OS === 'ios' ? 'App Store' : 'Google Play'} üzerinden alınır.
-        (Simülatörde Test Modu Aktif)
+        (Şu an Kütüphanesiz Test Modu Aktif)
       </Text>
     </ScrollView>
   );
@@ -231,7 +168,7 @@ const styles = StyleSheet.create({
   currency: { fontSize: 24, fontWeight: 'bold', color: '#333', marginTop: 5 },
   amount: { fontSize: 48, fontWeight: 'bold', color: '#333' },
   cancelAnytime: { fontSize: 12, color: '#999', marginBottom: 20 },
-  buyButton: { backgroundColor: '#000', width: '100%', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
-  buyButtonText: { color: '#FFD700', fontSize: 18, fontWeight: 'bold' },
+  buyButton: { backgroundColor: '#FFD700', width: '100%', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+  buyButtonText: { color: '#000', fontSize: 18, fontWeight: 'bold' },
   legalText: { fontSize: 11, color: '#999', textAlign: 'center', marginBottom: 30, paddingHorizontal: 40 },
 });

@@ -6,13 +6,13 @@ import { ProductImage } from 'src/entities/product-image.entity';
 import { Category } from 'src/entities/category.entity';
 import { Favorite } from 'src/entities/favorite.entity';
 import { User } from 'src/entities/user.entity'; // ✅ EKLENDİ
-
+import { Offer } from 'src/entities/offer.entity';
 import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, ProductImage, Category, Favorite, User]),
+    TypeOrmModule.forFeature([Product, ProductImage, Category, Favorite, User, Offer]),
   ],
   controllers: [ProductController],
   providers: [ProductService],

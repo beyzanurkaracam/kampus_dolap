@@ -20,6 +20,7 @@ import { ChatDetailScreen } from './android/app/src/screens/ChatDetailScreen';
 import { PremiumScreen } from './android/app/src/screens/PremiumScreen';
 import { MakeOfferScreen } from './android/app/src/screens/MakeOfferScreen';
 import { UserProfileScreen } from './android/app/src/screens/UserProfileScreen';
+import { OffersScreen } from './android/app/src/screens/OffersScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -127,6 +128,14 @@ function App() {
                   headerBackTitle: 'Geri'
                 }}
               />
+              <Stack.Screen 
+              name="Offers" 
+              component={OffersScreen}
+              options={{ 
+                title: 'Teklifler',
+                headerBackTitle: 'Geri'
+              }}
+            />
               <Stack.Screen 
                 name="MakeOffer" 
                 component={MakeOfferScreen} 

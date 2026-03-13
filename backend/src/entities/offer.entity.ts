@@ -9,13 +9,15 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { Product } from './product.entity';
+import { CampusLocation } from './campus-location.entity'; // ✅ Import Ekle
 
 export enum OfferStatus {
   PENDING = 'pending',
-  ACCEPTED = 'accepted',
+  ACCEPTED = 'accepted', 
   REJECTED = 'rejected',
   CANCELLED = 'cancelled',
-  COUNTERED = 'countered', 
+  COUNTERED = 'countered',
+  MEETING_CONFIRMED = 'meeting_confirmed', 
 }
 
 @Entity('offers')
@@ -33,8 +35,8 @@ export class Offer {
   })
   status: OfferStatus;
 
-
-  @Column({ nullable: true }) 
+  // ... (Diğer mevcut alanlar makerId, buyer, seller vs. aynı kalıyor) ...
+  @Column({ nullable: true })
   makerId: string;
 
   @ManyToOne(() => User, { eager: true })
@@ -53,6 +55,17 @@ export class Offer {
 
   @Column()
   sellerId: string;
+
+  // ✅ YENİ ALANLAR: Buluşma Detayları
+  @ManyToOne(() => CampusLocation, { nullable: true, eager: true })
+  @JoinColumn({ name: 'meetingPointId' })
+  meetingPoint: CampusLocation;
+
+  @Column({ nullable: true })
+  meetingPointId: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  meetingTime: Date;
 
   @CreateDateColumn()
   createdAt: Date;

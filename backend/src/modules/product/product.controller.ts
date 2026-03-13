@@ -169,5 +169,16 @@ export class ProductController {
         : null
     };
   }
+
+  @Get(':id/similar')
+  async getSimilarProducts(@Param('id') id: string) {
+    const products = await this.productService.getSimilarProducts(id);
+    
+    // Fiyatı string'den number'a çevirerek dön (Frontend hesaplamaları için)
+    return products.map(p => ({
+      ...p,
+      price: p.price ? parseFloat(p.price.toString()) : 0
+    }));
+  }
   
 }

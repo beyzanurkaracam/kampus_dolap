@@ -27,6 +27,7 @@ import { Offer } from './entities/offer.entity';
 import { OfferModule } from './modules/offer/offer.module';
 import { FollowModule } from './modules/follow/follow.module';
 import { Follow } from './entities/follow.entity';
+import { CampusLocation } from './entities/campus-location.entity';
 
 @Module({
   imports: [
@@ -54,7 +55,8 @@ import { Follow } from './entities/follow.entity';
           Chat,
           Message,
           Offer,
-          Follow
+          Follow,
+          CampusLocation
         ], 
        
         synchronize: true,
@@ -71,7 +73,8 @@ import { Follow } from './entities/follow.entity';
     PaymentModule,
     TasksModule,
     OfferModule,
-    FollowModule
+    FollowModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,6 +5,7 @@ import { OfferService } from './offer.service';
 import { JwtGuard } from '../guards/jwt.guard';
 import { OfferStatus } from '../../entities/offer.entity';
 import { CreateOfferDto } from './dto/create-offer.dto';
+import { AcceptOfferDto } from './dto/accept-offer.dto';
 
 @Controller('offers')
 @UseGuards(JwtGuard)
@@ -27,24 +28,37 @@ export class OfferController {
   getMade(@Request() req) {
     return this.offerService.getOffersMade(req.user.userId);
   }
-  @Post(':id/counter')
+@Post(':id/counter')
   counter(
     @Request() req, 
-    @Param('id') id: string, // Eski teklif ID'si
-    @Body('amount') amount: number // Body'den sadece { amount: 500 } bekliyoruz
+    @Param('id') id: string,
+    @Body() body: { amount: number; meetingPointId?: string; meetingTime?: string } // ✅ Opsiyonel konum/saat
   ) {
-    return this.offerService.counterOffer(req.user.userId, id, amount);
+    return this.offerService.counterOffer(
+      req.user.userId, 
+      id, 
+      body.amount,
+      body.meetingPointId,
+      body.meetingTime
+    );
   }
 
-  // Teklifi Kabul Et
   @Patch(':id/accept')
-  acceptOffer(@Request() req, @Param('id') id: string) {
-    return this.offerService.respondToOffer(req.user.userId, id, OfferStatus.ACCEPTED);
+  acceptOffer(
+    @Request() req, 
+    @Param('id') id: string,
+    @Body() acceptDto: AcceptOfferDto // Body eklendi
+  ) {
+    return this.offerService.acceptOfferWithMeeting(req.user.userId, id, acceptDto);
   }
-
   // Teklifi Reddet
   @Patch(':id/reject')
   rejectOffer(@Request() req, @Param('id') id: string) {
     return this.offerService.respondToOffer(req.user.userId, id, OfferStatus.REJECTED);
+  }
+
+  @Patch(':id/confirm-meeting')
+  confirmMeeting(@Request() req, @Param('id') id: string) {
+    return this.offerService.confirmMeeting(req.user.userId, id);
   }
 }

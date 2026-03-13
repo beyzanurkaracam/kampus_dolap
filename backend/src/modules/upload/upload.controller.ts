@@ -111,23 +111,27 @@ export class UploadController {
     @Param('filename') filename: string,
     @Res() res: Response,
   ) {
+    const key = `${folder}/${filename}`;
+    console.log(`🔄 Proxy İsteği Geldi: ${key} dosyasını S3'ten çekmeye çalışıyorum...`); // LOG 6
+
     try {
-      const key = `${folder}/${filename}`;
       const command = new GetObjectCommand({
         Bucket: this.bucketName,
         Key: key,
       });
 
       const s3Response = await this.s3Client.send(command);
-      const stream = s3Response.Body as any;
+      
+      console.log(`✅ S3'ten veri başarıyla çekildi, resim stream ediliyor.`); // LOG 7
 
+      const stream = s3Response.Body as any;
       res.set('Content-Type', s3Response.ContentType || 'image/jpeg');
       res.set('Cache-Control', 'public, max-age=31536000');
       
       stream.pipe(res);
     } catch (error) {
-      console.error('Proxy error:', error);
-      throw new NotFoundException('Resim bulunamadı');
+      console.error(`❌ Proxy Hatası! S3'ten ${key} okunamadı:`, error.message); // LOG 8
+      throw new NotFoundException('Resim bulunamadı veya S3 erişim hatası');
     }
   }
 }

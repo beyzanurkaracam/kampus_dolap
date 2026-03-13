@@ -1,17 +1,19 @@
 import UIKit
 import React
 import React_RCTAppDelegate
-import ReactAppDependencyProvider
+import ReactAppDependencyProvider // 👈 1. BU EKLENDİ
 
 @main
-class AppDelegate: RCTAppDelegate { // 👈 DİKKAT: RCTAppDelegate'den miras almalı
+class AppDelegate: RCTAppDelegate {
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
-    self.moduleName = "dolapkampus" // 👈 Artık bu çalışacak
-    self.initialProps = [:]         // 👈 Bu da çalışacak
+    self.moduleName = "dolapkampus"
+    self.initialProps = [:]
+
+    self.dependencyProvider = RCTAppDependencyProvider()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -22,9 +24,9 @@ class AppDelegate: RCTAppDelegate { // 👈 DİKKAT: RCTAppDelegate'den miras al
 
   override func bundleURL() -> URL? {
 #if DEBUG
-    RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+    return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
 #else
-    Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif
   }
 }

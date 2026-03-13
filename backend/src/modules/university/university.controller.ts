@@ -37,4 +37,11 @@ export class UniversityController {
   async getUniversityById(@Param('id') id: string) {
     return this.universityService.getUniversityById(id);
   }
+
+
+  @Get(':id/locations')
+  async getUniversityLocations(@Param('id') id: string) {
+    return this.universityService.getCampusLocations(id);
+  }
+
 }

@@ -30,46 +30,43 @@ export class UploadService {
   }
 
   async uploadFile(file: Express.Multer.File, folder: string = 'products'): Promise<string> {
-    const fileName = `${folder}/${uuidv4()}.jpg`; // Her zaman jpg olarak kaydet
-
-    // Resmi optimize et: max 1200px genişlik, 80% kalite, WebP formatı
+    const fileName = `${folder}/${uuidv4()}.jpg`;
+  
     const optimizedBuffer = await sharp(file.buffer)
-      .resize(1200, 1200, { 
-        fit: 'inside', 
-        withoutEnlargement: true // Küçük resimleri büyütme
-      })
-      .jpeg({ quality: 80 }) // JPEG 80% kalite
+      .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
       .toBuffer();
-
-    console.log(`📦 Resim optimize edildi: ${(file.size / 1024).toFixed(2)}KB → ${(optimizedBuffer.length / 1024).toFixed(2)}KB`);
-
+  
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: fileName,
       Body: optimizedBuffer,
       ContentType: 'image/jpeg',
     });
-
+  
     try {
+      console.log(`📤 S3 Yüklemesi Başlıyor: ${fileName}`); 
       await this.s3Client.send(command);
+      console.log(`✅ S3 Yüklemesi Başarılı!`); 
       
-      // Environment'a göre URL döndür
       const isDevelopment = this.configService.get('NODE_ENV') !== 'production';
       const s3DirectUrl = `https://${this.bucketName}.s3.${this.configService.get('AWS_REGION')}.amazonaws.com/${fileName}`;
       
       if (isDevelopment) {
-        // Development: Local proxy URL (Android emulator DNS sorunu için)
         const [folderName, fileNameOnly] = fileName.split('/');
-        const proxyUrl = `http://10.0.2.2:3000/upload/proxy/${folderName}/${fileNameOnly}`;
-        console.log(`🔗 Development mode - Proxy URL: ${proxyUrl}`);
+        
+        // 👇 DEĞİŞİKLİK BURADA: 10.0.2.2 yerine localhost yapıyoruz.
+        // iOS 'localhost'u anlar. Android frontend tarafında bunu algılayıp değiştirecek.
+        const proxyUrl = `http://localhost:3000/upload/proxy/${folderName}/${fileNameOnly}`;
+        
+        console.log(`🔗 Development Mode: Proxy URL döndürülüyor -> ${proxyUrl}`); 
         return proxyUrl;
       } else {
-        // Production: Direct S3 URL
-        console.log(`🔗 Production mode - S3 URL: ${s3DirectUrl}`);
+        console.log(`🔗 Production Mode: Direct URL döndürülüyor -> ${s3DirectUrl}`); 
         return s3DirectUrl;
       }
     } catch (error) {
-      console.error('S3 upload hatası:', error);
+      console.error(' S3 Yükleme Hatası:', error);
       throw new Error('Dosya yüklenirken hata oluştu');
     }
   }

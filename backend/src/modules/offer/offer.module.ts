@@ -7,10 +7,11 @@ import { OfferController } from './offer.controller';
 import { Offer } from '../../entities/offer.entity';
 import { Product } from '../../entities/product.entity';
 import { ChatModule } from '../chat/chat.module'; // Chat servisini kullanmak için
+import { CampusLocation } from '../../entities/campus-location.entity'; 
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Offer, Product]),
+    TypeOrmModule.forFeature([Offer, Product, CampusLocation]),
     ChatModule 
   ],
   controllers: [OfferController],

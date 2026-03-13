@@ -13,6 +13,12 @@ import {
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { AvatarPicker } from '../components/AvatarPicker';
+import axios from 'axios';
+import { Platform } from 'react-native';
+
+const API_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
 
 export const UserProfileScreen = ({ navigation, route }: any) => {
   const { user: currentUser, token, logout, userId: myId } = useAuth();
@@ -30,6 +36,7 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
   // Takip State'leri
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
+  const [favorites, setFavorites] = useState<any[]>([]);
   const [followLoading, setFollowLoading] = useState(false);
 
   // Sekmeler
@@ -38,17 +45,67 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
   // --- 1. Header Ayarları (Native Header İçin) ---
   useLayoutEffect(() => {
     navigation.setOptions({
-      // Sayfa başlığı: Eğer veri geldiyse Kullanıcı Adı, yoksa 'Profil'
       title: profile?.fullName || 'Profil',
-      
-      // Sağ üst köşe: Sadece kendi profilimse "Çıkış" butonu koy
       headerRight: () => isOwner ? (
         <TouchableOpacity onPress={handleLogout} style={{ marginRight: 10 }}>
             <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Çıkış</Text>
         </TouchableOpacity>
       ) : null,
     });
-  }, [navigation, isOwner, profile]); // Profile güncellenince başlık da güncellenir
+  }, [navigation, isOwner, profile]);
+
+  // ✅ Favorileri çekme fonksiyonu - GÜÇLENDİRİLMİŞ
+  const fetchFavorites = async () => {
+    if (!isOwner) {
+      console.log('⚠️ Başkasının profilinde favoriler gösterilmiyor');
+      return;
+    }
+    
+    try {
+      console.log('📥 Favoriler çekiliyor...');
+      console.log('🔑 Token:', token ? 'Var' : 'YOK!');
+      console.log('🌐 API URL:', `${API_URL}/products/favorites`);
+      
+      const response = await axios.get(`${API_URL}/products/favorites`, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 10000, // 10 saniye timeout
+      });
+      
+      console.log('✅ API Yanıtı:', response.status);
+      console.log('✅ Favoriler:', response.data);
+      
+      // Veriyi kontrol et
+      if (Array.isArray(response.data)) {
+        console.log(`✅ ${response.data.length} adet favori ürün bulundu`);
+        setFavorites(response.data);
+      } else if (response.data?.favorites && Array.isArray(response.data.favorites)) {
+        // Backend bazen {favorites: [...]} şeklinde dönebilir
+        console.log(`✅ ${response.data.favorites.length} adet favori ürün bulundu (nested)`);
+        setFavorites(response.data.favorites);
+      } else {
+        console.warn('⚠️ Beklenmeyen veri formatı:', typeof response.data);
+        setFavorites([]);
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Favoriler yüklenirken HATA:');
+      console.error('  - Status:', error.response?.status);
+      console.error('  - Data:', error.response?.data);
+      console.error('  - Message:', error.message);
+      
+      if (error.response?.status === 404) {
+        console.log('ℹ️ Favorites endpoint bulunamadı - Backend kontrolü gerekli');
+        Alert.alert('Bilgi', 'Favoriler özelliği henüz aktif değil');
+      } else if (error.response?.status === 401) {
+        console.log('🔒 Token geçersiz veya süresi dolmuş');
+        Alert.alert('Hata', 'Oturum süreniz dolmuş, lütfen tekrar giriş yapın');
+      } else {
+        Alert.alert('Hata', 'Favoriler yüklenemedi: ' + (error.response?.data?.message || error.message));
+      }
+      
+      setFavorites([]); // Hata durumunda boş array
+    }
+  };
 
   // --- Veri Çekme ---
   const fetchAllData = useCallback(async () => {
@@ -56,6 +113,9 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
       if (isOwner) {
         const myProfile = await api.getProfile();
         setProfile(myProfile);
+        
+        // ✅ Favorileri de çek
+        await fetchFavorites();
       } else {
         const userProfile = await api.getPublicUserProfile(targetUserId);
         setProfile(userProfile);
@@ -126,6 +186,21 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
     ]);
   };
 
+  // ✅ Favori silme işlemi
+  const handleRemoveFavorite = async (productId: string) => {
+    try {
+      await axios.delete(`${API_URL}/products/favorites/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // State'ten kaldır
+      setFavorites(prev => prev.filter(p => p.id !== productId));
+      Alert.alert('Başarılı', 'Favorilerden kaldırıldı');
+    } catch (error) {
+      Alert.alert('Hata', 'Favorilerden kaldırılamadı');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -134,7 +209,7 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
     );
   }
 
-  // --- Profil İçeriği (Artık Header değil, listenin bir parçası) ---
+  // --- Profil İçeriği ---
   const renderProfileHeader = () => (
     <View style={styles.profileContainer}>
         
@@ -234,17 +309,22 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
                 onPress={() => setActiveTab('products')}
             >
                 <Text style={[styles.tabText, activeTab === 'products' && styles.activeTabText]}>
-                    İlanlar
+                    İlanlar ({products.length})
                 </Text>
             </TouchableOpacity>
             
             {isOwner && (
                 <TouchableOpacity 
                     style={[styles.tab, activeTab === 'favorites' && styles.activeTab]}
-                    onPress={() => setActiveTab('favorites')}
+                    onPress={() => {
+                        setActiveTab('favorites');
+                        // Sekmeye tıklandığında favorileri yeniden yükle
+                        console.log('🔄 Favoriler sekmesi açıldı, yeniden yükleniyor...');
+                        fetchFavorites();
+                    }}
                 >
                     <Text style={[styles.tabText, activeTab === 'favorites' && styles.activeTabText]}>
-                        Favoriler
+                        Favoriler ({favorites.length})
                     </Text>
                 </TouchableOpacity>
             )}
@@ -261,6 +341,20 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
             source={{ uri: item.images?.[0]?.imageUrl || 'https://via.placeholder.com/150' }} 
             style={styles.productImage} 
         />
+        
+        {/* ✅ Favoriler sekmesinde çarpı butonu ekle */}
+        {activeTab === 'favorites' && (
+            <TouchableOpacity 
+                style={styles.removeButton}
+                onPress={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFavorite(item.id);
+                }}
+            >
+                <Text style={styles.removeButtonText}>✕</Text>
+            </TouchableOpacity>
+        )}
+        
         <View style={styles.productInfo}>
             <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
             <Text style={styles.productPrice}>₺{item.price}</Text>
@@ -271,7 +365,7 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={activeTab === 'products' ? products : []}
+        data={activeTab === 'products' ? products : favorites}
         keyExtractor={(item) => item.id}
         renderItem={renderProduct}
         numColumns={2}
@@ -281,6 +375,11 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
                 <Text style={styles.emptyText}>
                     {activeTab === 'products' ? 'Henüz ilan yok.' : 'Favori ürün yok.'}
                 </Text>
+                {activeTab === 'favorites' && (
+                    <Text style={styles.emptySubtext}>
+                        Beğendiğin ürünleri buradan takip edebilirsin
+                    </Text>
+                )}
             </View>
         }
         columnWrapperStyle={styles.listColumnWrapper}
@@ -297,7 +396,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  // Profil Alanı (Header değil, sayfa içeriği)
   profileContainer: { 
       alignItems: 'center', 
       paddingTop: 20, 
@@ -320,14 +418,12 @@ const styles = StyleSheet.create({
   fullName: { fontSize: 20, fontWeight: 'bold', color: '#333' },
   universityText: { fontSize: 14, color: '#666', marginBottom: 15 },
 
-  // İstatistikler
   statsRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-around', marginBottom: 20 },
   statItem: { alignItems: 'center', flex: 1 },
   statNumber: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   statLabel: { fontSize: 12, color: '#888' },
   verticalDivider: { width: 1, height: '100%', backgroundColor: '#E5E5EA' },
 
-  // Butonlar
   actionButtons: { flexDirection: 'row', gap: 10, width: '100%', marginBottom: 20 },
   button: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   editButton: { backgroundColor: '#F2F2F7', borderWidth: 1, borderColor: '#D1D1D6' },
@@ -340,21 +436,44 @@ const styles = StyleSheet.create({
   buttonTextBlack: { color: '#333', fontWeight: '600' },
   followingButtonText: { color: '#007AFF', fontWeight: '600' },
 
-  // Tablar
   tabContainer: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E5EA', width: '100%' },
   tab: { flex: 1, paddingVertical: 15, alignItems: 'center' },
   activeTab: { borderBottomWidth: 2, borderBottomColor: '#333' },
   tabText: { fontSize: 14, color: '#888', fontWeight: '600' },
   activeTabText: { color: '#333' },
 
-  // Liste
   listColumnWrapper: { justifyContent: 'space-between', paddingHorizontal: 10, marginTop: 10 },
-  productCard: { width: '48%', backgroundColor: '#fff', borderRadius: 8, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  productCard: { width: '48%', backgroundColor: '#fff', borderRadius: 8, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2, position: 'relative' },
   productImage: { width: '100%', height: 160, borderTopLeftRadius: 8, borderTopRightRadius: 8, backgroundColor: '#f0f0f0' },
   productInfo: { padding: 8 },
   productTitle: { fontSize: 13, fontWeight: '500', color: '#333', marginBottom: 4 },
   productPrice: { fontSize: 15, fontWeight: 'bold', color: '#007AFF' },
 
+  // ✅ Favorilerden kaldırma butonu
+  removeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    lineHeight: 16,
+  },
+
   emptyContainer: { padding: 40, alignItems: 'center' },
-  emptyText: { color: '#999', fontSize: 16 },
+  emptyText: { color: '#999', fontSize: 16, marginBottom: 8 },
+  emptySubtext: { color: '#ccc', fontSize: 14, textAlign: 'center' },
 });

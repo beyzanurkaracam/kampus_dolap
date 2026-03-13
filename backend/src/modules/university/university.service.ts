@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { University } from 'src/entities/university.entity';
 import * as bolumlerData from './bolumler.json';
 import * as universityData from './university.json';
+import { CampusLocation } from 'src/entities/campus-location.entity';
 
 export interface UniversityApiData {
   name: string;
@@ -21,6 +22,8 @@ export class UniversityService implements OnModuleInit {
   constructor(
     @InjectRepository(University)
     private universityRepository: Repository<University>,
+    @InjectRepository(CampusLocation)
+    private locationRepository: Repository<CampusLocation>
   ) {}
 
   async onModuleInit() {
@@ -172,4 +175,11 @@ export class UniversityService implements OnModuleInit {
     // JSON'daki tüm üniversite isimlerini döndür
     return Object.keys(bolumlerData);
   }
+
+  async getCampusLocations(universityId: string): Promise<CampusLocation[]> {
+    return this.locationRepository.find({
+        where: { universityId, isActive: true },
+        order: { name: 'ASC' }
+    });
+}
 }

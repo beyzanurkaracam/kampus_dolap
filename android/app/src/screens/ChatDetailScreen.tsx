@@ -62,7 +62,7 @@ const getImageUrl = (url?: string) => {
   return `${API_URL}/${cleanPath}`;
 };
 
-// ✅ AYRI BİLEŞEN: Ürün Mesaj Kartı
+
 const ProductMessageCard = ({ metadata, navigation }: { metadata: any, navigation: any }) => {
   const [imageError, setImageError] = useState(false);
   const imageUrl = getImageUrl(metadata?.productImage);
@@ -100,10 +100,10 @@ const ProductMessageCard = ({ metadata, navigation }: { metadata: any, navigatio
       {/* Ürün Bilgileri */}
       <View style={styles.productCardInfo}>
         <Text style={styles.productCardTitle} numberOfLines={2}>
-          📦 {metadata?.productTitle || 'Ürün'}
+           {metadata?.productTitle || 'Ürün'}
         </Text>
         <Text style={styles.productCardPrice}>
-          💰 {metadata?.productPrice} ₺
+           {metadata?.productPrice} ₺
         </Text>
         <Text style={styles.productCardText}>
           Merhaba, bu ürün hakkında bilgi alabilir miyim?
@@ -138,7 +138,7 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
         >
           <View style={styles.headerTitle}>
             <Text style={styles.headerProductTitle} numberOfLines={1}>
-              📦 {product?.title || 'Ürün'}
+               {product?.title || 'Ürün'}
             </Text>
             <Text style={styles.headerName} numberOfLines={1}>
               {otherUser?.fullName || 'Sohbet'}
@@ -170,8 +170,8 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
     });
 
     socket.on('chat:newMessage', (message: Message) => {
-      setMessages(prev => [...prev, message]);
-      scrollToBottom();
+      // ✅ Yeni mesajı BAŞA ekle (çünkü inverted kullanıyoruz)
+      setMessages(prev => [message, ...prev]);
       if (message.sender.id !== userId) {
         markAsRead();
       }
@@ -215,8 +215,9 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      setMessages(response.data);
-      setTimeout(scrollToBottom, 100);
+      // ✅ Mesajları TERS ÇEVİR - En yeni mesaj başta olsun
+      setMessages(response.data.reverse());
+      
       markAsRead();
     } catch (error: any) {
       console.error('Mesajlar yüklenirken hata:', error);
@@ -257,12 +258,6 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
     if (socket && isConnected && text.length > 0) {
       socket.emit('chat:typing', { chatId });
     }
-  };
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
@@ -341,7 +336,7 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
         renderItem={renderMessage}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messagesList}
-        onContentSizeChange={scrollToBottom}
+        inverted={true}
         ListEmptyComponent={
           <View style={styles.emptyMessages}>
             <Text style={styles.emptyMessagesText}>Henüz mesaj yok. İlk mesajı gönderin! 👋</Text>

@@ -1,6 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 import { Product } from './product.entity';
+import { CampusLocation } from './campus-location.entity';
+
+
 
 @Entity('universities')
 export class University {
@@ -30,4 +33,13 @@ export class University {
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
+
+  @OneToMany(() => CampusLocation, (location) => location.university)
+  campusLocations: CampusLocation[];
+
+  @Column('decimal', { precision: 10, scale: 7, nullable: true })
+  latitude: number;
+
+  @Column('decimal', { precision: 10, scale: 7, nullable: true })
+  longitude: number;
 }

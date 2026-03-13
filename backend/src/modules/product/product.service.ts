@@ -43,7 +43,8 @@ export class ProductService {
 
 // getAllActiveProducts fonksiyonunu güncelle
 async getAllActiveProducts(query: any = {}): Promise<Product[]> {
-  const { search, categoryId, minPrice, maxPrice, sort } = query;
+  // 👇 sellerId parametresini buraya ekledik
+  const { search, categoryId, minPrice, maxPrice, sort, sellerId } = query; 
 
   const queryBuilder = this.productRepository.createQueryBuilder('product')
     .leftJoinAndSelect('product.images', 'images')
@@ -51,6 +52,11 @@ async getAllActiveProducts(query: any = {}): Promise<Product[]> {
     .leftJoinAndSelect('product.university', 'university')
     .leftJoinAndSelect('product.seller', 'seller')
     .where('product.status = :status', { status: 'active' });
+
+  // 👇 BU KISMI EKLE: Satıcı ID'sine göre filtreleme
+  if (sellerId) {
+    queryBuilder.andWhere('product.sellerId = :sellerId', { sellerId });
+  }
 
   // 1. Arama (Başlık veya Açıklama)
   if (search) {
@@ -386,5 +392,61 @@ async getAllActiveProducts(query: any = {}): Promise<Product[]> {
 
     product.status = status;
     return await this.productRepository.save(product);
+  }
+
+
+  async getSimilarProducts(productId: string): Promise<Product[]> {
+    // 1. Referans ürünü çek
+    const currentProduct = await this.productRepository.findOne({
+      where: { id: productId },
+    });
+  
+    if (!currentProduct) {
+      throw new NotFoundException('Ürün bulunamadı');
+    }
+  
+    // Fiyat aralığı ( %30 altı ve %30 fazlası )
+    const minPrice = Number(currentProduct.price) * 0.3;
+    const maxPrice = Number(currentProduct.price) * 3.3;
+  
+    // 2. QueryBuilder ile benzer ürünleri çek
+    const query = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.images', 'images')
+      .leftJoinAndSelect('product.seller', 'seller')
+      .leftJoinAndSelect('product.category', 'category')
+      
+      // Mevcut ürünü hariç tut
+      .where('product.id != :id', { id: productId })
+      // Sadece aktif ilanlar
+      .andWhere('product.status = :status', { status: 'active' })
+      .andWhere('product.universityId = :uniId', { uniId: currentProduct.universityId })
+      
+      // Puanlama için SELECT ekle
+      .addSelect(
+        `(
+          (CASE WHEN product."categoryId" = :catId THEN 50 ELSE 0 END) + 
+          (CASE WHEN product.brand = :brand AND product.brand != '' THEN 30 ELSE 0 END) + 
+          (CASE WHEN product.price BETWEEN :minPrice AND :maxPrice THEN 20 ELSE 0 END)
+        )`,
+        'similarity_score'
+      )
+      
+      // Parametreleri ata
+      .setParameters({
+        id: productId,
+        status: 'active',
+        uniId: currentProduct.universityId,
+        catId: currentProduct.categoryId,
+        brand: currentProduct.brand || '', 
+        minPrice,
+        maxPrice,
+      })
+      
+      .orderBy('similarity_score', 'DESC') // En yüksek puanlılar üstte
+      .addOrderBy('RANDOM()')              // Puanı eşit olanları karıştır
+      .limit(6);                            // Maksimum 6 ürün
+  
+    return await query.getMany();
   }
 }

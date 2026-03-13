@@ -5,276 +5,305 @@ import {
   StyleSheet, 
   Image, 
   TouchableOpacity, 
-  ActivityIndicator, 
   TextInput, 
   Alert 
 } from 'react-native';
 
 interface OfferItemProps {
   offer: any;
+  currentUserId: string | null;
   onAccept: (id: string) => void;
   onReject: (id: string) => void;
-  onCounter: (id: string, amount: number) => void; // ✅ Yeni Prop
+  onCounter: (id: string, amount: number) => void;
+  onCounterWithMeeting?: (id: string, amount: number, meetingPointId: string, meetingTime: Date) => void; 
+  onMeetingChangeOnly?: () => void; 
+  onConfirmMeeting: (id: string) => void;
   loadingId: string | null;
 }
 
 export const OfferItem: React.FC<OfferItemProps> = ({ 
   offer, 
+  currentUserId,
   onAccept, 
   onReject, 
-  onCounter, 
+  onCounter,
+  onCounterWithMeeting,
+  onMeetingChangeOnly,
+  onConfirmMeeting, 
   loadingId 
 }) => {
-  const isPending = offer.status === 'pending';
   const productImg = offer.product?.images?.[0]?.imageUrl;
-
-  // Karşı teklif modu için state
+  
+  // Roller
+  const isBuyer = currentUserId === offer.buyerId;
+  const isSeller = currentUserId === offer.sellerId;
+  
+  // Durumlar
+  const isPending = offer.status === 'pending';
+  const isAccepted = offer.status === 'accepted'; 
+  const isConfirmed = offer.status === 'meeting_confirmed'; 
+  
+  // Kim son onayı verecek?
+  const shouldIConfirm = isAccepted && offer.makerId !== currentUserId;
+  
+  // Buluşma önerisi kontrolü
+  const hasMeetingInfo = offer.meetingPoint && offer.meetingTime;
+  const isMeetingProposal = isPending && hasMeetingInfo;
+  
+  // State'ler
   const [isCounterMode, setIsCounterMode] = useState(false);
   const [counterPrice, setCounterPrice] = useState('');
+  // showMeetingModal kaldırıldı - parent'tan gelecek
 
-  // Duruma göre etiket rengi
+  // Renkler
   const getStatusColor = () => {
-    switch (offer.status) {
-      case 'accepted': return '#34C759';
-      case 'rejected': return '#FF3B30';
-      case 'countered': return '#8E8E93'; // Gri (Arşivlenmiş)
-      default: return '#FF9500';
-    }
+    if (isConfirmed) return '#34C759';
+    if (isAccepted) return '#007AFF';
+    if (offer.status === 'rejected') return '#FF3B30';
+    if (isMeetingProposal) return '#5856D6';
+    return '#FF9500';
   };
 
   const getStatusText = () => {
-    switch (offer.status) {
-      case 'accepted': return 'Kabul Edildi';
-      case 'rejected': return 'Reddedildi';
-      case 'countered': return 'Karşı Teklif Verildi';
-      default: return 'Cevap Bekliyor';
+    if (isConfirmed) return 'Buluşma Kesinleşti ';
+    
+    if (isAccepted) {
+      if (shouldIConfirm) {
+        // Ben onaylayacağım - karşı taraf kabul etti
+        const whoAccepted = offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı';
+        return `${whoAccepted} Kabul Etti - Onayınız Bekleniyor`;
+      } else {
+        // Ben kabul ettim - karşı taraf onaylayacak
+        const whoWillConfirm = offer.makerId === offer.buyerId ? 'Satıcıdan' : 'Alıcıdan';
+        return `Gönderildi - ${whoWillConfirm} Onay Bekleniyor`;
+      }
+    }
+    
+    if (offer.status === 'rejected') return 'Reddedildi ';
+    
+    // PENDING durumu
+    if (isMeetingProposal) {
+      const whoSent = offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı';
+      return `📍 ${whoSent} Buluşma Önerisi`;
+    }
+    
+    if (offer.makerId === currentUserId) {
+      return 'Gönderildi - Cevap Bekleniyor ';
+    } else {
+      return 'Cevap Vermeniz Bekleniyor ';
     }
   };
 
-  const handleSendCounter = () => {
+  const getHeaderText = () => {
+    const who = offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı';
+    if (isMeetingProposal) return `${who} Buluşma Önerisi`;
+    if (offer.makerId === offer.buyerId) return 'Alıcı Fiyat Teklifi';
+    return 'Satıcı Karşı Teklifi';
+  };
+
+  const handleSendSimpleCounter = () => {
     const amount = parseFloat(counterPrice);
     if (!amount || amount <= 0) {
-      Alert.alert('Hata', 'Lütfen geçerli bir tutar giriniz');
+      Alert.alert('Hata', 'Geçerli bir tutar giriniz.');
       return;
     }
-    // API'ye gönder
     onCounter(offer.id, amount);
-    // Modu kapat
     setIsCounterMode(false);
     setCounterPrice('');
   };
 
   return (
-    <View style={styles.card}>
-      {/* Üst Kısım: Ürün ve Fiyat */}
+    <View style={[styles.card, { borderLeftColor: getStatusColor() }]}>
+      
       <View style={styles.header}>
-        <Image 
-          source={{ uri: productImg || 'https://via.placeholder.com/100' }} 
-          style={styles.image} 
-        />
+        <Image source={{ uri: productImg || 'https://via.placeholder.com/100' }} style={styles.image} />
         <View style={styles.info}>
           <Text style={styles.productTitle} numberOfLines={1}>{offer.product.title}</Text>
+          
           <Text style={styles.buyerName}>
-             {/* Teklifi kimin yaptığını gösterir */}
-             {offer.makerId === offer.buyer.id ? 'Alıcı Teklifi' : 'Satıcı Teklifi'}: {offer.buyer.fullName}
+            {getHeaderText()}: <Text style={{fontWeight: 'bold', color: '#333'}}>{offer.offerAmount} ₺</Text>
           </Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.offerPrice}>₺{offer.offerAmount}</Text>
-            <Text style={[styles.statusBadge, { color: getStatusColor() }]}>
-              {getStatusText()}
-            </Text>
-          </View>
+          
+          {}
+          {hasMeetingInfo && (
+            <View style={styles.meetingInfo}>
+              <Text style={styles.meetingLabel}>
+                {isMeetingProposal ? ' Önerilen Buluşma:' : '📍 Buluşma Detayı:'}
+              </Text>
+              <Text style={styles.meetingText}>🏢 {offer.meetingPoint.name}</Text>
+              <Text style={styles.meetingText}>
+                🕒 {new Date(offer.meetingTime).toLocaleDateString('tr-TR')} - {new Date(offer.meetingTime).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'})}
+              </Text>
+            </View>
+          )}
+
+          <Text style={[styles.statusBadge, { color: getStatusColor() }]}>
+            {getStatusText()}
+          </Text>
         </View>
       </View>
 
-      {/* Alt Kısım: Aksiyonlar (Sadece Pending ise) */}
-      {isPending && (
-        <View style={styles.actionContainer}>
-          {/* A) KARŞI TEKLİF MODU (Input Açık) */}
-          {isCounterMode ? (
-            <View style={styles.counterRow}>
-               <TextInput 
-                  style={styles.input}
-                  placeholder="Yeni Tutar"
-                  keyboardType="numeric"
-                  value={counterPrice}
-                  onChangeText={setCounterPrice}
-                  autoFocus
-               />
-               <TouchableOpacity 
-                 style={styles.sendButton} 
-                 onPress={handleSendCounter}
-                 disabled={!!loadingId}
-               >
-                 <Text style={styles.buttonText}>Gönder</Text>
-               </TouchableOpacity>
+      <View style={styles.actionContainer}>
+  
+        {}
+        {isPending && (
+          offer.makerId !== currentUserId ? (
+            
+            isCounterMode ? (
+              <View style={styles.counterRow}>
+                <TextInput 
+                  style={styles.input} 
+                  placeholder="Tutar" 
+                  keyboardType="numeric" 
+                  value={counterPrice} 
+                  onChangeText={setCounterPrice} 
+                />
+                <TouchableOpacity style={styles.sendButton} onPress={handleSendSimpleCounter}>
+                  <Text style={styles.buttonText}>✓</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.cancelButton} onPress={() => setIsCounterMode(false)}>
+                  <Text style={styles.cancelText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.buttonContainerColumn}>
+                {isMeetingProposal && (
+                  <Text style={styles.proposalNote}>
+                    {offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı'} buluşma yeri ve saati önerdi. 
+                    {'\n'}Kabul edebilir veya farklı yer/saat önerebilirsiniz.
+                  </Text>
+                )}
 
-               <TouchableOpacity 
-                 style={styles.cancelButton} 
-                 onPress={() => setIsCounterMode(false)}
-               >
-                 <Text style={styles.cancelText}>✕</Text>
-               </TouchableOpacity>
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity style={[styles.button, styles.rejectButton]} onPress={() => onReject(offer.id)}>
+                    <Text style={styles.buttonText}>Reddet</Text>
+                  </TouchableOpacity>
+                  
+                  {}
+                  {isMeetingProposal && onMeetingChangeOnly && (
+                    <TouchableOpacity 
+                      style={[styles.button, styles.changeMeetingButton]} 
+                      onPress={onMeetingChangeOnly}
+                    >
+                      <Text style={styles.buttonText}>Değiştir</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {!isMeetingProposal && (
+                    <TouchableOpacity style={[styles.button, styles.counterButton]} onPress={() => setIsCounterMode(true)}>
+                      <Text style={[styles.buttonText, {color:'#000'}]}>Fiyat Değiştir</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  <TouchableOpacity style={[styles.button, styles.acceptButton]} onPress={() => onAccept(offer.id)}>
+                    <Text style={styles.buttonText}>Kabul Et</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )
+          ) : (
+            // BENİM GÖNDERDİĞİM TEKLİF
+            <Text style={styles.waitingText}>
+              {isMeetingProposal 
+                ? `${offer.makerId === offer.buyerId ? 'Satıcıdan' : 'Alıcıdan'} yanıt bekleniyor...`
+                : `${offer.makerId === offer.buyerId ? 'Satıcıdan' : 'Alıcıdan'} yanıt bekleniyor...`}
+            </Text>
+          )
+        )}
+
+        {}
+        {isAccepted && (
+          shouldIConfirm ? (
+            // BEN ONAYLAMALIYIM
+            <View>
+              <Text style={styles.infoText}>
+                {offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı'} teklifi kabul etti. 
+                {'\n'}Onaylarsanız buluşma kesinleşir veya yeri değiştirebilirsiniz.
+              </Text>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity style={[styles.button, styles.rejectButton]} onPress={() => onReject(offer.id)}>
+                  <Text style={styles.buttonText}>Vazgeç</Text>
+                </TouchableOpacity>
+                
+                {}
+                {onMeetingChangeOnly && (
+                  <TouchableOpacity 
+                    style={[styles.button, styles.changeMeetingButton]} 
+                    onPress={onMeetingChangeOnly}
+                  >
+                    <Text style={styles.buttonText}>Yer Değiştir</Text>
+                  </TouchableOpacity>
+                )}
+                
+                <TouchableOpacity style={[styles.button, styles.confirmMeetingButton]} onPress={() => onConfirmMeeting(offer.id)}>
+                  <Text style={styles.buttonText}>Onayla </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ) : (
-            /* B) NORMAL BUTONLAR */
-            <View style={styles.buttonRow}>
-              <TouchableOpacity 
-                style={[styles.button, styles.rejectButton]} 
-                onPress={() => onReject(offer.id)}
-                disabled={!!loadingId}
-              >
-                {loadingId === `reject-${offer.id}` ? (
-                   <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                   <Text style={styles.buttonText}>Reddet</Text>
-                )}
-              </TouchableOpacity>
+            // BEN KABUL ETTİM - KARŞI TARAF ONAYLAYACAK
+            <Text style={styles.waitingText}>
+              {offer.makerId === offer.buyerId ? 'Satıcıdan' : 'Alıcıdan'} son onay bekleniyor...
+            </Text>
+          )
+        )}
 
-              {/* Karşı Teklif Butonu */}
-              <TouchableOpacity 
-                style={[styles.button, styles.counterButton]} 
-                onPress={() => setIsCounterMode(true)}
-                disabled={!!loadingId}
-              >
-                 {loadingId === `counter-${offer.id}` ? (
-                   <ActivityIndicator color="#333" size="small" />
-                ) : (
-                   <Text style={[styles.buttonText, { color: '#333' }]}>Karşı Teklif</Text>
-                )}
-              </TouchableOpacity>
+        {}
+        {isConfirmed && (
+          <Text style={styles.successText}> İyi alışverişler! Ürün rezerve edildi.</Text>
+        )}
 
-              <TouchableOpacity 
-                style={[styles.button, styles.acceptButton]} 
-                onPress={() => onAccept(offer.id)}
-                disabled={!!loadingId}
-              >
-                 {loadingId === `accept-${offer.id}` ? (
-                   <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                   <Text style={styles.buttonText}>Kabul Et</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: '#007AFF', 
+  card: { 
+    backgroundColor: '#fff', 
+    borderRadius: 12, 
+    padding: 12, 
+    marginBottom: 10, 
+    shadowOpacity: 0.1, 
+    elevation: 3, 
+    borderLeftWidth: 4 
   },
-  header: {
-    flexDirection: 'row',
-    marginBottom: 10,
+  header: { flexDirection: 'row', marginBottom: 5 },
+  image: { width: 70, height: 70, borderRadius: 8, backgroundColor: '#f0f0f0' },
+  info: { flex: 1, marginLeft: 12, justifyContent: 'center' },
+  productTitle: { fontSize: 14, fontWeight: '600', color: '#333' },
+  buyerName: { fontSize: 13, color: '#555', marginTop: 2 },
+  statusBadge: { fontSize: 12, fontWeight: '700', marginTop: 4 },
+  
+  meetingInfo: { 
+    marginVertical: 6, 
+    backgroundColor: '#F2F2F7', 
+    padding: 6, 
+    borderRadius: 6 
   },
-  image: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-  },
-  info: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'center',
-  },
-  productTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  buyerName: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 4,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  offerPrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  statusBadge: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  actionContainer: {
-    marginTop: 5,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingTop: 10,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  acceptButton: { backgroundColor: '#34C759' },
-  rejectButton: { backgroundColor: '#FF3B30' },
-  counterButton: { backgroundColor: '#FFD60A' }, // Sarı
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  // Counter Modu Stilleri
-  counterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  input: {
-    flex: 2,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 40,
-    backgroundColor: '#f9f9f9',
-  },
-  sendButton: {
-    flex: 1,
-    backgroundColor: '#007AFF',
-    height: 40,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-  },
-  cancelText: {
-    fontSize: 18,
-    color: '#999',
-    fontWeight: 'bold',
-  },
+  meetingLabel: { fontSize: 11, fontWeight: 'bold', color: '#555', marginBottom: 2 },
+  meetingText: { fontSize: 12, color: '#000', fontWeight: '500' },
+
+  actionContainer: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 10 },
+  buttonContainerColumn: { flexDirection: 'column', gap: 8, width: '100%' },
+  buttonRow: { flexDirection: 'row', gap: 8, marginTop: 5 },
+  proposalNote: { fontSize: 11, color: '#666', fontStyle: 'italic', marginBottom: 5 },
+
+  button: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+  acceptButton: { backgroundColor: '#66BB6A' }, // Yumuşak Yeşil (Material Green)
+  rejectButton: { backgroundColor: '#EF5350' }, // Yumuşak Kırmızı (Mercan tonu)
+  counterButton: { backgroundColor: '#5C9EAD' }, // Pastel Mavi/Yeşil (Gri yerine)
+  confirmMeetingButton: { backgroundColor: '#007AFF' },
+  buttonText: { color: '#fff', fontWeight: '600', fontSize: 12 },
+  
+  waitingText: { color: '#888', fontStyle: 'italic', fontSize: 12, textAlign: 'center' },
+  successText: { color: '#34C759', fontWeight: 'bold', fontSize: 13, textAlign: 'center' },
+  infoText: { fontSize: 12, color: '#007AFF', marginBottom: 10, textAlign: 'center', fontWeight: '500' },
+  
+  counterRow: { flexDirection: 'row', gap: 5 },
+  input: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 10, height: 40 },
+  sendButton: { backgroundColor: '#007AFF', width: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
+  cancelButton: { backgroundColor: '#ccc', width: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
+  cancelText: { fontWeight: 'bold', color: '#333' },
+  changeMeetingButton: { backgroundColor: '#5C9EAD' }, // Pastel Mavi/Yeşil (Gri yerine)
 });

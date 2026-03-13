@@ -269,6 +269,45 @@ class ApiService {
     });
     return response.json();
   }
+
+  async getUniversityLocations(universityId: string) {
+    const response = await fetch(`${API_URL}/university/${universityId}/locations`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Konumlar alınamadı');
+    return response.json();
+  }
+
+  // Teklifi kabul et ve buluşma ayarla
+  async acceptOfferWithMeeting(offerId: string, meetingPointId: string, meetingTime: Date) {
+    const response = await fetch(`${API_URL}/offers/${offerId}/accept`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify({
+        meetingPointId,
+        meetingTime: meetingTime.toISOString(), // ISO formatında gönderiyoruz
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Teklif kabul edilemedi');
+    }
+    return response.json();
+  }
+  
+  async confirmMeeting(offerId: string) {
+    const response = await fetch(`${API_URL}/offers/${offerId}/confirm-meeting`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Onaylanamadı');
+    }
+    return response.json();
+  }
+
 }
 
 export default new ApiService();

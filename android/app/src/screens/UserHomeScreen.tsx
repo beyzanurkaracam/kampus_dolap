@@ -61,8 +61,7 @@ const UserHomeScreen = ({ navigation }: any) => {
     fetchFavorites();
   }, []);
 
-  // ✅ Main Fetch Trigger
-  // Triggers ONLY when: Category changes OR Search text changes OR "Apply" is pressed (Active filters change)
+
   useEffect(() => {
     fetchListings();
   }, [selectedCategory, searchQuery, activeMinPrice, activeMaxPrice, activeSortBy]);
@@ -247,12 +246,37 @@ const UserHomeScreen = ({ navigation }: any) => {
           <Text style={styles.userName}>{user?.fullName || 'Misafir'}</Text>
         </View>
         <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Chats')}>
+
+        {user?.role === 'ADMIN' && (
+            <TouchableOpacity 
+              style={[styles.headerButton]} // Kırmızı renk verelim dikkat çeksin
+              onPress={() => navigation.navigate('AdminDashboard')}
+            >
+              <Text style={styles.headerButtonIcon}>🛡️</Text>
+            </TouchableOpacity>
+          )}
+        <TouchableOpacity 
+            style={styles.headerButton} 
+            onPress={() => navigation.navigate('Offers')} 
+          >
+            <Text style={styles.headerButtonIcon}>🏷️</Text>
+          </TouchableOpacity>
+          
+          {/* Mesajlar Butonu */}
+          <TouchableOpacity 
+            style={styles.headerButton} 
+            onPress={() => navigation.navigate('Chats')} 
+          >
             <Text style={styles.headerButtonIcon}>💬</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('UserProfile')}>
-          <Text style={styles.headerButtonIcon}>👤</Text>
-        </TouchableOpacity>
+          
+          {/* Profil Butonu */}
+          <TouchableOpacity 
+            style={styles.headerButton} 
+            onPress={() => navigation.navigate('UserProfile')}
+          >
+            <Text style={styles.headerButtonIcon}>👤</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -398,6 +422,13 @@ const UserHomeScreen = ({ navigation }: any) => {
           </View>
         </View>
       </Modal>
+
+      <TouchableOpacity
+        style={styles.floatingAddButton}
+        onPress={() => navigation.navigate('AddProduct')}
+      >
+        <Text style={styles.floatingAddButtonText}>+</Text>
+      </TouchableOpacity>
 
     </View>
   );
@@ -594,6 +625,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   applyFilterText: { color: '#fff', fontWeight: 'bold' },
+  floatingAddButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 999, // En üstte durması için
+  },
+  floatingAddButtonText: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: '300',
+    marginTop: -2, // Görsel ortalama düzeltmesi
+  },
 });
 
 export default UserHomeScreen;

@@ -10,14 +10,20 @@ import { seedProducts } from './seed-products';
 dotenv.config();
 
 // TypeORM DataSource configuration
+// TypeORM DataSource configuration
 const AppDataSource = new DataSource({
   type: 'postgres',
-  host: process.env.DATABASE_HOST || 'localhost',
-  port: parseInt(process.env.DATABASE_PORT || '5432'),
-  username: process.env.DATABASE_USERNAME || 'postgres',
-  password: process.env.DATABASE_PASSWORD || 'postgres',
-  database: process.env.DATABASE_NAME || 'secondhand_db',
-  entities: ['src/entities/**/*.entity.ts'],
+  // Senin .env dosyanla uyumlu hale getirildi
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  username: process.env.DB_USERNAME || 'postgres',
+  password: process.env.DB_PASSWORD || 'beyza123', // Buraya gerçek şifreni yazabilirsin
+  database: process.env.DB_DATABASE || 'kampus_dolap_db',
+  
+  // __dirname ile mutlak yol kullanmak ts-node hatalarını önler
+  entities: [__dirname + '/../entities/**/*.entity.{ts,js}'],
+  
+  // EĞER tabloların henüz veritabanında oluşmadıysa burayı geçici olarak true yap:
   synchronize: false, 
 });
 

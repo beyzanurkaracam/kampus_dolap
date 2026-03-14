@@ -1,9 +1,19 @@
-version: '3.8'
-
 services:
- 
+  # 1. PostgreSQL (İlişkisel Veritabanı)
+  postgres:
+    image: postgres:16
+    container_name: kampus_dolap_pg
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: beyza123
+      POSTGRES_DB: kampus_dolap_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_new_data:/var/lib/postgresql/data
 
-  # 2. Redis (Hız ve Önbellek)
+  # 2. Redis (Hız, Önbellek ve Socket.io adaptörü)
   redis:
     image: redis:alpine
     container_name: dolap_redis
@@ -12,7 +22,7 @@ services:
 
   # 3. Zookeeper (Kafka'nın Yönetimi için Şart)
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.0
     container_name: dolap_zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -22,7 +32,7 @@ services:
 
   # 4. Kafka (Mesaj Kuyruk Sistemi)
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.0
     container_name: dolap_kafka
     depends_on:
       - zookeeper
@@ -35,4 +45,4 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
 volumes:
-  postgres_data:
+  pg_new_data:

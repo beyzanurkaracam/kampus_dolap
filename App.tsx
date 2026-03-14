@@ -3,24 +3,25 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
-import { AuthProvider } from './android/app/src/context/AuthContext';
-import { SocketProvider } from './android/app/src/context/SocketContext';
+import { AuthProvider } from './src/context/AuthContext';
+import { SocketProvider } from './src/context/SocketContext';
 
 // Screens
-import LoginScreen from './android/app/src/screens/LoginScreen';
-import RegisterScreen from './android/app/src/screens/RegisterScreen';
-import { EmailVerificationScreen } from './android/app/src/screens/EmailVerificationScreen';
-import AdminDashboardScreen from './android/app/src/screens/AdminDashboardScreen';
-import UserHomeScreen from './android/app/src/screens/UserHomeScreen';
-import { MyProductsScreen } from './android/app/src/screens/MyProductsScreen';
-import { AddProductScreen } from './android/app/src/screens/AddProductScreen';
-import { ProductDetailScreen } from './android/app/src/screens/ProductDetailScreen';
-import { ChatScreen } from './android/app/src/screens/ChatScreen';
-import { ChatDetailScreen } from './android/app/src/screens/ChatDetailScreen';
-import { PremiumScreen } from './android/app/src/screens/PremiumScreen';
-import { MakeOfferScreen } from './android/app/src/screens/MakeOfferScreen';
-import { UserProfileScreen } from './android/app/src/screens/UserProfileScreen';
-import { OffersScreen } from './android/app/src/screens/OffersScreen';
+import LoginScreen from './src/screens/auth/LoginScreen';
+import RegisterScreen from './src/screens/auth/RegisterScreen';
+import { EmailVerificationScreen } from './src/screens/auth/EmailVerificationScreen';
+import AdminDashboardScreen from './src/screens/admin/AdminDashboardScreen';
+import UserHomeScreen from './src/screens/user/UserHomeScreen';
+import { UserProfileScreen } from './src/screens/user/UserProfileScreen';
+import { MyProductsScreen } from './src/screens/product/MyProductsScreen';
+import { AddProductScreen } from './src/screens/product/AddProductScreen';
+import { ProductDetailScreen } from './src/screens/product/ProductDetailScreen';
+import { ChatScreen } from './src/screens/chat/ChatScreen';
+import { PremiumScreen } from './src/screens/user/PremiumScreen';
+import { ChatDetailScreen } from './src/screens/chat/ChatDetailScreen';
+import { OffersScreen } from './src/screens/offer/OffersScreen';
+import { MakeOfferScreen } from './src/screens/offer/MakeOfferScreen';
+
 
 const Stack = createNativeStackNavigator();
 

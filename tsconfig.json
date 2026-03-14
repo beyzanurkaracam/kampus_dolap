@@ -3,10 +3,20 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./android/app/src/*"]
+      "@/*": ["./src/*"]
     },
     "skipLibCheck": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["**/node_modules", "**/Pods", "**/build"]
+  "include": [
+    "**/*.ts", 
+    "**/*.tsx", 
+    "./src/services/PaymentSuccess.js"
+  ],
+  "exclude": [
+    "**/node_modules", 
+    "**/Pods", 
+    "**/build",
+    "android",
+    "ios"
+  ]
 }

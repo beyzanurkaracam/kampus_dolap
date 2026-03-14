@@ -3,6 +3,9 @@ import { Platform } from "react-native";
 
 const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
 
+// ==========================================================
+// TİP TANIMLAMALARI (SINGLE SOURCE OF TRUTH)
+// ==========================================================
 interface LoginData {
   email: string;
   password: string;
@@ -28,6 +31,23 @@ export interface AuthResponse {
   user: User;
 }
 
+// 👑 SENIOR DOKUNUŞU 1: Backend'den Dönen Standart Hata Tipi
+interface ErrorResponse {
+  message?: string;
+}
+
+// 👑 SENIOR DOKUNUŞU 2: Dosya Yükleme Yanıt Tipi
+interface UploadResponse {
+  avatarUrl?: string;
+  url?: string;
+  imageUrl?: string;
+  data?: { url?: string };
+}
+
+// 👑 SENIOR DOKUNUŞU 3: Favoriler Yanıt Tipi
+type FavoritesBackendResponse = any[] | { favorites?: any[] };
+
+
 class ApiService {
   private async getAuthHeaders() {
     const token = await AsyncStorage.getItem('token');
@@ -45,8 +65,8 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const errorData: any = await response.json().catch(() => ({}));
-      throw new Error(errorData?.message || 'Login failed');
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Login failed');
     }
 
     const result = (await response.json()) as AuthResponse;
@@ -63,8 +83,8 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const errorData: any = await response.json().catch(() => ({}));
-      throw new Error(errorData?.message || 'Registration failed');
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Registration failed');
     }
 
     const result = (await response.json()) as AuthResponse;
@@ -113,8 +133,8 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const errorData: any = await response.json().catch(() => ({}));
-      throw new Error(errorData?.message || 'Failed to create user');
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Failed to create user');
     }
 
     const result = await response.json();
@@ -154,8 +174,8 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const errorData: any = await response.json().catch(() => ({}));
-      throw new Error(errorData?.message || 'Takip etme işlemi başarısız');
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Takip etme işlemi başarısız');
     }
 
     const data = await response.json();
@@ -169,8 +189,8 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const errorData: any = await response.json().catch(() => ({}));
-      throw new Error(errorData?.message || 'Takipten çıkma işlemi başarısız');
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Takipten çıkma işlemi başarısız');
     }
 
     const data = await response.json();
@@ -202,52 +222,49 @@ class ApiService {
     const data = await response.json();
     return data as User[];
   }
-// api.ts dosyandaki fonksiyonu bul ve şu şekilde güncelle:
-async getUserProducts(userId: string): Promise<any[]> { // <-- Sadece : Promise<any[]> eklendi
-  const response = await fetch(`${API_URL}/products?sellerId=${userId}`, {
-     headers: await this.getAuthHeaders(),
-  });
-  const data = await response.json();
-  return data as any[]; // <-- ve buraya as any[] eklendi
-}
+
+  async getUserProducts(userId: string): Promise<any[]> {
+    const response = await fetch(`${API_URL}/products?sellerId=${userId}`, {
+       headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+        throw new Error('Ürünler alınamadı');
+    }
+    const data = await response.json();
+    return data as any[];
+  }
+
   // ==========================================================
   // PROFİL VE AVATAR YÖNETİMİ
   // ==========================================================
 
- async uploadAvatar(formData: FormData): Promise<string> {
+  async uploadAvatar(formData: FormData): Promise<string> {
     const token = await AsyncStorage.getItem('token');
-    
-    console.log('API uploadAvatar çağrıldı');
     
     const response = await fetch(`${API_URL}/upload/avatar`, {
       method: 'POST',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
       },
-      body: formData as any,
+      body: formData as unknown as RequestInit['body'],
     });
 
-    console.log('Upload response status:', response.status);
-
     if (!response.ok) {
-      const errorData: any = await response.json().catch(() => ({}));
-      console.error('Upload hata response:', errorData);
-      throw new Error(errorData?.message || 'Avatar yüklenemedi');
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Avatar yüklenemedi');
     }
 
-    const result: any = await response.json();
-    console.log('Upload response data:', result);
-    
-    // Backend response format'ını kontrol et - url, avatarUrl, imageUrl vb.
+    // 👑 SENIOR DOKUNUŞU: Sonucu UploadResponse tipine bağlıyoruz
+    const result = (await response.json()) as UploadResponse;
     const avatarUrl = result.avatarUrl || result.url || result.imageUrl || result.data?.url;
     
     if (!avatarUrl) {
-      console.error('Response\'ta URL bulunamadı:', result);
       throw new Error('Backend avatar URL döndürmedi');
     }
     
     return avatarUrl;
   }
+
   async updateProfile(profilePhotoUrl: string): Promise<User> {
     const response = await fetch(`${API_URL}/auth/profile/update`, {
       method: 'POST', 
@@ -256,8 +273,8 @@ async getUserProducts(userId: string): Promise<any[]> { // <-- Sadece : Promise<
     });
 
     if (!response.ok) {
-      const errorData: any = await response.json().catch(() => ({}));
-      throw new Error(errorData?.message || 'Profil güncellenemedi');
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Profil güncellenemedi');
     }
 
     const data = await response.json();
@@ -328,8 +345,8 @@ async getUserProducts(userId: string): Promise<any[]> { // <-- Sadece : Promise<
     });
 
     if (!response.ok) {
-      const errorData: any = await response.json().catch(() => ({}));
-      throw new Error(errorData?.message || 'Teklif kabul edilemedi');
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Teklif kabul edilemedi');
     }
     return response.json();
   }
@@ -340,8 +357,8 @@ async getUserProducts(userId: string): Promise<any[]> { // <-- Sadece : Promise<
       headers: await this.getAuthHeaders(),
     });
     if (!response.ok) {
-        const errorData: any = await response.json().catch(() => ({}));
-        throw new Error(errorData?.message || 'Onaylanamadı');
+        const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+        throw new Error(errorData.message || 'Onaylanamadı');
     }
     return response.json();
   }
@@ -362,6 +379,41 @@ async getUserProducts(userId: string): Promise<any[]> { // <-- Sadece : Promise<
       throw new Error('FCM Token kaydedilemedi');
     }
     return response.json();
+  }
+
+  // ==========================================================
+  // FAVORİ YÖNETİMİ
+  // ==========================================================
+
+  async getFavorites(): Promise<any[]> {
+    const response = await fetch(`${API_URL}/products/favorites`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      if (response.status === 404) return [];
+      throw new Error(errorData.message || 'Favoriler yüklenemedi');
+    }
+
+    // 👑 SENIOR DOKUNUŞU: Hatanın kök çözüm noktası.
+    // TypeScript'e bu verinin "unknown" olmadığını, tanımladığımız şekle uyduğunu söylüyoruz.
+    const data = (await response.json()) as FavoritesBackendResponse;
+    
+    // Artık data.favorites dediğimizde TS kızmayacak, çünkü "ya arraydir ya da favorites içerir" dedik.
+    return Array.isArray(data) ? data : (data.favorites || []);
+  }
+
+  async removeFavorite(productId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/products/favorites/${productId}`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Favori kaldırılamadı');
+    }
   }
 }
 

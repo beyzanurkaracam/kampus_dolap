@@ -1,20 +1,9 @@
+// src/context/AuthContext.tsx
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import api from '../services/api';
-import { Platform } from 'react-native';
+import api, { User as ApiUser } from '../services/api'; 
 
-
-const BASE_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:3000' 
-  : 'http://localhost:3000';
-
-const API_URL = `${BASE_URL}/auth`;
-
-export interface User {
-  id: string;
-  email: string;
-  fullName?: string;
+export interface User extends ApiUser {
   role: 'USER' | 'ADMIN';
 }
 
@@ -30,117 +19,140 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  token: null,
-  userId: null,
-  loading: true,
-  isLoggedIn: false,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
-  checkAuth: async () => {},
-});
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // 👑 SENIOR DOKUNUŞU: İlk açılışta beyaz (veya loading) ekran göstermek için default true.
+  const [loading, setLoading] = useState(true); 
 
-  // Uygulama açıldığında token kontrol et (Auto Login)
   const checkAuth = useCallback(async () => {
+    // 👑 KRİTİK: İlk açılışta loading TRUE tutmalı ki UI render olmasın
+    setLoading(true);
     try {
+      console.log('🔄 checkAuth - başladı');
       const savedToken = await AsyncStorage.getItem('token');
-      if (savedToken) {
-        setToken(savedToken);
-        // Token doğrulaması yap
-        const response = await axios.get(`${API_URL}/verify`, {
-          headers: { Authorization: `Bearer ${savedToken}` },
-        });
-        if (response.data.valid) {
-          setUser({ ...response.data.user, role: response.data.user.role.toUpperCase() as 'USER' | 'ADMIN' });
-          
-          
-        }
+      
+      if (!savedToken) {
+        console.log('⚠️ Token yok, Login ekranı gösterilecek');
+        setToken(null);
+        setUser(null);
+        setLoading(false); // Token yoksa hemen ekranı aç
+        return; // Token yoksa API'ye gitme
       }
-    } catch (error) {
-      console.log('Auth check failed:', error);
+
+      console.log('🎫 Token bulundu, profil çekiliyor...');
+      
+      // Token varsa profil bilgisini çek (İşlemler sırasında loading hala TRUE)
+      const profileData = await api.getProfile();
+      
+      if (!profileData) {
+        throw new Error('Profile data boş döndü');
+      }
+      
+      // 👑 SENIOR DOKUNUŞU: Hem token'ı hem user'ı AYNI ANDA set ediyoruz.
+      // Ayrı ayrı yaparsak React iki kere render eder ve yönlendirme bug'a girer.
+      setToken(savedToken);
+      setUser({ 
+         ...profileData, 
+         role: (profileData.role?.toUpperCase() || 'USER') as 'USER' | 'ADMIN' 
+      });
+      console.log('✅ checkAuth - Profil başarıyla yüklendi, authenticated');
+
+    } catch (error: any) {
+      console.log('❌ checkAuth HATA:', error.message);
+      // Profil çekilemediyse token geçersiz/süresi dolmuş. Temizle!
       await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('userType');
+      setToken(null);
+      setUser(null);
     } finally {
+      // 👑 KRİTİK NOKTA: İşlemler TAMAMEN bitince loading'i FALSE'a çek
+      console.log('✋ checkAuth bitti, UI kilidini aç (loading = false)');
       setLoading(false);
     }
   }, []);
 
+  // Uygulama açıldığında BİR KERE çalışır.
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
-  // Kullanıcı Manuel Giriş Yaptığında
   const login = useCallback(
     async (email: string, password: string, userType: 'user' | 'admin') => {
-      const endpoint = userType === 'admin' ? 'admin-login' : 'login';
-      const response = await axios.post(`${API_URL}/${endpoint}`, {
-        email,
-        password,
-      });
+      try {
+        console.log('🔐 AuthContext.login başlatıldı');
+        
+        const response = await api.login({ email, password }, userType);
+        
+        // 👑 KRİTİK: Backend'den gelen cevap geçerli mi kontrol et
+        if (!response || !response.access_token || !response.user) {
+          throw new Error('Sunucudan geçersiz yanıt alındı (token veya user eksik)');
+        }
+        
+        const userData: User = {
+          ...response.user,
+          role: (response.user.role?.toUpperCase() || userType.toUpperCase()) as 'USER' | 'ADMIN'
+        };
 
-      const newToken = response.data.access_token;
-      const userData = response.data.user || response.data.admin;
+        console.log('📝 Hazırlanan userData:', { id: userData.id, role: userData.role });
 
-      setToken(newToken);
-      setUser({ ...userData, role: userData.role.toUpperCase() as 'USER' | 'ADMIN' });
-
-      await AsyncStorage.setItem('token', newToken);
-      await AsyncStorage.setItem('userType', userType);
-
-      // ✅ 3. EKLEME: Manuel girişte FCM Token'ı al ve kaydet
-      console.log("🔓 Login Başarılı: Bildirim izni isteniyor...");
+        // 👑 SENIOR DOKUNUŞU: Verileri donanıma yazılmasını (await) BEKLE
+        await AsyncStorage.setItem('token', response.access_token);
+        await AsyncStorage.setItem('userType', userType);
+        
+        console.log('💾 AsyncStorage\'a kaydedildi, state güncelleniyor...');
+        
+        // Donanıma yazıldıktan sonra state'i güncelle (Sıralama kritik)
+        setToken(response.access_token);
+        setUser(userData);
+        
+        console.log('✅ AuthContext.login başarılı, dönüştürülüyor...');
+      } catch (error: any) {
+        console.log('❌ AuthContext.login hata:', error.message);
+        // Hata durumunda state'i temizle
+        setToken(null);
+        setUser(null);
+        throw error; 
+      }
     },
     [],
   );
 
-  const refreshProfile = useCallback(async () => {
-    try {
-      console.log("Profil yenileniyor...");
-      const updatedUserData = await api.getProfile();
-      setUser({ ...updatedUserData, role: updatedUserData.role.toUpperCase() as 'USER' | 'ADMIN' }); 
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUserData));
-      return updatedUserData;
-    } catch (error) {
-      console.error("Profil güncellenemedi:", error);
-      throw error; 
-    }
-  }, []);
-
   const register = useCallback(
     async (email: string, password: string, fullName: string) => {
-      const response = await axios.post(`${API_URL}/register`, {
-        email,
-        password,
-        fullName,
-      });
-
-      const newToken = response.data.access_token;
-      const userData = response.data.user;
-
-      setToken(newToken);
-      setUser(userData);
-
-      await AsyncStorage.setItem('token', newToken);
-      await AsyncStorage.setItem('userType', 'user');
-
-      // (Opsiyonel) Kayıt sonrası otomatik girişte de token alınabilir
-      // NotificationService.getFCMToken(newToken);
+      try {
+        const response = await api.register({ email, password, fullName });
+        
+        const userData: User = {
+          ...response.user,
+          role: 'USER'
+        };
+        
+        await AsyncStorage.setItem('token', response.access_token);
+        await AsyncStorage.setItem('userType', 'user');
+        
+        setToken(response.access_token);
+        setUser(userData);
+      } catch (error) {
+        throw error;
+      }
     },
     [],
   );
 
   const logout = useCallback(async () => {
-    setUser(null);
-    setToken(null);
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('userType');
-    console.log('api.ts logout - Token silindi');
+    setLoading(true);
+    try {
+      await api.logout();
+    } catch (e) {
+      console.log("Logout API hatası (önemsiz):", e);
+    } finally {
+      setUser(null);
+      setToken(null);
+      setLoading(false);
+    }
   }, []);
 
   const value: AuthContextType = {
@@ -148,7 +160,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     token,
     userId: user?.id || null,
     loading,
-    isLoggedIn: !!token,
+    // 👑 Token varsa giriş yapılmış (user loading ekranında background'da yüklenebilir)
+    isLoggedIn: !!token, 
     login,
     register,
     logout,

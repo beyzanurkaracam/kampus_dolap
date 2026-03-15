@@ -11,18 +11,20 @@ interface LoginData {
   password: string;
 }
 
+// 👑 SENIOR DOKUNUŞU: Backend DTO'suna %100 uyarlandı (fullName geldi)
 interface RegisterData extends LoginData {
-  firstName: string;
-  lastName: string;
+  fullName: string;
+  department?: string; 
+  phone?: string;      
   role?: 'admin' | 'user';
 }
 
+// 👑 SENIOR DOKUNUŞU: User objesi de backend'e uyarlandı
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  role: 'admin' | 'user';
+  fullName: string; 
+  role: 'admin' | 'user' | 'ADMIN' | 'USER'; 
   isPremium?: boolean; 
 }
 
@@ -31,12 +33,12 @@ export interface AuthResponse {
   user: User;
 }
 
-// 👑 SENIOR DOKUNUŞU 1: Backend'den Dönen Standart Hata Tipi
+// Backend'den Dönen Standart Hata Tipi
 interface ErrorResponse {
   message?: string;
 }
 
-// 👑 SENIOR DOKUNUŞU 2: Dosya Yükleme Yanıt Tipi
+// Dosya Yükleme Yanıt Tipi
 interface UploadResponse {
   avatarUrl?: string;
   url?: string;
@@ -44,7 +46,7 @@ interface UploadResponse {
   data?: { url?: string };
 }
 
-// 👑 SENIOR DOKUNUŞU 3: Favoriler Yanıt Tipi
+// Favoriler Yanıt Tipi
 type FavoritesBackendResponse = any[] | { favorites?: any[] };
 
 
@@ -57,8 +59,11 @@ class ApiService {
     };
   }
 
-  async login(data: LoginData): Promise<AuthResponse> {
-    const response = await fetch(`${API_URL}/auth/login`, {
+  // 👑 SENIOR DOKUNUŞU: userType parametresi eklendi ve endpoint dinamik hale getirildi
+  async login(data: LoginData, userType: 'user' | 'admin' = 'user'): Promise<AuthResponse> {
+    const endpoint = userType === 'admin' ? 'admin-login' : 'login';
+    
+    const response = await fetch(`${API_URL}/auth/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -66,7 +71,7 @@ class ApiService {
 
     if (!response.ok) {
       const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
-      throw new Error(errorData.message || 'Login failed');
+      throw new Error(errorData.message || 'Giriş başarısız oldu');
     }
 
     const result = (await response.json()) as AuthResponse;
@@ -84,7 +89,7 @@ class ApiService {
 
     if (!response.ok) {
       const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
-      throw new Error(errorData.message || 'Registration failed');
+      throw new Error(errorData.message || 'Kayıt işlemi başarısız oldu');
     }
 
     const result = (await response.json()) as AuthResponse;
@@ -99,7 +104,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch profile');
+      throw new Error('Profil bilgileri alınamadı');
     }
 
     const data = await response.json();
@@ -118,7 +123,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch users');
+      throw new Error('Kullanıcılar getirilemedi');
     }
 
     const data = await response.json();
@@ -134,7 +139,7 @@ class ApiService {
 
     if (!response.ok) {
       const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
-      throw new Error(errorData.message || 'Failed to create user');
+      throw new Error(errorData.message || 'Kullanıcı oluşturulamadı');
     }
 
     const result = await response.json();
@@ -149,7 +154,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update user');
+      throw new Error('Kullanıcı güncellenemedi');
     }
 
     const result = await response.json();
@@ -163,7 +168,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to delete user');
+      throw new Error('Kullanıcı silinemedi');
     }
   }
 
@@ -254,7 +259,6 @@ class ApiService {
       throw new Error(errorData.message || 'Avatar yüklenemedi');
     }
 
-    // 👑 SENIOR DOKUNUŞU: Sonucu UploadResponse tipine bağlıyoruz
     const result = (await response.json()) as UploadResponse;
     const avatarUrl = result.avatarUrl || result.url || result.imageUrl || result.data?.url;
     
@@ -396,11 +400,7 @@ class ApiService {
       throw new Error(errorData.message || 'Favoriler yüklenemedi');
     }
 
-    // 👑 SENIOR DOKUNUŞU: Hatanın kök çözüm noktası.
-    // TypeScript'e bu verinin "unknown" olmadığını, tanımladığımız şekle uyduğunu söylüyoruz.
     const data = (await response.json()) as FavoritesBackendResponse;
-    
-    // Artık data.favorites dediğimizde TS kızmayacak, çünkü "ya arraydir ya da favorites içerir" dedik.
     return Array.isArray(data) ? data : (data.favorites || []);
   }
 

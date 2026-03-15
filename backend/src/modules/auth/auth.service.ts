@@ -342,13 +342,18 @@ export class AuthService {
     }
 
     return {
-      fullName: user.fullName,
+      id: user.id,
       email: user.email,
+      fullName: user.fullName,
+      firstName: user.fullName?.split(' ')[0] || '',
+      lastName: user.fullName?.split(' ').slice(1).join(' ') || '',
+      role: user.role,
       department: user.department,
       phone: user.phone,
       profilePhoto: user.profilePhoto,
       isPremium: user.isPremium,
       university: {
+        id: user.university.id,
         name: user.university.name,
         city: user.university.city,
       },
@@ -378,5 +383,27 @@ export class AuthService {
   async saveFcmToken(userId: string, token: string) {
     await this.userRepository.update(userId, { fcmToken: token });
     return { success: true, message: 'Bildirim tokenı güncellendi' };
+  }
+
+  async getFullProfile(userId: string) {
+    console.log('getFullProfile çağrıldı, userId:', userId);
+    
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['university'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Kullanıcı bulunamadı');
+    }
+
+    // Password ve hassas alanları çıkar, güvenli veriyi döndür
+    const { password, verificationCode, verificationCodeExpiry, fcmToken, ...safeUser } = user;
+    
+    return {
+      ...safeUser,
+      firstName: user.fullName?.split(' ')[0] || '',
+      lastName: user.fullName?.split(' ').slice(1).join(' ') || '',
+    };
   }
 }

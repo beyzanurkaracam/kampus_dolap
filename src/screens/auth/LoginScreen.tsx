@@ -18,30 +18,22 @@ export const LoginScreen = ({ navigation }: any) => {
   const [userType, setUserType] = useState<'user' | 'admin'>('user');
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    const trimmedEmail = email.trim(); // Boşlukları temizle
+    
+    if (!trimmedEmail || !password) {
       Alert.alert('Hata', 'Lütfen tüm alanları doldurunuz');
       return;
     }
 
     setLoading(true);
     try {
-      console.log('Login başlatılıyor, userType:', userType);
+      // 1. Sadece Context'e "Giriş yap" diyoruz.
+      await login(trimmedEmail, password, userType);
       
-      await login(email, password, userType);
+      // 2. BAŞKA HİÇBİR ŞEY YAPMIYORUZ! Yönlendirmeyi App.tsx otomatik yapacak.
       
-      console.log('Login başarılı, navigation yapılıyor...');
-
-      if (userType === 'admin') {
-        navigation.replace('AdminDashboard');
-      } else {
-        navigation.replace('UserHome');
-      }
     } catch (error: any) {
-      console.log('Login hatası:', error);
-      Alert.alert(
-        'Giriş Hatası',
-        error.message || 'Giriş yapılamadı',
-      );
+      Alert.alert('Giriş Hatası', error.message || 'Giriş yapılamadı');
     } finally {
       setLoading(false);
     }

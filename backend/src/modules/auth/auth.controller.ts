@@ -58,9 +58,9 @@ export class AuthController {
   @Get('profile')
   async getProfile(@Request() req, @Headers() headers) {
     console.log('Profile endpoint çağrıldı');
-    console.log('Headers:', headers);
     console.log('req.user:', req.user);
-    return this.authService.getUserProfile(req.user.userId);
+    // JWT payload'daki 'sub' userId'dir
+    return this.authService.getFullProfile(req.user.sub);
   }
 
   @UseGuards(JwtGuard)

@@ -2,8 +2,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'react-native';
-import { AuthProvider } from './src/context/AuthContext';
+import { StatusBar, View, ActivityIndicator } from 'react-native';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { SocketProvider } from './src/context/SocketContext';
 
 // Screens
@@ -22,8 +22,128 @@ import { ChatDetailScreen } from './src/screens/chat/ChatDetailScreen';
 import { OffersScreen } from './src/screens/offer/OffersScreen';
 import { MakeOfferScreen } from './src/screens/offer/MakeOfferScreen';
 
-
 const Stack = createNativeStackNavigator();
+
+// 👑 ANA NAVIGATOR (Güvenlik Kontrollü)
+const RootNavigator = () => {
+  const { isLoggedIn, loading, user } = useAuth();
+
+  // Yükleme ekranı (Token kontrol edilirken)
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator>
+      {isLoggedIn ? (
+        // ✅ GİRİŞ YAPMIŞ KULLANICI EKRANLARI
+        <Stack.Group>
+          {user?.role === 'ADMIN' ? (
+             <Stack.Screen 
+               name="AdminDashboard" 
+               component={AdminDashboardScreen} 
+               options={{ title: 'Admin Paneli', headerLeft: () => null, gestureEnabled: false }} 
+             />
+          ) : (
+             <Stack.Screen 
+               name="UserHome" 
+               component={UserHomeScreen} 
+               options={{ title: 'Ana Sayfa', headerLeft: () => null, gestureEnabled: false, headerShown: false }} 
+             />
+          )}
+
+          <Stack.Screen 
+            name="UserProfile" 
+            component={UserProfileScreen} 
+            options={{ 
+              title: 'Profil', 
+              headerBackTitle: 'Geri', 
+              headerTintColor: '#007AFF', 
+              headerTitleStyle: { color: '#000' } 
+            }} 
+          />
+          
+          <Stack.Screen 
+            name="MyProducts" 
+            component={MyProductsScreen} 
+            options={{ headerShown: false }} 
+          />
+          
+          <Stack.Screen 
+            name="AddProduct" 
+            component={AddProductScreen} 
+            options={{ headerShown: false }} 
+          />
+          
+          <Stack.Screen 
+            name="ProductDetail" 
+            component={ProductDetailScreen} 
+            options={{ title: 'Ürün Detayı' }} 
+          />
+          
+          {/* Chat Screens */}
+          <Stack.Screen 
+            name="Chats" 
+            component={ChatScreen} 
+            options={{ title: 'Mesajlarım', headerBackTitle: 'Geri' }} 
+          />
+          
+          <Stack.Screen 
+            name="Premium" 
+            component={PremiumScreen} 
+            options={{ 
+              title: 'Premium Üyelik', 
+              headerStyle: { backgroundColor: '#1a1a1a' }, 
+              headerTintColor: '#FFD700', 
+              headerTitleStyle: { fontWeight: 'bold' } 
+            }} 
+          />
+          
+          <Stack.Screen 
+            name="ChatDetail" 
+            component={ChatDetailScreen} 
+            options={{ title: 'Sohbet', headerBackTitle: 'Geri' }} 
+          />
+          
+          <Stack.Screen 
+            name="Offers" 
+            component={OffersScreen} 
+            options={{ title: 'Teklifler', headerBackTitle: 'Geri' }} 
+          />
+          
+          <Stack.Screen 
+            name="MakeOffer" 
+            component={MakeOfferScreen} 
+            options={{ headerShown: false, presentation: 'modal' }} 
+          />
+        </Stack.Group>
+      ) : (
+        // ❌ GİRİŞ YAPMAMIŞ (ZİYARETÇİ) EKRANLARI
+        <Stack.Group>
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={{ headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="Register" 
+            component={RegisterScreen} 
+            options={{ title: 'Kayıt Ol' }} 
+          />
+          <Stack.Screen 
+            name="EmailVerification" 
+            component={EmailVerificationScreen} 
+            options={{ title: 'Email Doğrulama', headerLeft: () => null }} 
+          />
+        </Stack.Group>
+      )}
+    </Stack.Navigator>
+  );
+};
 
 function App() {
   return (
@@ -32,120 +152,7 @@ function App() {
         <SafeAreaProvider>
           <StatusBar barStyle="dark-content" />
           <NavigationContainer>
-            <Stack.Navigator initialRouteName="Login">
-              <Stack.Screen 
-                name="Login" 
-                component={LoginScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen 
-                name="Register" 
-                component={RegisterScreen}
-                options={{ title: 'Kayıt Ol' }}
-              />
-              <Stack.Screen 
-                name="EmailVerification" 
-                component={EmailVerificationScreen}
-                options={{ 
-                  title: 'Email Doğrulama',
-                  headerLeft: () => null,
-                }}
-              />
-              <Stack.Screen 
-                name="AdminDashboard" 
-                component={AdminDashboardScreen}
-                options={{ 
-                  title: 'Admin Paneli',
-                  headerLeft: () => null,
-                  gestureEnabled: false
-                }}
-              />
-              <Stack.Screen 
-                name="UserHome" 
-                component={UserHomeScreen}
-                options={{ 
-                  title: 'Ana Sayfa',
-                  headerLeft: () => null,
-                  gestureEnabled: false,
-                  headerShown: false
-                }}
-              />
-              
-              
-              <Stack.Screen 
-              name="UserProfile" 
-              component={UserProfileScreen} 
-              options={{ 
-                // headerShown: false,  <-- BUNU SİLİYORUZ (veya true yapıyoruz)
-                title: 'Profil',         // Varsayılan başlık
-                headerBackTitle: 'Geri', // Sol üstteki geri tuşunda ne yazsın?
-                headerTintColor: '#007AFF', // Geri tuşu rengi (iOS Mavisi)
-                headerTitleStyle: { color: '#000' } // Başlık rengi
-              }} 
-/>
-
-              {/* 👇 ProfileScreen yerine artık UserProfile kullanıyoruz, o yüzden eskisini kaldırdım */}
-              
-              <Stack.Screen 
-                name="MyProducts" 
-                component={MyProductsScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen 
-                name="AddProduct" 
-                component={AddProductScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen 
-                name="ProductDetail" 
-                component={ProductDetailScreen}
-                options={{ title: 'Ürün Detayı' }}
-              />
-              
-              {/* Chat Screens */}
-              <Stack.Screen 
-                name="Chats" 
-                component={ChatScreen}
-                options={{ 
-                  title: 'Mesajlarım',
-                  headerBackTitle: 'Geri'
-                }}
-              />
-              <Stack.Screen 
-                name="Premium" 
-                component={PremiumScreen}
-                options={{ 
-                  title: 'Premium Üyelik',
-                  headerStyle: { backgroundColor: '#1a1a1a' },
-                  headerTintColor: '#FFD700',
-                  headerTitleStyle: { fontWeight: 'bold' }
-                }}
-              />
-              <Stack.Screen 
-                name="ChatDetail" 
-                component={ChatDetailScreen}
-                options={{ 
-                  title: 'Sohbet',
-                  headerBackTitle: 'Geri'
-                }}
-              />
-              <Stack.Screen 
-              name="Offers" 
-              component={OffersScreen}
-              options={{ 
-                title: 'Teklifler',
-                headerBackTitle: 'Geri'
-              }}
-            />
-              <Stack.Screen 
-                name="MakeOffer" 
-                component={MakeOfferScreen} 
-                options={{ 
-                  headerShown: false,
-                  presentation: 'modal'
-                }} 
-              />
-            </Stack.Navigator>
+            <RootNavigator /> 
           </NavigationContainer>
         </SafeAreaProvider>
       </SocketProvider>

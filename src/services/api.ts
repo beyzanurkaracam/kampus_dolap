@@ -1,5 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
+// 🛡️ GÜVENLİK GÜNCELLEMESİ: AsyncStorage yerine EncryptedStorage import edildi
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
 
@@ -11,7 +12,6 @@ interface LoginData {
   password: string;
 }
 
-// 👑 SENIOR DOKUNUŞU: Backend DTO'suna %100 uyarlandı (fullName geldi)
 interface RegisterData extends LoginData {
   fullName: string;
   department?: string; 
@@ -19,7 +19,6 @@ interface RegisterData extends LoginData {
   role?: 'admin' | 'user';
 }
 
-// 👑 SENIOR DOKUNUŞU: User objesi de backend'e uyarlandı
 export interface User {
   id: string;
   email: string;
@@ -33,12 +32,10 @@ export interface AuthResponse {
   user: User;
 }
 
-// Backend'den Dönen Standart Hata Tipi
 interface ErrorResponse {
   message?: string;
 }
 
-// Dosya Yükleme Yanıt Tipi
 interface UploadResponse {
   avatarUrl?: string;
   url?: string;
@@ -46,20 +43,19 @@ interface UploadResponse {
   data?: { url?: string };
 }
 
-// Favoriler Yanıt Tipi
 type FavoritesBackendResponse = any[] | { favorites?: any[] };
 
 
 class ApiService {
   private async getAuthHeaders() {
-    const token = await AsyncStorage.getItem('token');
+    // 🛡️ Şifreli hafızadan okuma
+    const token = await EncryptedStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
 
-  // 👑 SENIOR DOKUNUŞU: userType parametresi eklendi ve endpoint dinamik hale getirildi
   async login(data: LoginData, userType: 'user' | 'admin' = 'user'): Promise<AuthResponse> {
     const endpoint = userType === 'admin' ? 'admin-login' : 'login';
     
@@ -75,8 +71,9 @@ class ApiService {
     }
 
     const result = (await response.json()) as AuthResponse;
-    await AsyncStorage.setItem('token', result.access_token);
-    await AsyncStorage.setItem('user', JSON.stringify(result.user));
+    // 🛡️ Şifreli hafızaya yazma
+    await EncryptedStorage.setItem('token', result.access_token);
+    await EncryptedStorage.setItem('user', JSON.stringify(result.user));
     return result;
   }
 
@@ -93,8 +90,9 @@ class ApiService {
     }
 
     const result = (await response.json()) as AuthResponse;
-    await AsyncStorage.setItem('token', result.access_token);
-    await AsyncStorage.setItem('user', JSON.stringify(result.user));
+    // 🛡️ Şifreli hafızaya yazma
+    await EncryptedStorage.setItem('token', result.access_token);
+    await EncryptedStorage.setItem('user', JSON.stringify(result.user));
     return result;
   }
 
@@ -112,9 +110,11 @@ class ApiService {
   }
 
   async logout() {
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('user');
-    await AsyncStorage.removeItem('userType');
+    // 🛡️ Şifreli hafızadan silme
+    await EncryptedStorage.removeItem('token');
+    await EncryptedStorage.removeItem('user');
+    await EncryptedStorage.removeItem('userType');
+    // Alternatif olarak tüm depolamayı silmek istersen: await EncryptedStorage.clear();
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -244,7 +244,8 @@ class ApiService {
   // ==========================================================
 
   async uploadAvatar(formData: FormData): Promise<string> {
-    const token = await AsyncStorage.getItem('token');
+    // 🛡️ Şifreli hafızadan okuma
+    const token = await EncryptedStorage.getItem('token');
     
     const response = await fetch(`${API_URL}/upload/avatar`, {
       method: 'POST',

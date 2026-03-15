@@ -1,6 +1,7 @@
 // src/context/AuthContext.tsx
-import React, { createContext, useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+// 🛡️ 3. ÇÖZÜM: AsyncStorage yerine donanımsal şifreleme yapan kütüphaneyi kullanıyoruz
+import EncryptedStorage from 'react-native-encrypted-storage';
 import api, { User as ApiUser } from '../services/api'; 
 
 export interface User extends ApiUser {
@@ -24,57 +25,65 @@ export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  // 👑 SENIOR DOKUNUŞU: İlk açılışta beyaz (veya loading) ekran göstermek için default true.
   const [loading, setLoading] = useState(true); 
 
   const checkAuth = useCallback(async () => {
-    // 👑 KRİTİK: İlk açılışta loading TRUE tutmalı ki UI render olmasın
     setLoading(true);
     try {
       console.log('🔄 checkAuth - başladı');
-      const savedToken = await AsyncStorage.getItem('token');
+      
+      const savedToken = await EncryptedStorage.getItem('token');
+      // 🚨 1. ÇÖZÜM İÇİN EK: İnternet yoksa bile user'ı yükleyebilmek için cache'den alıyoruz
+      const savedUserStr = await EncryptedStorage.getItem('user_profile');
       
       if (!savedToken) {
-        console.log('⚠️ Token yok, Login ekranı gösterilecek');
         setToken(null);
         setUser(null);
-        setLoading(false); // Token yoksa hemen ekranı aç
-        return; // Token yoksa API'ye gitme
+        return; 
       }
 
-      console.log('🎫 Token bulundu, profil çekiliyor...');
+      // Önce elimizdeki verilerle state'i dolduralım (Uygulamanın offline veya hızlı açılmasını sağlar)
+      setToken(savedToken);
+      if (savedUserStr) {
+        setUser(JSON.parse(savedUserStr));
+      }
+
+      console.log('🎫 Token bulundu, arka planda en güncel profil çekiliyor...');
       
-      // Token varsa profil bilgisini çek (İşlemler sırasında loading hala TRUE)
       const profileData = await api.getProfile();
       
-      if (!profileData) {
-        throw new Error('Profile data boş döndü');
+      if (profileData) {
+        const updatedUser: User = { 
+          ...profileData, 
+          role: (profileData.role?.toUpperCase() || 'USER') as 'USER' | 'ADMIN' 
+        };
+        setUser(updatedUser);
+        // Profil başarıyla çekildiyse cache'i de güncelliyoruz
+        await EncryptedStorage.setItem('user_profile', JSON.stringify(updatedUser));
       }
-      
-      // 👑 SENIOR DOKUNUŞU: Hem token'ı hem user'ı AYNI ANDA set ediyoruz.
-      // Ayrı ayrı yaparsak React iki kere render eder ve yönlendirme bug'a girer.
-      setToken(savedToken);
-      setUser({ 
-         ...profileData, 
-         role: (profileData.role?.toUpperCase() || 'USER') as 'USER' | 'ADMIN' 
-      });
-      console.log('✅ checkAuth - Profil başarıyla yüklendi, authenticated');
 
     } catch (error: any) {
       console.log('❌ checkAuth HATA:', error.message);
-      // Profil çekilemediyse token geçersiz/süresi dolmuş. Temizle!
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('userType');
-      setToken(null);
-      setUser(null);
+      
+      // 🚨 1. ÇÖZÜM (Uçak Modu Koruması): Sadece hata 401 (Yetkisiz/Token patlak) ise çıkış yap!
+      // İnternet çekmiyorsa (Network Error) if bloğuna girmeyecek, üstteki cache verileriyle kullanıcı içeride kalacak.
+      const isUnauthorized = error?.response?.status === 401 || error?.message?.includes('401') || error?.message?.includes('token');
+      
+      if (isUnauthorized) {
+        console.log('⚠️ Token geçersiz, oturum kapatılıyor...');
+        await EncryptedStorage.removeItem('token');
+        await EncryptedStorage.removeItem('userType');
+        await EncryptedStorage.removeItem('user_profile');
+        setToken(null);
+        setUser(null);
+      } else {
+        console.log('📶 Ağ hatası tespit edildi, mevcut oturum korunuyor (Offline Mod)');
+      }
     } finally {
-      // 👑 KRİTİK NOKTA: İşlemler TAMAMEN bitince loading'i FALSE'a çek
-      console.log('✋ checkAuth bitti, UI kilidini aç (loading = false)');
       setLoading(false);
     }
   }, []);
 
-  // Uygulama açıldığında BİR KERE çalışır.
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -82,13 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(
     async (email: string, password: string, userType: 'user' | 'admin') => {
       try {
-        console.log('🔐 AuthContext.login başlatıldı');
-        
         const response = await api.login({ email, password }, userType);
         
-        // 👑 KRİTİK: Backend'den gelen cevap geçerli mi kontrol et
         if (!response || !response.access_token || !response.user) {
-          throw new Error('Sunucudan geçersiz yanıt alındı (token veya user eksik)');
+          throw new Error('Sunucudan geçersiz yanıt alındı');
         }
         
         const userData: User = {
@@ -96,22 +102,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: (response.user.role?.toUpperCase() || userType.toUpperCase()) as 'USER' | 'ADMIN'
         };
 
-        console.log('📝 Hazırlanan userData:', { id: userData.id, role: userData.role });
-
-        // 👑 SENIOR DOKUNUŞU: Verileri donanıma yazılmasını (await) BEKLE
-        await AsyncStorage.setItem('token', response.access_token);
-        await AsyncStorage.setItem('userType', userType);
+        // Donanımsal Şifreli Veritabanına Yazma
+        await EncryptedStorage.setItem('token', response.access_token);
+        await EncryptedStorage.setItem('userType', userType);
+        await EncryptedStorage.setItem('user_profile', JSON.stringify(userData));
         
-        console.log('💾 AsyncStorage\'a kaydedildi, state güncelleniyor...');
-        
-        // Donanıma yazıldıktan sonra state'i güncelle (Sıralama kritik)
         setToken(response.access_token);
         setUser(userData);
         
-        console.log('✅ AuthContext.login başarılı, dönüştürülüyor...');
       } catch (error: any) {
-        console.log('❌ AuthContext.login hata:', error.message);
-        // Hata durumunda state'i temizle
         setToken(null);
         setUser(null);
         throw error; 
@@ -125,13 +124,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const response = await api.register({ email, password, fullName });
         
-        const userData: User = {
-          ...response.user,
-          role: 'USER'
-        };
+        const userData: User = { ...response.user, role: 'USER' };
         
-        await AsyncStorage.setItem('token', response.access_token);
-        await AsyncStorage.setItem('userType', 'user');
+        await EncryptedStorage.setItem('token', response.access_token);
+        await EncryptedStorage.setItem('userType', 'user');
+        await EncryptedStorage.setItem('user_profile', JSON.stringify(userData));
         
         setToken(response.access_token);
         setUser(userData);
@@ -145,28 +142,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(async () => {
     setLoading(true);
     try {
-      await api.logout();
+      await api.logout(); // Backend'e çıkış isteği at
     } catch (e) {
       console.log("Logout API hatası (önemsiz):", e);
     } finally {
+      await EncryptedStorage.clear(); // Tüm şifreli verileri tertemiz yap
       setUser(null);
       setToken(null);
       setLoading(false);
     }
   }, []);
 
-  const value: AuthContextType = {
+  // ⚡ 2. ÇÖZÜM: Performans Sızıntısını Önlemek için useMemo Kullanımı
+  // 💥 4. ÇÖZÜM: Çökme riskine karşı isLoggedIn: !!token && !!user
+  const value = useMemo<AuthContextType>(() => ({
     user,
     token,
     userId: user?.id || null,
     loading,
-    // 👑 Token varsa giriş yapılmış (user loading ekranında background'da yüklenebilir)
-    isLoggedIn: !!token, 
+    isLoggedIn: !!token && !!user, 
     login,
     register,
     logout,
     checkAuth,
-  };
+  }), [user, token, loading, login, register, logout, checkAuth]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

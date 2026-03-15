@@ -11,7 +11,16 @@ interface LoginData {
   email: string;
   password: string;
 }
-
+export interface DetectUniversityResponse {
+  success: boolean;
+  university?: {
+    id?: string;
+    name: string;
+    domain?: string;
+  };
+  departments?: string[];
+  message?: string;
+}
 interface RegisterData extends LoginData {
   fullName: string;
   department?: string; 
@@ -52,6 +61,10 @@ class ApiService {
     const token = await EncryptedStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
+      // 🚀 SENIOR DOKUNUŞU: React Native'in agresif önbelleğini (cache) kapatıyoruz
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
@@ -368,11 +381,18 @@ class ApiService {
     return response.json();
   }
 
-  async detectUniversity(email: string) {
+ async detectUniversity(email: string): Promise<DetectUniversityResponse> {
     const response = await fetch(`${API_URL}/auth/detect-university?email=${email}`);
-    return response.json();
+    
+    if (!response.ok) {
+      // 👑 SENIOR DOKUNUŞU: 'as ErrorResponse' ekleyerek TypeScript'i rahatlatıyoruz
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Üniversite tespit edilemedi');
+    }
+    
+    const data = await response.json();
+    return data as DetectUniversityResponse;
   }
-
   async saveFcmToken(token: string) {
     const response = await fetch(`${API_URL}/auth/fcm-token`, {
       method: 'POST',

@@ -83,9 +83,9 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
   const fetchAllData = useCallback(async () => {
     try {
       if (isOwner) {
-        const myProfile = await api.getProfile();
-        // Backend'den fullName geliyor, mapping'e gerek yok
-        setProfile(myProfile as unknown as UserProfile); 
+        // 👑 SENIOR DOKUNUŞU: Kendi profilimiz için API'ye gitmek yerine
+        // doğrudan AuthContext içindeki en güncel (Trafik Polisi'nden) datasını kullanıyoruz!
+        setProfile(currentUser as unknown as UserProfile); 
         await fetchFavorites();
       } else {
         const userProfile = await api.getPublicUserProfile(targetUserId);

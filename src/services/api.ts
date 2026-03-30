@@ -34,6 +34,7 @@ export interface User {
   fullName: string; 
   role: 'admin' | 'user' | 'ADMIN' | 'USER'; 
   isPremium?: boolean; 
+  university?: { id?: string; name: string; domain?: string } | string; 
 }
 
 export interface AuthResponse {
@@ -107,6 +108,39 @@ class ApiService {
     await EncryptedStorage.setItem('token', result.access_token);
     await EncryptedStorage.setItem('user', JSON.stringify(result.user));
     return result;
+  }
+
+  async verifyEmail(email: string, code: string): Promise<AuthResponse> {
+    const response = await fetch(`${API_URL}/auth/verify-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Kod doğrulanamadı');
+    }
+
+    const result = (await response.json()) as AuthResponse;
+    // 🛡️ Şifreli hafızaya kayıt (Kritik)
+    await EncryptedStorage.setItem('token', result.access_token);
+    await EncryptedStorage.setItem('user', JSON.stringify(result.user));
+    await EncryptedStorage.setItem('userType', 'user');
+    return result;
+  }
+
+  async resendVerificationCode(email: string): Promise<void> {
+    const response = await fetch(`${API_URL}/auth/resend-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Kod gönderilemedi');
+    }
   }
 
   async getProfile(): Promise<User> {
@@ -434,6 +468,51 @@ class ApiService {
     if (!response.ok) {
       const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
       throw new Error(errorData.message || 'Favori kaldırılamadı');
+    }
+  }
+  // ==========================================================
+  // ANA SAYFA (HOME) İŞLEMLERİ
+  // ==========================================================
+
+  async getCategories(): Promise<any> {
+    const response = await fetch(`${API_URL}/products/categories`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Kategoriler yüklenemedi');
+    }
+
+    return response.json();
+  }
+
+  async getListings(params: any): Promise<any[]> {
+    const query = new URLSearchParams(params).toString();
+    
+    const response = await fetch(`${API_URL}/products?${query}`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'İlanlar yüklenemedi');
+    }
+
+    // 👑 SENIOR DOKUNUŞU: 'as any[]' diyerek TypeScript'i ikna ediyoruz
+    const data = await response.json();
+    return data as any[]; 
+  }
+
+  async addFavorite(productId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/products/favorites/${productId}`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Favori eklenemedi');
     }
   }
 }

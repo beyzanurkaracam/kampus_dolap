@@ -1,5 +1,3 @@
-// android/app/src/screens/OffersScreen.tsx
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -9,51 +7,74 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-  Platform,
+  TouchableOpacity,
 } from 'react-native';
-import axios from 'axios';
+
+import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { OfferItem } from '../../components/OfferItem';
 import { MeetingModal } from '../../components/MeetingModal';
 
-const API_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:3000' 
-  : 'http://localhost:3000';
+interface Offer {
+  id: string;
+  offerAmount: number;
+  status: string;
+  meetingPointId?: string;
+  meetingTime?: string;
+  [key: string]: any; 
+}
+
+interface ModalConfig {
+  visible: boolean;
+  offer: Offer | null;
+  mode: 'accept' | 'change';
+}
 
 export const OffersScreen = ({ navigation }: any) => {
-  const { token, userId } = useAuth();
+  const { userId } = useAuth(); 
   
-  const [offers, setOffers] = useState<any[]>([]);
+  const [receivedOffers, setReceivedOffers] = useState<Offer[]>([]);
+  const [sentOffers, setSentOffers] = useState<Offer[]>([]);
+  const [activeTab, setActiveTab] = useState<'received' | 'sent'>('received');
+  
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [offerActionLoading, setOfferActionLoading] = useState<string | null>(null);
   
-  const [meetingModalVisible, setMeetingModalVisible] = useState(false);
-  const [selectedOfferForAccept, setSelectedOfferForAccept] = useState<any>(null);
-  const [selectedOfferForMeetingChange, setSelectedOfferForMeetingChange] = useState<any>(null); 
+  const [modalConfig, setModalConfig] = useState<ModalConfig>({
+    visible: false,
+    offer: null,
+    mode: 'accept'
+  });
 
   useEffect(() => {
     navigation.setOptions({ title: 'Teklifler' });
     fetchOffers();
   }, []);
 
-  const fetchOffers = async () => {
+  const fetchOffers = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_URL}/offers/received`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setOffers(response.data);
-    } catch (error) {
+      const [receivedData, sentData] = await Promise.all([
+        api.getReceivedOffers(),
+        api.getSentOffers()
+      ]);
+      
+      setReceivedOffers(receivedData);
+      setSentOffers(sentData);
+    } catch (error: any) {
       console.error('Teklifler alınamadı:', error);
-      Alert.alert('Hata', 'Teklifler yüklenemedi');
+      Alert.alert('Hata', error.message || 'Teklifler yüklenemedi');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
+  }, []);
+
+  const closeModal = () => {
+    setModalConfig({ visible: false, offer: null, mode: 'accept' });
   };
 
-  const handleAcceptPress = (offer: any) => {
-    // KONTROL: Eğer gelen teklifte ZATEN mekan ve saat varsa, tekrar seçtirme!
+  const handleAcceptPress = useCallback((offer: Offer) => {
     if (offer.meetingPointId && offer.meetingTime) {
         Alert.alert(
             'Buluşmayı Onayla',
@@ -62,206 +83,151 @@ export const OffersScreen = ({ navigation }: any) => {
                 { text: 'Vazgeç', style: 'cancel' },
                 { 
                     text: 'Evet, Kabul Et', 
-                    onPress: () => {
-                        // Mevcut bilgileri kullanarak direkt API'ye yolla
-                        confirmAcceptWithMeeting(
-                            offer.meetingPointId, 
-                            new Date(offer.meetingTime),
-                            offer // State'e yazılmasını beklemeden objeyi yolla
-                        );
-                    }
+                    onPress: () => confirmAcceptWithMeeting(offer.meetingPointId!, new Date(offer.meetingTime!), offer)
                 }
             ]
         );
     } else {
-        // Eğer mekan/saat YOKSA, modalı aç ve kullanıcıdan seçmesini iste
-        setSelectedOfferForAccept(offer);
-        setMeetingModalVisible(true);
+        setModalConfig({ visible: true, offer, mode: 'accept' });
     }
-  };
+  }, []);
 
-  const confirmAcceptWithMeeting = async (meetingPointId: string, date: Date, offerParam?: any) => {
-    const targetOffer = offerParam || selectedOfferForAccept;
+  const confirmAcceptWithMeeting = async (meetingPointId: string, date: Date, offerParam?: Offer) => {
+    const targetOffer = offerParam || modalConfig.offer;
     if (!targetOffer) return;
 
-    setMeetingModalVisible(false);
+    closeModal();
     setOfferActionLoading(`accept-${targetOffer.id}`);
     
     try {
-      // API isteğini yap ve cevabı al
-      const response = await axios.patch(
-        `${API_URL}/offers/${targetOffer.id}/accept`,
-        { 
-          meetingPointId, 
-          meetingTime: date.toISOString() 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      const newOffer = response.data;
-
+      const newOffer = await api.acceptOffer(targetOffer.id, { 
+        meetingPointId, 
+        meetingTime: date.toISOString() 
+      });
       
       if (newOffer.status === 'meeting_confirmed') {
-          Alert.alert(
-            ' Harika!', 
-            'Buluşma önerisini kabul ettiniz. Ürün rezerve edildi ve anlaşma sağlandı.',
-            [{ text: 'Tamam', onPress: () => fetchOffers() }]
-          );
+          Alert.alert('Harika! 🤝', 'Buluşma önerisini kabul ettiniz. Ürün rezerve edildi.', [{ text: 'Tamam', onPress: fetchOffers }]);
       } else {
-          Alert.alert(
-            ' Teklif İletildi', 
-            'Buluşma öneriniz karşı tarafa iletildi. Onayını bekleyin.',
-            [{ text: 'Tamam', onPress: () => fetchOffers() }]
-          );
+          Alert.alert('Teklif İletildi 📨', 'Buluşma öneriniz karşı tarafa iletildi. Onayını bekleyin.', [{ text: 'Tamam', onPress: fetchOffers }]);
       }
-      
     } catch (error: any) {
-      Alert.alert('Hata', error.response?.data?.message || 'İşlem başarısız');
+      Alert.alert('Hata', error.message || 'İşlem başarısız');
     } finally {
       setOfferActionLoading(null);
-      setSelectedOfferForAccept(null);
     }
   };
 
-  const handleOfferResponse = async (offerId: string, status: 'reject') => {
+  const handleOfferResponse = useCallback(async (offerId: string, status: 'reject') => {
     setOfferActionLoading(`${status}-${offerId}`);
     try {
-      await axios.patch(
-        `${API_URL}/offers/${offerId}/${status}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.rejectOffer(offerId);
       Alert.alert('Başarılı', 'Teklif reddedildi.');
       fetchOffers(); 
-    } catch (error) {
-      Alert.alert('Hata', 'İşlem gerçekleştirilemedi.');
+    } catch (error: any) {
+      Alert.alert('Hata', error.message || 'İşlem gerçekleştirilemedi.');
     } finally {
       setOfferActionLoading(null);
     }
-  };
+  }, [fetchOffers]);
 
-  const handleConfirmMeetingPress = async (offerId: string) => {
+  const handleConfirmMeetingPress = useCallback(async (offerId: string) => {
+    setOfferActionLoading(`confirm-${offerId}`);
     try {
-      setOfferActionLoading(`confirm-${offerId}`);
-      await axios.patch(
-        `${API_URL}/offers/${offerId}/confirm-meeting`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.confirmMeeting(offerId);
       Alert.alert('Süper! 🤝', 'Buluşma kesinleşti. Ürün sizin için rezerve edildi.');
       fetchOffers();
     } catch (error: any) {
-      Alert.alert('Hata', error.response?.data?.message || 'İşlem başarısız');
+      Alert.alert('Hata', error.message || 'İşlem başarısız');
     } finally {
       setOfferActionLoading(null);
     }
-  };
+  }, [fetchOffers]);
 
-  const handleCounterOffer = async (offerId: string, amount: number) => {
+  const handleCounterOffer = useCallback(async (offerId: string, amount: number) => {
     setOfferActionLoading(`counter-${offerId}`);
     try {
-      await axios.post(
-        `${API_URL}/offers/${offerId}/counter`,
-        { amount },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
+      await api.counterOffer(offerId, { amount });
       Alert.alert('Başarılı', `Karşı teklif (${amount} TL) gönderildi.`);
       fetchOffers(); 
-
     } catch (error: any) {
-        console.error("Counter Error:", error.response?.data);
-        const errMsg = error.response?.data?.message || 'Karşı teklif gönderilemedi.';
-        Alert.alert('Hata', errMsg);
+        Alert.alert('Hata', error.message || 'Karşı teklif gönderilemedi.');
     } finally {
       setOfferActionLoading(null);
     }
-  };
+  }, [fetchOffers]);
 
-  const handleCounterOfferWithMeeting = async (
-    offerId: string, 
-    amount: number, 
-    meetingPointId: string, 
-    meetingTime: Date
-  ) => {
+  const handleCounterOfferWithMeeting = useCallback(async (offerId: string, amount: number, meetingPointId: string, meetingTime: Date) => {
     setOfferActionLoading(`counter-${offerId}`);
     try {
-      await axios.post(
-        `${API_URL}/offers/${offerId}/counter`,
-        { 
-          amount, 
-          meetingPointId, 
-          meetingTime: meetingTime.toISOString() 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
+      await api.counterOffer(offerId, { 
+        amount, 
+        meetingPointId, 
+        meetingTime: meetingTime.toISOString() 
+      });
       Alert.alert('Başarılı', `Karşı teklif (${amount} TL) ve yeni buluşma detayı gönderildi.`);
       fetchOffers();
-
     } catch (error: any) {
-      console.error("Counter with Meeting Error:", error.response?.data);
-      const errMsg = error.response?.data?.message || 'Karşı teklif gönderilemedi.';
-      Alert.alert('Hata', errMsg);
+      Alert.alert('Hata', error.message || 'Karşı teklif gönderilemedi.');
     } finally {
       setOfferActionLoading(null);
     }
-  };
+  }, [fetchOffers]);
 
-  const handleMeetingChangeOnly = async (
-    offerId: string,
-    meetingPointId: string,
-    meetingTime: Date
-  ) => {
-    const currentOffer = offers.find(o => o.id === offerId);
-    if (!currentOffer) return;
+  const handleMeetingChangeOnly = async (meetingPointId: string, meetingTime: Date) => {
+    const targetOffer = modalConfig.offer;
+    if (!targetOffer) return;
 
-    setOfferActionLoading(`change-meeting-${offerId}`);
+    setOfferActionLoading(`change-meeting-${targetOffer.id}`);
     try {
-      await axios.post(
-        `${API_URL}/offers/${offerId}/counter`,
-        { 
-          amount: currentOffer.offerAmount,
-          meetingPointId, 
-          meetingTime: meetingTime.toISOString() 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.counterOffer(targetOffer.id, { 
+        amount: targetOffer.offerAmount,
+        meetingPointId, 
+        meetingTime: meetingTime.toISOString() 
+      });
       
       Alert.alert('Başarılı', 'Buluşma detayı değişikliği gönderildi. Karşı taraftan onay bekleniyor.');
+      closeModal();
       fetchOffers();
-
     } catch (error: any) {
-      console.error("Meeting Change Error:", error.response?.data);
-      const errMsg = error.response?.data?.message || 'Buluşma değiştirilemedi.';
-      Alert.alert('Hata', errMsg);
+      Alert.alert('Hata', error.message || 'Buluşma değiştirilemedi.');
     } finally {
       setOfferActionLoading(null);
     }
   };
 
+  const handleChangeMeetingPress = useCallback((offer: Offer) => {
+    setModalConfig({ visible: true, offer, mode: 'change' });
+  }, []);
 
-  const handleChangeMeetingPress = (offer: any) => {
-    setSelectedOfferForMeetingChange(offer);
-    setMeetingModalVisible(true);
-  };
-
- 
   const handleMeetingModalConfirm = async (meetingPointId: string, date: Date) => {
-    if (selectedOfferForAccept) {
-      // Kabul Et aksiyonu
+    if (modalConfig.mode === 'accept') {
       await confirmAcceptWithMeeting(meetingPointId, date);
-    } else if (selectedOfferForMeetingChange) {
-      // Buluşma Değiştir aksiyonu
-      await handleMeetingChangeOnly(selectedOfferForMeetingChange.id, meetingPointId, date);
-      setSelectedOfferForMeetingChange(null);
+    } else if (modalConfig.mode === 'change') {
+      await handleMeetingChangeOnly(meetingPointId, date);
     }
   };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchOffers();
-  }, []);
+  }, [fetchOffers]);
+
+  const currentData = activeTab === 'received' ? receivedOffers : sentOffers;
+
+  const renderOfferItem = useCallback(({ item }: { item: Offer }) => (
+    <OfferItem 
+      offer={item} 
+      currentUserId={userId || ''} 
+      isSentOffer={activeTab === 'sent'} 
+      onAccept={() => handleAcceptPress(item)} 
+      onReject={(id) => handleOfferResponse(id, 'reject')}
+      onCounter={handleCounterOffer}
+      onCounterWithMeeting={handleCounterOfferWithMeeting}
+      onMeetingChangeOnly={() => handleChangeMeetingPress(item)} 
+      onConfirmMeeting={handleConfirmMeetingPress} 
+      loadingId={offerActionLoading}
+    />
+  ), [userId, activeTab, handleAcceptPress, handleOfferResponse, handleCounterOffer, handleCounterOfferWithMeeting, handleChangeMeetingPress, handleConfirmMeetingPress, offerActionLoading]);
 
   if (loading) {
     return (
@@ -273,40 +239,52 @@ export const OffersScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tabButton, activeTab === 'received' && styles.activeTabButton]}
+          onPress={() => setActiveTab('received')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.tabText, activeTab === 'received' && styles.activeTabText]}>
+            Gelen Teklifler ({receivedOffers.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tabButton, activeTab === 'sent' && styles.activeTabButton]}
+          onPress={() => setActiveTab('sent')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.tabText, activeTab === 'sent' && styles.activeTabText]}>
+            Verdiğim Teklifler ({sentOffers.length})
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={offers}
-        renderItem={({ item }) => (
-          <OfferItem 
-            offer={item} 
-            currentUserId={userId} 
-            onAccept={() => handleAcceptPress(item)} 
-            onReject={(id) => handleOfferResponse(id, 'reject')}
-            onCounter={handleCounterOffer}
-            onCounterWithMeeting={handleCounterOfferWithMeeting}
-            onMeetingChangeOnly={() => handleChangeMeetingPress(item)} 
-            onConfirmMeeting={handleConfirmMeetingPress} 
-            loadingId={offerActionLoading}
-          />
-        )}
+        data={currentData}
+        renderItem={renderOfferItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007AFF" />}
+        initialNumToRender={8} 
+        maxToRenderPerBatch={5}
+        windowSize={10}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
              <Text style={styles.emptyIcon}>🏷️</Text>
-             <Text style={styles.emptyText}>Bekleyen teklif yok.</Text>
+             <Text style={styles.emptyText}>
+                {activeTab === 'received' 
+                  ? 'Şu an bekleyen bir teklifiniz bulunmuyor.' 
+                  : 'Henüz kimseye teklif göndermediniz.'}
+             </Text>
           </View>
         }
       />
 
       <MeetingModal
-        visible={meetingModalVisible}
-        onClose={() => {
-          setMeetingModalVisible(false);
-          setSelectedOfferForAccept(null);
-          setSelectedOfferForMeetingChange(null);
-        }}
-        offer={selectedOfferForAccept || selectedOfferForMeetingChange} 
+        visible={modalConfig.visible}
+        onClose={closeModal}
+        offer={modalConfig.offer} 
         onConfirm={handleMeetingModalConfirm} 
       />
     </View>
@@ -316,8 +294,13 @@ export const OffersScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F2F2F7' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  tabContainer: { flexDirection: 'row', backgroundColor: '#fff', padding: 8, borderBottomWidth: 1, borderBottomColor: '#E5E5EA' },
+  tabButton: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 8 },
+  activeTabButton: { backgroundColor: '#F2F2F7' },
+  tabText: { fontSize: 14, fontWeight: '600', color: '#8E8E93' },
+  activeTabText: { color: '#007AFF' },
   list: { padding: 12 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 100 },
-  emptyIcon: { fontSize: 50, marginBottom: 10 },
-  emptyText: { fontSize: 16, color: '#8E8E93', textAlign: 'center' },
+  emptyIcon: { fontSize: 50, marginBottom: 12 },
+  emptyText: { fontSize: 16, color: '#8E8E93', textAlign: 'center', fontWeight: '500', paddingHorizontal: 20 },
 });

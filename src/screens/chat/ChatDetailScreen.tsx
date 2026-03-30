@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,125 +11,91 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  
 } from 'react-native';
 
-import axios from 'axios';
+// 👑 MİMARİ KURAL: Axios SİLİNDİ, api.ts import edildi
+import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 
-const API_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:3000' 
-  : 'http://localhost:3000';
-interface Message {
-  id: string;
-  sender: {
-    id: string;
-    fullName: string;
-    profilePhoto?: string;
-  };
-  content: string;
-  type: 'text' | 'product' | 'image' | 'system'; 
-  metadata?: {
-    productId?: string;
-    productTitle?: string;
-    productPrice?: number;
-    productImage?: string;
-  };
-  createdAt: string;
-  isRead: boolean;
-}
-
-// ✅ URL Düzenleyici
+// Resim URL'ini çözümleyen yardımcı fonksiyon
 const getImageUrl = (url?: string) => {
   if (!url) return undefined;
-
   let finalUrl = url.trim();
 
-  // 1. Android Emülatör Düzeltmesi
   if (Platform.OS === 'android') {
-    if (finalUrl.includes('localhost')) {
-      finalUrl = finalUrl.replace('localhost', '10.0.2.2');
-    } else if (finalUrl.includes('127.0.0.1')) {
-      finalUrl = finalUrl.replace('127.0.0.1', '10.0.2.2');
-    }
+    if (finalUrl.includes('localhost')) finalUrl = finalUrl.replace('localhost', '10.0.2.2');
+    else if (finalUrl.includes('127.0.0.1')) finalUrl = finalUrl.replace('127.0.0.1', '10.0.2.2');
   }
 
-  // 2. HTTP/HTTPS kontrolü (S3 linkleri buraya düşer)
   if (finalUrl.startsWith('http')) return finalUrl;
-
-  // 3. Local path ise API_URL ekle
+  
+  const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
   const cleanPath = finalUrl.startsWith('/') ? finalUrl.substring(1) : finalUrl;
   return `${API_URL}/${cleanPath}`;
 };
 
-
-const ProductMessageCard = ({ metadata, navigation }: { metadata: any, navigation: any }) => {
+// 👑 SENIOR DOKUNUŞU: React.memo() ile sarıldı. Gereksiz render'ı engeller.
+const ProductMessageCard = React.memo(({ metadata, navigation }: { metadata: any, navigation: any }) => {
   const [imageError, setImageError] = useState(false);
   const imageUrl = getImageUrl(metadata?.productImage);
 
   return (
     <TouchableOpacity
       style={styles.productCard}
+      activeOpacity={0.8}
       onPress={() => {
         if (metadata?.productId) {
           navigation.navigate('ProductDetail', { productId: metadata.productId });
         }
       }}
     >
-      {/* Resim Alanı */}
       {!imageError && imageUrl ? (
         <Image 
           source={{ uri: imageUrl }} 
           style={styles.productCardImage}
           resizeMode="cover"
-          onError={(e) => {
-            console.warn('Image Load Error:', e.nativeEvent.error);
-            setImageError(true);
-          }}
+          onError={() => setImageError(true)}
         />
       ) : (
-        // Resim yüklenemezse veya yoksa gösterilecek alan
         <View style={[styles.productCardImage, styles.placeholderImage]}>
           <Text style={styles.placeholderIcon}>📦</Text>
-          <Text style={styles.placeholderText}>
-            {imageError ? 'Yüklenemedi' : 'Resim Yok'}
-          </Text>
+          <Text style={styles.placeholderText}>{imageError ? 'Yüklenemedi' : 'Resim Yok'}</Text>
         </View>
       )}
       
-      {/* Ürün Bilgileri */}
       <View style={styles.productCardInfo}>
         <Text style={styles.productCardTitle} numberOfLines={2}>
            {metadata?.productTitle || 'Ürün'}
         </Text>
-        <Text style={styles.productCardPrice}>
-           {metadata?.productPrice} ₺
-        </Text>
-        <Text style={styles.productCardText}>
-          Merhaba, bu ürün hakkında bilgi alabilir miyim?
-        </Text>
+        <Text style={styles.productCardPrice}>{metadata?.productPrice} ₺</Text>
+        <Text style={styles.productCardText}>Merhaba, bu ürün hakkında bilgi alabilir miyim?</Text>
       </View>
     </TouchableOpacity>
   );
-};
+});
 
 export const ChatDetailScreen = ({ route, navigation }: any) => {
   const { chatId, otherUser, product } = route.params;
-  const { token, userId } = useAuth();
+  const { userId } = useAuth();
   const { socket, isConnected } = useSocket();
   
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [otherUserStatus, setOtherUserStatus] = useState<'online' | 'offline'>('offline');
   const [isTyping, setIsTyping] = useState(false);
   
-  const flatListRef = useRef<FlatList>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingEmitRef = useRef<number>(0); 
+
+  // --- Header Ayarları ---
   useEffect(() => {
     navigation.setOptions({
+      // 👑 Başlığı geri butonuna rağmen tam ortaya sabitler!
+      headerTitleAlign: 'center', 
+      
       headerTitle: () => (
         <TouchableOpacity 
           onPress={() => product?.id && navigation.navigate('ProductDetail', { productId: product.id })}
@@ -137,16 +103,9 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
           disabled={!product?.id}
         >
           <View style={styles.headerTitle}>
-            <Text style={styles.headerProductTitle} numberOfLines={1}>
-               {product?.title || 'Ürün'}
-            </Text>
-            <Text style={styles.headerName} numberOfLines={1}>
-              {otherUser?.fullName || 'Sohbet'}
-            </Text>
-            <Text style={[
-              styles.headerStatus,
-              otherUserStatus === 'online' && styles.headerStatusOnline
-            ]}>
+            {/* 👑 UX DOKUNUŞU: Ürün ismi kaldırıldı, isim fontu büyütüldü */}
+            <Text style={styles.headerName} numberOfLines={1}>{otherUser?.fullName || 'Sohbet'}</Text>
+            <Text style={[styles.headerStatus, otherUserStatus === 'online' && styles.headerStatusOnline]}>
               {otherUserStatus === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
             </Text>
           </View>
@@ -155,10 +114,32 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
     });
   }, [otherUserStatus, otherUser, product, navigation]);
 
+  // --- Yardımcı Metodlar (Memoized) ---
+  const markAsRead = useCallback(() => {
+    if (socket && isConnected) {
+      socket.emit('chat:read', { chatId });
+    }
+  }, [socket, isConnected, chatId]);
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      const response = await api.getChatMessages(chatId);
+      setMessages(response.reverse()); // En yeni başta olsun (inverted list)
+      markAsRead();
+    } catch (error: any) {
+      Alert.alert('Hata', error.message || 'Mesajlar yüklenemedi');
+      navigation.goBack();
+    } finally {
+      setLoading(false);
+    }
+  }, [chatId, markAsRead, navigation]);
+
+  // --- İlk Yükleme ---
   useEffect(() => {
     fetchMessages();
-  }, [chatId]);
+  }, [fetchMessages]);
 
+  // --- Socket Olayları ---
   useEffect(() => {
     if (!socket || !isConnected) return;
 
@@ -169,72 +150,61 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
       }
     });
 
-    socket.on('chat:newMessage', (message: Message) => {
-      // ✅ Yeni mesajı BAŞA ekle (çünkü inverted kullanıyoruz)
+    const handleNewMessage = (message: any) => {
       setMessages(prev => [message, ...prev]);
-      if (message.sender.id !== userId) {
-        markAsRead();
-      }
-    });
+      if (message.sender.id !== userId) markAsRead();
+    };
 
-    socket.on('chat:userTyping', () => {
+    const handleUserTyping = () => {
       setIsTyping(true);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
-    });
+      typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2500);
+    };
 
-    socket.on('chat:error', (data: any) => {
+    const handleError = (data: any) => {
       Alert.alert('Hata', data.message);
       setSending(false);
-    });
+    };
+
+    socket.on('chat:newMessage', handleNewMessage);
+    socket.on('chat:userTyping', handleUserTyping);
+    socket.on('chat:error', handleError);
 
     return () => {
       socket.emit('chat:leave', chatId);
-      socket.off('chat:newMessage');
-      socket.off('chat:userTyping');
-      socket.off('chat:error');
+      socket.off('chat:newMessage', handleNewMessage);
+      socket.off('chat:userTyping', handleUserTyping);
+      socket.off('chat:error', handleError);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
-  }, [socket, isConnected, chatId]);
+  }, [socket, isConnected, chatId, userId, markAsRead, navigation]);
 
+  // --- Çevrimiçi Durumu Kontrolü ---
   useEffect(() => {
     if (!socket || !isConnected || !otherUser) return;
+    
     const checkStatus = () => {
       socket.emit('user:status', otherUser.id, (response: any) => {
         if (response?.success) setOtherUserStatus(response.data.status);
       });
     };
+    
     checkStatus();
     const interval = setInterval(checkStatus, 15000);
     return () => clearInterval(interval);
   }, [socket, isConnected, otherUser]);
 
-  const fetchMessages = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/chats/${chatId}/messages`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      // ✅ Mesajları TERS ÇEVİR - En yeni mesaj başta olsun
-      setMessages(response.data.reverse());
-      
-      markAsRead();
-    } catch (error: any) {
-      console.error('Mesajlar yüklenirken hata:', error);
-      Alert.alert('Hata', 'Mesajlar yüklenemedi');
-      navigation.goBack();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markAsRead = async () => {
-    try {
-      if (socket && isConnected) {
-        socket.emit('chat:read', { chatId });
+  // --- Kullanıcı Aksiyonları ---
+  const handleTyping = (text: string) => {
+    setInputText(text);
+    
+    // Throttling: Saniyede sadece 1 kere "yazıyor" gönderir
+    if (socket && isConnected && text.length > 0) {
+      const now = Date.now();
+      if (now - lastTypingEmitRef.current > 2000) {
+        socket.emit('chat:typing', { chatId });
+        lastTypingEmitRef.current = now;
       }
-    } catch (error) {
-      console.error('Okundu işaretleme hatası:', error);
     }
   };
 
@@ -246,69 +216,40 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
     socket.emit('chat:send', { chatId, content: trimmedText }, (response: any) => {
       setSending(false);
       if (response?.success) {
-        setInputText('');
+        setInputText(''); 
       } else {
         Alert.alert('Hata', response?.error || 'Mesaj gönderilemedi');
       }
     });
   };
 
-  const handleTyping = (text: string) => {
-    setInputText(text);
-    if (socket && isConnected && text.length > 0) {
-      socket.emit('chat:typing', { chatId });
-    }
-  };
-
-  const renderMessage = ({ item }: { item: Message }) => {
+  const renderMessage = useCallback(({ item }: { item: any }) => {
     const isMyMessage = item.sender.id === userId;
+    const timeString = new Date(item.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
     if (item.type === 'product' && item.metadata) {
       return (
-        <View style={[
-          styles.messageContainer,
-          isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer
-        ]}>
+        <View style={[styles.messageContainer, isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer]}>
           <ProductMessageCard metadata={item.metadata} navigation={navigation} />
-          <Text style={styles.messageTime}>
-            {new Date(item.createdAt).toLocaleTimeString('tr-TR', {
-              hour: '2-digit', minute: '2-digit',
-            })}
-          </Text>
+          <Text style={styles.messageTime}>{timeString}</Text>
         </View>
       );
     }
 
     return (
-      <View style={[
-        styles.messageContainer,
-        isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer
-      ]}>
-        <View style={[
-          styles.messageBubble,
-          isMyMessage ? styles.myMessageBubble : styles.otherMessageBubble
-        ]}>
-          {!isMyMessage && (
-            <Text style={styles.senderName}>{item.sender.fullName}</Text>
-          )}
-          <Text style={[
-            styles.messageText,
-            isMyMessage ? styles.myMessageText : styles.otherMessageText
-          ]}>
+      <View style={[styles.messageContainer, isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer]}>
+        <View style={[styles.messageBubble, isMyMessage ? styles.myMessageBubble : styles.otherMessageBubble]}>
+          {!isMyMessage && <Text style={styles.senderName}>{item.sender.fullName}</Text>}
+          <Text style={[styles.messageText, isMyMessage ? styles.myMessageText : styles.otherMessageText]}>
             {item.content}
           </Text>
-          <Text style={[
-            styles.messageTime,
-            isMyMessage ? styles.myMessageTime : styles.otherMessageTime
-          ]}>
-            {new Date(item.createdAt).toLocaleTimeString('tr-TR', {
-              hour: '2-digit', minute: '2-digit',
-            })}
+          <Text style={[styles.messageTime, isMyMessage ? styles.myMessageTime : styles.otherMessageTime]}>
+            {timeString}
           </Text>
         </View>
       </View>
     );
-  };
+  }, [userId, navigation]);
 
   if (loading) {
     return (
@@ -326,30 +267,37 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
     >
       {!isConnected && (
         <View style={styles.offlineBanner}>
-          <Text style={styles.offlineBannerText}>⚠️ Bağlantı kuruluyor...</Text>
+          <Text style={styles.offlineBannerText}>⚠️ Sunucuya bağlanılıyor...</Text>
         </View>
       )}
 
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messagesList}
-        inverted={true}
-        ListEmptyComponent={
-          <View style={styles.emptyMessages}>
-            <Text style={styles.emptyMessagesText}>Henüz mesaj yok. İlk mesajı gönderin! 👋</Text>
+      {/* Mesaj Listesi Alanı */}
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messagesList}
+          inverted={true}
+          initialNumToRender={15}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          removeClippedSubviews={Platform.OS === 'android'}
+          ListEmptyComponent={
+            <View style={styles.emptyMessages}>
+              <Text style={styles.emptyMessagesText}>Henüz mesaj yok. İlk mesajı gönderin! 👋</Text>
+            </View>
+          }
+        />
+        {/* Yazıyor Bildirimi */}
+        {isTyping && (
+          <View style={styles.typingContainer}>
+            <Text style={styles.typingText}>{otherUser?.fullName?.split(' ')[0]} yazıyor...</Text>
           </View>
-        }
-      />
+        )}
+      </View>
 
-      {isTyping && (
-        <View style={styles.typingContainer}>
-          <Text style={styles.typingText}>Yazıyor...</Text>
-        </View>
-      )}
-
+      {/* Input Alanı */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -362,12 +310,10 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
           editable={!sending && isConnected}
         />
         <TouchableOpacity
-          style={[
-            styles.sendButton,
-            (!inputText.trim() || sending || !isConnected) && styles.sendButtonDisabled
-          ]}
+          style={[styles.sendButton, (!inputText.trim() || sending || !isConnected) && styles.sendButtonDisabled]}
           onPress={sendMessage}
           disabled={!inputText.trim() || sending || !isConnected}
+          activeOpacity={0.8}
         >
           {sending ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.sendButtonText}>Gönder</Text>}
         </TouchableOpacity>
@@ -377,25 +323,23 @@ export const ChatDetailScreen = ({ route, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
+  emptyMessages: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 100 },
+  emptyMessagesText: { fontSize: 16, color: '#8E8E93', textAlign: 'center' },
   container: { flex: 1, backgroundColor: '#F2F2F7' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F2F2F7' },
   headerTitle: { alignItems: 'center' },
-  headerProductTitle: { fontSize: 14, fontWeight: '700', color: '#007AFF', marginBottom: 2 },
-  headerName: { fontSize: 14, fontWeight: '500', color: '#000' },
+  headerName: { fontSize: 16, fontWeight: '600', color: '#000' }, // 👑 Boyut büyütüldü
   headerStatus: { fontSize: 11, color: '#8E8E93' },
   headerStatusOnline: { color: '#34C759' },
   offlineBanner: { backgroundColor: '#FF9500', paddingVertical: 6, alignItems: 'center' },
   offlineBannerText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
   messagesList: { padding: 16, flexGrow: 1 },
-  
   messageContainer: { marginVertical: 4, width: '100%' },
   myMessageContainer: { alignItems: 'flex-end' },
   otherMessageContainer: { alignItems: 'flex-start' },
-
   messageBubble: { maxWidth: '75%', padding: 12, borderRadius: 16, marginBottom: 4 },
   myMessageBubble: { backgroundColor: '#007AFF', alignSelf: 'flex-end' },
   otherMessageBubble: { backgroundColor: '#FFF', alignSelf: 'flex-start' },
-
   senderName: { fontSize: 12, fontWeight: '600', color: '#8E8E93', marginBottom: 4 },
   messageText: { fontSize: 16, lineHeight: 20 },
   myMessageText: { color: '#FFF' },
@@ -403,27 +347,14 @@ const styles = StyleSheet.create({
   messageTime: { fontSize: 11, marginTop: 4 },
   myMessageTime: { color: 'rgba(255, 255, 255, 0.7)', textAlign: 'right' },
   otherMessageTime: { color: '#8E8E93' },
-
-  typingContainer: { paddingHorizontal: 16, paddingVertical: 8 },
-  typingText: { fontSize: 13, color: '#8E8E93', fontStyle: 'italic' },
+  typingContainer: { position: 'absolute', bottom: 5, left: 16, backgroundColor: 'rgba(255,255,255,0.8)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+  typingText: { fontSize: 13, color: '#8E8E93', fontStyle: 'italic', fontWeight: '500' },
   inputContainer: { flexDirection: 'row', padding: 12, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#E5E5EA' },
   input: { flex: 1, backgroundColor: '#F2F2F7', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, maxHeight: 100, marginRight: 8, color: '#000' },
   sendButton: { backgroundColor: '#007AFF', borderRadius: 20, paddingHorizontal: 20, justifyContent: 'center', alignItems: 'center', minWidth: 80 },
   sendButtonDisabled: { backgroundColor: '#C7C7CC' },
   sendButtonText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
-  emptyMessages: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 100 },
-  emptyMessagesText: { fontSize: 16, color: '#8E8E93', textAlign: 'center' },
-
-  // ✅ GÜNCELLENEN STİL: Sabit genişlik verildi
-  productCard: { 
-    backgroundColor: '#FFF', 
-    borderRadius: 12, 
-    overflow: 'hidden', 
-    borderWidth: 1, 
-    borderColor: '#E5E5EA', 
-    width: 250, // Sabit genişlik eklendi
-    maxWidth: 280 
-  },
+  productCard: { backgroundColor: '#FFF', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#E5E5EA', width: 250, maxWidth: 280 },
   productCardImage: { width: '100%', height: 180, backgroundColor: '#F2F2F7' },
   placeholderImage: { justifyContent: 'center', alignItems: 'center', backgroundColor: '#E5E5EA' },
   placeholderIcon: { fontSize: 32, marginBottom: 4 },

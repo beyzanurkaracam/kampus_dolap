@@ -1,3 +1,4 @@
+import { Product } from "backend/src/entities/product.entity";
 import { Platform } from "react-native";
 // 🛡️ GÜVENLİK GÜNCELLEMESİ: AsyncStorage yerine EncryptedStorage import edildi
 import EncryptedStorage from 'react-native-encrypted-storage';
@@ -403,7 +404,7 @@ class ApiService {
     return response.json();
   }
   
-  async confirmMeeting(offerId: string) {
+  /*async confirmMeeting(offerId: string) {
     const response = await fetch(`${API_URL}/offers/${offerId}/confirm-meeting`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
@@ -414,7 +415,7 @@ class ApiService {
     }
     return response.json();
   }
-
+*/
  async detectUniversity(email: string): Promise<DetectUniversityResponse> {
     const response = await fetch(`${API_URL}/auth/detect-university?email=${email}`);
     
@@ -514,6 +515,205 @@ class ApiService {
       const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
       throw new Error(errorData.message || 'Favori eklenemedi');
     }
+  }
+  // ==========================================================
+  // ADMİN İŞLEMLERİ (Klasik Fetch Yapısı)
+  // ==========================================================
+
+  async getAdminDashboardStats(): Promise<any> {
+    const response = await fetch(`${API_URL}/admin/dashboard`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Dashboard verileri alınamadı');
+    }
+
+    return response.json();
+  }
+
+  async getPendingProducts(): Promise<any[]> {
+    const response = await fetch(`${API_URL}/admin/pending-products`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Bekleyen ürünler alınamadı');
+    }
+
+    const data = await response.json();
+    return data as any[];
+  }
+
+  async approveProduct(productId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/admin/approve-product/${productId}`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Ürün onaylanamadı');
+    }
+  }
+
+  async rejectProduct(productId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/admin/reject-product/${productId}`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Ürün reddedilemedi');
+    }
+  }
+  
+  async getChatMessages(chatId: string): Promise<any[]> {
+    const response = await fetch(`${API_URL}/chats/${chatId}/messages`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Mesajlar alınamadı');
+    }
+
+    const data = await response.json();
+    return data as any[];
+  }
+  // ==========================================================
+  // SOHBET (CHAT) İŞLEMLERİ
+  // ==========================================================
+
+  async getChats(): Promise<any[]> {
+    const response = await fetch(`${API_URL}/chats`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Sohbetler yüklenemedi');
+    }
+
+    const data = await response.json();
+    return data as any[];
+  }
+  // ==========================================================
+  // TEKLİF (OFFER) İŞLEMLERİ
+  // ==========================================================
+
+  async getReceivedOffers(): Promise<any[]> {
+    const response = await fetch(`${API_URL}/offers/received`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Teklifler alınamadı');
+    }
+
+    // 👑 SENIOR DOKUNUŞU: Önce veriyi bekle, sonra "Bu bir dizidir" diyerek zorla (Type Casting)
+    const data = await response.json();
+    return data as any[];
+  }
+
+  async acceptOffer(id: string, data: any): Promise<any> {
+    const response = await fetch(`${API_URL}/offers/${id}/accept`, {
+      method: 'PATCH',
+      headers: {
+        ...(await this.getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Teklif kabul edilemedi');
+    }
+
+    return response.json();
+  }
+
+  async rejectOffer(id: string): Promise<any> {
+    const response = await fetch(`${API_URL}/offers/${id}/reject`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Teklif reddedilemedi');
+    }
+
+    return response.json();
+  }
+
+  async confirmMeeting(id: string): Promise<any> {
+    const response = await fetch(`${API_URL}/offers/${id}/confirm-meeting`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Buluşma onaylanamadı');
+    }
+
+    return response.json();
+  }
+
+  async counterOffer(id: string, data: any): Promise<any> {
+    const response = await fetch(`${API_URL}/offers/${id}/counter`, {
+      method: 'POST',
+      headers: {
+        ...(await this.getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Karşı teklif gönderilemedi');
+    }
+
+    return response.json();
+  }
+  async createOffer(data: { productId: string; amount: number }): Promise<any> {
+    const response = await fetch(`${API_URL}/offers`, {
+      method: 'POST',
+      headers: {
+        ...(await this.getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Teklif gönderilemedi');
+    }
+
+    return response.json();
+  }
+ 
+  async getSentOffers(): Promise<any[]> {
+    // 👑 Backend endpointinle birebir uyumlu hale getirildi
+    const response = await fetch(`${API_URL}/offers/made`, { 
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(errorData.message || 'Gönderilen teklifler alınamadı');
+    }
+
+    const data = await response.json();
+    return data as any[];
   }
 }
 

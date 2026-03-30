@@ -1,309 +1,178 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Image, 
-  TouchableOpacity, 
-  TextInput, 
-  Alert 
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 
-interface OfferItemProps {
-  offer: any;
-  currentUserId: string | null;
-  onAccept: (id: string) => void;
-  onReject: (id: string) => void;
-  onCounter: (id: string, amount: number) => void;
-  onCounterWithMeeting?: (id: string, amount: number, meetingPointId: string, meetingTime: Date) => void; 
-  onMeetingChangeOnly?: () => void; 
-  onConfirmMeeting: (id: string) => void;
+export interface OfferItemProps {
+  offer: any; 
+  currentUserId: string;
+  isSentOffer?: boolean; 
+  onAccept: () => void;
+  onReject: (id: string) => void | Promise<void>;
+  onCounter: (offerId: string, amount: number) => void | Promise<void>;
+  onCounterWithMeeting: (offerId: string, amount: number, meetingPointId: string, meetingTime: Date) => void | Promise<void>;
+  onMeetingChangeOnly: () => void;
+  onConfirmMeeting: (id: string) => void | Promise<void>;
   loadingId: string | null;
 }
 
-export const OfferItem: React.FC<OfferItemProps> = ({ 
-  offer, 
+const getImageUrl = (url?: string) => {
+  if (!url) return undefined;
+  let finalUrl = url.trim();
+  if (Platform.OS === 'android') {
+    if (finalUrl.includes('localhost')) finalUrl = finalUrl.replace('localhost', '10.0.2.2');
+    else if (finalUrl.includes('127.0.0.1')) finalUrl = finalUrl.replace('127.0.0.1', '10.0.2.2');
+  }
+  if (finalUrl.startsWith('http')) return finalUrl;
+  const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+  const cleanPath = finalUrl.startsWith('/') ? finalUrl.substring(1) : finalUrl;
+  return `${API_URL}/${cleanPath}`;
+};
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('tr-TR', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+  });
+};
+
+export const OfferItem = ({
+  offer,
   currentUserId,
-  onAccept, 
-  onReject, 
-  onCounter,
+  isSentOffer = false,
+  onAccept,
+  onReject,
+  onCounter, 
   onCounterWithMeeting,
   onMeetingChangeOnly,
-  onConfirmMeeting, 
-  loadingId 
-}) => {
-  const productImg = offer.product?.images?.[0]?.imageUrl;
+  onConfirmMeeting,
+  loadingId,
+}: OfferItemProps) => {
   
-  // Roller
-  const isBuyer = currentUserId === offer.buyerId;
-  const isSeller = currentUserId === offer.sellerId;
-  
-  // Durumlar
-  const isPending = offer.status === 'pending';
-  const isAccepted = offer.status === 'accepted'; 
-  const isConfirmed = offer.status === 'meeting_confirmed'; 
-  
-  // Kim son onayı verecek?
-  const shouldIConfirm = isAccepted && offer.makerId !== currentUserId;
-  
-  // Buluşma önerisi kontrolü
-  const hasMeetingInfo = offer.meetingPoint && offer.meetingTime;
-  const isMeetingProposal = isPending && hasMeetingInfo;
-  
-  // State'ler
-  const [isCounterMode, setIsCounterMode] = useState(false);
-  const [counterPrice, setCounterPrice] = useState('');
-  // showMeetingModal kaldırıldı - parent'tan gelecek
+  const isAccepting = loadingId === `accept-${offer.id}`;
+  const isRejecting = loadingId === `reject-${offer.id}`;
+  const isAnyLoading = isAccepting || isRejecting;
 
-  // Renkler
-  const getStatusColor = () => {
-    if (isConfirmed) return '#34C759';
-    if (isAccepted) return '#007AFF';
-    if (offer.status === 'rejected') return '#FF3B30';
-    if (isMeetingProposal) return '#5856D6';
-    return '#FF9500';
-  };
-
-  const getStatusText = () => {
-    if (isConfirmed) return 'Buluşma Kesinleşti ';
-    
-    if (isAccepted) {
-      if (shouldIConfirm) {
-        // Ben onaylayacağım - karşı taraf kabul etti
-        const whoAccepted = offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı';
-        return `${whoAccepted} Kabul Etti - Onayınız Bekleniyor`;
-      } else {
-        // Ben kabul ettim - karşı taraf onaylayacak
-        const whoWillConfirm = offer.makerId === offer.buyerId ? 'Satıcıdan' : 'Alıcıdan';
-        return `Gönderildi - ${whoWillConfirm} Onay Bekleniyor`;
-      }
-    }
-    
-    if (offer.status === 'rejected') return 'Reddedildi ';
-    
-    // PENDING durumu
-    if (isMeetingProposal) {
-      const whoSent = offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı';
-      return `📍 ${whoSent} Buluşma Önerisi`;
-    }
-    
-    if (offer.makerId === currentUserId) {
-      return 'Gönderildi - Cevap Bekleniyor ';
-    } else {
-      return 'Cevap Vermeniz Bekleniyor ';
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'pending': return { text: 'Bekliyor', color: '#FF9500', bg: '#FFF5E5' };
+      case 'accepted': return { text: 'Kabul Edildi', color: '#34C759', bg: '#E8F8EE' };
+      case 'rejected': return { text: 'Reddedildi', color: '#FF3B30', bg: '#FFEBEA' };
+      case 'meeting_confirmed': return { text: 'Buluşma Onaylandı', color: '#007AFF', bg: '#E5F1FF' };
+      default: return { text: status, color: '#8E8E93', bg: '#F2F2F7' };
     }
   };
 
-  const getHeaderText = () => {
-    const who = offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı';
-    if (isMeetingProposal) return `${who} Buluşma Önerisi`;
-    if (offer.makerId === offer.buyerId) return 'Alıcı Fiyat Teklifi';
-    return 'Satıcı Karşı Teklifi';
-  };
-
-  const handleSendSimpleCounter = () => {
-    const amount = parseFloat(counterPrice);
-    if (!amount || amount <= 0) {
-      Alert.alert('Hata', 'Geçerli bir tutar giriniz.');
-      return;
-    }
-    onCounter(offer.id, amount);
-    setIsCounterMode(false);
-    setCounterPrice('');
-  };
+  const statusDisplay = getStatusDisplay(offer.status);
+  const productImage = getImageUrl(offer.product?.images?.[0]?.imageUrl);
 
   return (
-    <View style={[styles.card, { borderLeftColor: getStatusColor() }]}>
-      
+    <View style={styles.card}>
       <View style={styles.header}>
-        <Image source={{ uri: productImg || 'https://via.placeholder.com/100' }} style={styles.image} />
-        <View style={styles.info}>
-          <Text style={styles.productTitle} numberOfLines={1}>{offer.product.title}</Text>
-          
-          <Text style={styles.buyerName}>
-            {getHeaderText()}: <Text style={{fontWeight: 'bold', color: '#333'}}>{offer.offerAmount} ₺</Text>
-          </Text>
-          
-          {}
-          {hasMeetingInfo && (
-            <View style={styles.meetingInfo}>
-              <Text style={styles.meetingLabel}>
-                {isMeetingProposal ? ' Önerilen Buluşma:' : '📍 Buluşma Detayı:'}
-              </Text>
-              <Text style={styles.meetingText}>🏢 {offer.meetingPoint.name}</Text>
-              <Text style={styles.meetingText}>
-                🕒 {new Date(offer.meetingTime).toLocaleDateString('tr-TR')} - {new Date(offer.meetingTime).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'})}
-              </Text>
-            </View>
-          )}
-
-          <Text style={[styles.statusBadge, { color: getStatusColor() }]}>
-            {getStatusText()}
+        <Text style={styles.userName} numberOfLines={1}>
+          {isSentOffer ? `Alıcı: ${offer.seller?.fullName || 'Satıcı'}` : `Gönderen: ${offer.buyer?.fullName || 'Alıcı'}`}
+        </Text>
+        <View style={[styles.statusBadge, { backgroundColor: statusDisplay.bg }]}>
+          <Text style={[styles.statusText, { color: statusDisplay.color }]}>
+            {statusDisplay.text}
           </Text>
         </View>
       </View>
 
-      <View style={styles.actionContainer}>
-  
-        {}
-        {isPending && (
-          offer.makerId !== currentUserId ? (
-            
-            isCounterMode ? (
-              <View style={styles.counterRow}>
-                <TextInput 
-                  style={styles.input} 
-                  placeholder="Tutar" 
-                  keyboardType="numeric" 
-                  value={counterPrice} 
-                  onChangeText={setCounterPrice} 
-                />
-                <TouchableOpacity style={styles.sendButton} onPress={handleSendSimpleCounter}>
-                  <Text style={styles.buttonText}>✓</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setIsCounterMode(false)}>
-                  <Text style={styles.cancelText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.buttonContainerColumn}>
-                {isMeetingProposal && (
-                  <Text style={styles.proposalNote}>
-                    {offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı'} buluşma yeri ve saati önerdi. 
-                    {'\n'}Kabul edebilir veya farklı yer/saat önerebilirsiniz.
-                  </Text>
-                )}
-
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity style={[styles.button, styles.rejectButton]} onPress={() => onReject(offer.id)}>
-                    <Text style={styles.buttonText}>Reddet</Text>
-                  </TouchableOpacity>
-                  
-                  {}
-                  {isMeetingProposal && onMeetingChangeOnly && (
-                    <TouchableOpacity 
-                      style={[styles.button, styles.changeMeetingButton]} 
-                      onPress={onMeetingChangeOnly}
-                    >
-                      <Text style={styles.buttonText}>Değiştir</Text>
-                    </TouchableOpacity>
-                  )}
-                  
-                  {!isMeetingProposal && (
-                    <TouchableOpacity style={[styles.button, styles.counterButton]} onPress={() => setIsCounterMode(true)}>
-                      <Text style={[styles.buttonText, {color:'#000'}]}>Fiyat Değiştir</Text>
-                    </TouchableOpacity>
-                  )}
-                  
-                  <TouchableOpacity style={[styles.button, styles.acceptButton]} onPress={() => onAccept(offer.id)}>
-                    <Text style={styles.buttonText}>Kabul Et</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )
-          ) : (
-            // BENİM GÖNDERDİĞİM TEKLİF
-            <Text style={styles.waitingText}>
-              {isMeetingProposal 
-                ? `${offer.makerId === offer.buyerId ? 'Satıcıdan' : 'Alıcıdan'} yanıt bekleniyor...`
-                : `${offer.makerId === offer.buyerId ? 'Satıcıdan' : 'Alıcıdan'} yanıt bekleniyor...`}
-            </Text>
-          )
+      <View style={styles.body}>
+        {productImage ? (
+          <Image source={{ uri: productImage }} style={styles.productImage} />
+        ) : (
+          <View style={styles.productImagePlaceholder}>
+            <Text>📦</Text>
+          </View>
         )}
-
-        {}
-        {isAccepted && (
-          shouldIConfirm ? (
-            // BEN ONAYLAMALIYIM
-            <View>
-              <Text style={styles.infoText}>
-                {offer.makerId === offer.buyerId ? 'Alıcı' : 'Satıcı'} teklifi kabul etti. 
-                {'\n'}Onaylarsanız buluşma kesinleşir veya yeri değiştirebilirsiniz.
-              </Text>
-              <View style={styles.buttonRow}>
-                <TouchableOpacity style={[styles.button, styles.rejectButton]} onPress={() => onReject(offer.id)}>
-                  <Text style={styles.buttonText}>Vazgeç</Text>
-                </TouchableOpacity>
-                
-                {}
-                {onMeetingChangeOnly && (
-                  <TouchableOpacity 
-                    style={[styles.button, styles.changeMeetingButton]} 
-                    onPress={onMeetingChangeOnly}
-                  >
-                    <Text style={styles.buttonText}>Yer Değiştir</Text>
-                  </TouchableOpacity>
-                )}
-                
-                <TouchableOpacity style={[styles.button, styles.confirmMeetingButton]} onPress={() => onConfirmMeeting(offer.id)}>
-                  <Text style={styles.buttonText}>Onayla </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            // BEN KABUL ETTİM - KARŞI TARAF ONAYLAYACAK
-            <Text style={styles.waitingText}>
-              {offer.makerId === offer.buyerId ? 'Satıcıdan' : 'Alıcıdan'} son onay bekleniyor...
-            </Text>
-          )
-        )}
-
-        {}
-        {isConfirmed && (
-          <Text style={styles.successText}> İyi alışverişler! Ürün rezerve edildi.</Text>
-        )}
-
+        
+        <View style={styles.productInfo}>
+          <Text style={styles.productTitle} numberOfLines={2}>
+            {offer.product?.title || 'Ürün Bilgisi Yok'}
+          </Text>
+          <Text style={styles.offerAmount}>
+            Teklif: <Text style={styles.amountBold}>₺{offer.offerAmount}</Text>
+          </Text>
+        </View>
       </View>
+
+      {(offer.meetingPointId || offer.meetingTime) && (
+        <View style={styles.meetingInfo}>
+          <Text style={styles.meetingText}>📍 Buluşma Yeri: {offer.meetingPointId ? 'Belirlendi' : 'Belirsiz'}</Text>
+          <Text style={styles.meetingText}>⏰ Zaman: {formatDate(offer.meetingTime)}</Text>
+        </View>
+      )}
+
+      {/* KABUL/RED BUTONLARI: Verdiğimiz tekliflerde gizlenir */}
+      {offer.status === 'pending' && !isSentOffer && (
+        <View style={styles.actionRow}>
+          <TouchableOpacity 
+            style={[styles.button, styles.rejectButton, isAnyLoading && styles.disabledButton]}
+            onPress={() => onReject(offer.id)}
+            disabled={isAnyLoading}
+            activeOpacity={0.8}
+          >
+            {isRejecting ? <ActivityIndicator size="small" color="#FF3B30" /> : <Text style={styles.rejectButtonText}>Reddet</Text>}
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.button, styles.acceptButton, isAnyLoading && styles.disabledButton]}
+            onPress={onAccept}
+            disabled={isAnyLoading}
+            activeOpacity={0.8}
+          >
+            {isAccepting ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.acceptButtonText}>Kabul Et</Text>}
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* BULUŞMA ONAY BUTONU */}
+      {offer.status === 'awaiting_meeting_confirmation' && !isSentOffer &&(
+         <View style={styles.actionRow}>
+            <TouchableOpacity 
+              style={[styles.button, styles.confirmMeetingButton]}
+              onPress={() => onConfirmMeeting(offer.id)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.confirmMeetingText}>Buluşmayı Onayla</Text>
+            </TouchableOpacity>
+         </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: { 
-    backgroundColor: '#fff', 
-    borderRadius: 12, 
-    padding: 12, 
-    marginBottom: 10, 
-    shadowOpacity: 0.1, 
-    elevation: 3, 
-    borderLeftWidth: 4 
-  },
-  header: { flexDirection: 'row', marginBottom: 5 },
-  image: { width: 70, height: 70, borderRadius: 8, backgroundColor: '#f0f0f0' },
-  info: { flex: 1, marginLeft: 12, justifyContent: 'center' },
-  productTitle: { fontSize: 14, fontWeight: '600', color: '#333' },
-  buyerName: { fontSize: 13, color: '#555', marginTop: 2 },
-  statusBadge: { fontSize: 12, fontWeight: '700', marginTop: 4 },
-  
-  meetingInfo: { 
-    marginVertical: 6, 
-    backgroundColor: '#F2F2F7', 
-    padding: 6, 
-    borderRadius: 6 
-  },
-  meetingLabel: { fontSize: 11, fontWeight: 'bold', color: '#555', marginBottom: 2 },
-  meetingText: { fontSize: 12, color: '#000', fontWeight: '500' },
-
-  actionContainer: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 10 },
-  buttonContainerColumn: { flexDirection: 'column', gap: 8, width: '100%' },
-  buttonRow: { flexDirection: 'row', gap: 8, marginTop: 5 },
-  proposalNote: { fontSize: 11, color: '#666', fontStyle: 'italic', marginBottom: 5 },
-
-  button: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-  acceptButton: { backgroundColor: '#66BB6A' }, // Yumuşak Yeşil (Material Green)
-  rejectButton: { backgroundColor: '#EF5350' }, // Yumuşak Kırmızı (Mercan tonu)
-  counterButton: { backgroundColor: '#5C9EAD' }, // Pastel Mavi/Yeşil (Gri yerine)
-  confirmMeetingButton: { backgroundColor: '#007AFF' },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 12 },
-  
-  waitingText: { color: '#888', fontStyle: 'italic', fontSize: 12, textAlign: 'center' },
-  successText: { color: '#34C759', fontWeight: 'bold', fontSize: 13, textAlign: 'center' },
-  infoText: { fontSize: 12, color: '#007AFF', marginBottom: 10, textAlign: 'center', fontWeight: '500' },
-  
-  counterRow: { flexDirection: 'row', gap: 5 },
-  input: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 10, height: 40 },
-  sendButton: { backgroundColor: '#007AFF', width: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
-  cancelButton: { backgroundColor: '#ccc', width: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
-  cancelText: { fontWeight: 'bold', color: '#333' },
-  changeMeetingButton: { backgroundColor: '#5C9EAD' }, // Pastel Mavi/Yeşil (Gri yerine)
+  card: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  userName: { fontSize: 14, fontWeight: '600', color: '#333', flex: 1 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusText: { fontSize: 12, fontWeight: '700' },
+  body: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  productImage: { width: 60, height: 60, borderRadius: 8, backgroundColor: '#F2F2F7' },
+  productImagePlaceholder: { width: 60, height: 60, borderRadius: 8, backgroundColor: '#E5E5EA', justifyContent: 'center', alignItems: 'center' },
+  productInfo: { marginLeft: 12, flex: 1 },
+  productTitle: { fontSize: 15, color: '#333', marginBottom: 6, fontWeight: '500' },
+  offerAmount: { fontSize: 14, color: '#8E8E93' },
+  amountBold: { fontSize: 18, fontWeight: 'bold', color: '#007AFF' },
+  meetingInfo: { backgroundColor: '#F9F9F9', padding: 10, borderRadius: 8, marginBottom: 12, borderLeftWidth: 3, borderLeftColor: '#34C759' },
+  meetingText: { fontSize: 13, color: '#333', marginBottom: 2, fontWeight: '500' },
+  actionRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 8 },
+  button: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  rejectButton: { backgroundColor: '#FFF', borderColor: '#FF3B30' },
+  rejectButtonText: { color: '#FF3B30', fontWeight: '600', fontSize: 14 },
+  acceptButton: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
+  acceptButtonText: { color: '#FFF', fontWeight: '600', fontSize: 14 },
+  confirmMeetingButton: { backgroundColor: '#34C759', borderColor: '#34C759' },
+  confirmMeetingText: { color: '#FFF', fontWeight: '600', fontSize: 14 },
+  disabledButton: { opacity: 0.5 },
 });

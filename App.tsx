@@ -19,8 +19,10 @@ import { ProductDetailScreen } from './src/screens/product/ProductDetailScreen';
 import { ChatScreen } from './src/screens/chat/ChatScreen';
 import { PremiumScreen } from './src/screens/user/PremiumScreen';
 import { ChatDetailScreen } from './src/screens/chat/ChatDetailScreen';
-import { OffersScreen } from './src/screens/offer/OffersScreen';
 import { MakeOfferScreen } from './src/screens/offer/MakeOfferScreen';
+
+// 👑 EKSİK OLAN SATIR BURASIYDI: OffersScreen'i süslü parantezle dahil ettik
+import { OffersScreen } from './src/screens/offer/OffersScreen'; // Klasör yolunu kendi projene göre teyit et
 
 const Stack = createNativeStackNavigator();
 

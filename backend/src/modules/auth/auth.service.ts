@@ -265,13 +265,13 @@ export class AuthService {
     );
 
     console.log('Login token oluşturuldu:', { userId: user.id, email: user.email, tokenPreview: token.substring(0, 50) });
-
-    return {
+return {
       access_token: token,
       user: {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
+        profilePhoto: user.profilePhoto, // 👑 SENIOR DOKUNUŞU: Resim verisini Frontend'e yolluyoruz!
         isPremium: user.isPremium,
         department: user.department,
         university: {
@@ -308,9 +308,10 @@ export class AuthService {
       { expiresIn: '7d' },
     );
 
-    return {
+   return {
       access_token: token,
-      admin: {
+      // 👑 SENIOR DOKUNUŞU: Frontend'in beklediği formatta (Sözleşmeye uygun) dönüyoruz.
+      user: { 
         id: admin.id,
         email: admin.email,
         role: 'ADMIN',

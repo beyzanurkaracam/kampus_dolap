@@ -33,14 +33,14 @@ export const SocketProvider = ({ children }: any) => {
       return;
     }
 
-    // WebSocket bağlantısı oluştur
     const newSocket = io(`${API_URL}/chat`, {
-      transports: ['websocket'], // polling'i kaldırıyoruz, bazen çakışma yapar
+      // 👑 SENIOR DOKUNUŞU: transports satırını sildik. 
+      // Socket.io önce polling ile bağlanıp sonra websocket'e güvenle geçecek.
       auth: { token },
       reconnection: true,
-      reconnectionAttempts: 10, // Deneme sayısını artırdık
+      reconnectionAttempts: 10,
       reconnectionDelay: 2000,
-      timeout: 10000, // Timeout süresini artırdık
+      timeout: 10000, 
     });
 
     // Bağlantı başarılı

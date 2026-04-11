@@ -1,0 +1,39 @@
+name: Backend Docker Build & Push
+
+# 1. TETİKLEYİCİ: Bu işlem ne zaman çalışsın?
+on:
+  push:
+    branches: [ "main", "feature/dockerize-backend" ] # Senin bulunduğun branch!
+    paths:
+      - 'backend/**' # Backend kodlarında değişiklik olursa
+      - '.github/workflows/**' # Veya bu otomasyon dosyasında değişiklik olursa çalışs
+
+# 2. GÖREVLER
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest # GitHub'ın bize vereceği ücretsiz sanal makine
+
+    steps:
+      # Adım 1: GitHub'daki güncel kodlarımızı sanal makineye indir
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Adım 2: Docker imajlarını daha hızlı build etmek için Buildx kurulumu
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Adım 3: KASADAKİ ŞİFRELERLE Docker Hub'a güvenli giriş yap
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Adım 4: İmajı derle (Build) ve Docker Hub'a gönder (Push)
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend # Dockerfile'ın bulunduğu yer (backend klasörü)
+          push: true
+          # İmajın adı: senin_kullanici_adin/kampusumden-backend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/kampusumden-backend:latest

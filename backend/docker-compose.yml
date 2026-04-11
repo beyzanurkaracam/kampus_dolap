@@ -1,5 +1,25 @@
+version: '3.8'
+
 services:
-  # 1. PostgreSQL (İlişkisel Veritabanı)
+  # 👑 1. NESTJS BACKEND (Bizim Eklediğimiz Kısım)
+  backend-api:
+    build: . # Aynı klasördeki Dockerfile'ı kullanarak imajı üretir
+    container_name: kampus_api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    environment:
+      # DİKKAT: localhost yerine konteyner isimlerini (postgres, redis, kafka) kullanıyoruz!
+      - DATABASE_URL=postgres://postgres:beyza123@postgres:5432/kampus_dolap_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BROKER=kafka:9092
+      # Varsa JWT_SECRET gibi diğer .env değişkenlerini de buraya eklemelisin.
+
+  # 2. PostgreSQL (İlişkisel Veritabanı)
   postgres:
     image: postgres:16
     container_name: kampus_dolap_pg
@@ -13,14 +33,14 @@ services:
     volumes:
       - pg_new_data:/var/lib/postgresql/data
 
-  # 2. Redis (Hız, Önbellek ve Socket.io adaptörü)
+  # 3. Redis (Hız, Önbellek ve Socket.io adaptörü)
   redis:
     image: redis:alpine
     container_name: dolap_redis
     ports:
       - "6379:6379"
 
-  # 3. Zookeeper (Kafka'nın Yönetimi için Şart)
+  # 4. Zookeeper (Kafka'nın Yönetimi için Şart)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: dolap_zookeeper
@@ -30,7 +50,7 @@ services:
     ports:
       - "2181:2181"
 
-  # 4. Kafka (Mesaj Kuyruk Sistemi)
+  # 5. Kafka (Mesaj Kuyruk Sistemi)
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: dolap_kafka
@@ -41,7 +61,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
 volumes:

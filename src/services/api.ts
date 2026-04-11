@@ -715,6 +715,63 @@ class ApiService {
     const data = await response.json();
     return data as any[];
   }
+  // --- ÜRÜN VE KATEGORİ İŞLEMLERİ ---
+
+ 
+
+  async getColors(): Promise<any> {
+    const response = await fetch(`${API_URL}/products/colors`, { headers: await this.getAuthHeaders() });
+    if (!response.ok) throw new Error('Renkler alınamadı');
+    return response.json();
+  }
+
+  async getBrands(categoryId: string): Promise<any> {
+    const response = await fetch(`${API_URL}/products/brands/${categoryId}`, { headers: await this.getAuthHeaders() });
+    if (!response.ok) throw new Error('Markalar alınamadı');
+    return response.json();
+  }
+
+  async uploadImage(formData: FormData): Promise<any> {
+    // 🛡️ getAuthHeaders() KULLANMA — içinde Content-Type: application/json var
+    // FormData için sadece Authorization header'ı lazım
+    const token = await EncryptedStorage.getItem('token');
+    
+    const response = await fetch(`${API_URL}/upload/image`, {
+      method: 'POST',
+      headers: {
+        // Content-Type YOK — fetch otomatik multipart/form-data boundary ekleyecek
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData as any,
+    });
+    
+   if (!response.ok) {
+  const errorData = (await response.json().catch(() => ({}))) as { message?: string };
+  throw new Error(errorData.message || 'Resim yüklenemedi');
+}
+    return response.json();
+  }
+
+  async createProduct(data: any): Promise<any> {
+    const response = await fetch(`${API_URL}/products/create`, {
+      method: 'POST',
+      headers: {
+        ...(await this.getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      // 👑 TYPE FIX: errorData'nın içinde 'message' olabileceğini TypeScript'e söylüyoruz
+      const errorData = (await response.json().catch(() => ({}))) as { message?: string };
+      
+      const error = new Error(errorData.message || 'Ürün eklenemedi');
+      (error as any).status = response.status; // 403 kontrolü için status'ü ekliyoruz
+      throw error;
+    }
+    return response.json();
+  }
 }
 
 export default new ApiService();

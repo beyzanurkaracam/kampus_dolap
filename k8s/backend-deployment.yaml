@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kampusumden-backend-deployment
+spec:
+  replicas: 2 # Yüksek erişilebilirlik! Uygulamandan aynı anda 2 kopya çalışacak.
+  selector:
+    matchLabels:
+      app: kampusumden-backend
+  template: # Buradan aşağısı, oluşturulacak kopyaların (Pod'ların) tarifidir
+    metadata:
+      labels:
+        app: kampusumden-backend
+    spec:
+      containers:
+      - name: backend-container
+        # DİKKAT: Buradaki ismi kendi Docker Hub kullanıcı adınla değiştir!
+        image: beyzanurkaracamm/kampusumden-backend:latest 
+        imagePullPolicy: Always # Her seferinde Docker Hub'dan en güncel halini çek
+        ports:
+        - containerPort: 3000 # NestJS'in çalıştığı port
+        env:
+          # Veritabanı ve Redis bağlantılarını ileride K8s Secrets ile şifreleyeceğiz, 
+          # şimdilik yer tutucu olarak bırakıyoruz.
+          - name: NODE_ENV
+            value: "production"

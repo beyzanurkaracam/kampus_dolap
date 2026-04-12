@@ -1,6 +1,6 @@
 # --- AŞAMA 1: BUILD (Derleme) Aşaması ---
 # 'alpine' yerine 'bullseye-slim' kullanıyoruz (C++ derleme sorunlarını çözer)
-FROM node:18-bullseye-slim AS builder
+FROM node:20-bullseye-slim AS builder
 
 WORKDIR /usr/src/app
 
@@ -15,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # --- AŞAMA 2: PRODUCTION (Canlı Ortam) Aşaması ---
-FROM node:18-bullseye-slim
+FROM node:20-bullseye-slim
 
 WORKDIR /usr/src/app
 

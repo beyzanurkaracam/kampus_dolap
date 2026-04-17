@@ -12,6 +12,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest # GitHub'ın bize vereceği ücretsiz sanal makine
+    permissions:
+      contents: 'read'
+      id-token: 'write' # ANAHTARSIZ GİRİŞ İÇİN ZORUNLU!
 
     steps:
       # Adım 1: GitHub'daki güncel kodlarımızı sanal makineye indir
@@ -40,11 +43,12 @@ jobs:
 
       # --- BURADAN AŞAĞISI GOOGLE CLOUD GÜNCELLEMESİ İÇİNDİR ---
 
-      # Adım 5: Google Cloud'a Giriş Yap
-      - name: 🔐 Google Cloud'a Giriş Yap
+      # Adım 5: Google Cloud'a Anahtarsız Giriş Yap (WIF)
+      - name: 🔐 Google Cloud'a Anahtarsız Giriş Yap (WIF)
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          workload_identity_provider: 'projects/232202788415/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions@project-98dfb67c-aff3-4c13-9e3.iam.gserviceaccount.com'
 
       # Adım 6: GKE (Kubernetes) Bağlantısını Kur
       - name: 🌍 GKE (Kubernetes) Bağlantısını Kur

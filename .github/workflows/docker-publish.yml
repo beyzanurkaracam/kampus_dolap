@@ -37,3 +37,24 @@ jobs:
           push: true
           # İmajın adı: senin_kullanici_adin/kampusumden-backend:latest
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/kampusumden-backend:latest
+
+      # --- BURADAN AŞAĞISI GOOGLE CLOUD GÜNCELLEMESİ İÇİNDİR ---
+
+      # Adım 5: Google Cloud'a Giriş Yap
+      - name: 🔐 Google Cloud'a Giriş Yap
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      # Adım 6: GKE (Kubernetes) Bağlantısını Kur
+      - name: 🌍 GKE (Kubernetes) Bağlantısını Kur
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: kampusumden-cluster
+          location: europe-west3
+
+      # Adım 7: Buluttaki Sistemi Güncelle
+      - name: 🚀 Buluttaki Sistemi Güncelle
+        run: |
+          kubectl apply -f k8s/
+          kubectl rollout restart deployment kampusumden-backend-deployment

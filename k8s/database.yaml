@@ -1,0 +1,41 @@
+# 1. BÖLÜM: Veritabanı Askeri (Deployment)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        env:
+          - name: POSTGRES_USER
+            value: "postgres" 
+          - name: POSTGRES_PASSWORD
+            value: "beyza123" # Şifreyi eşitledik
+          - name: POSTGRES_DB
+            value: "kampus_dolap_db" # Veritabanı adını eşitledik
+        ports:
+        - containerPort: 5432
+
+---
+# 2. BÖLÜM: DB Trafik Polisi (Service)
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service # DİKKAT: Artık DB'nin K8s içindeki adresi budur!
+spec:
+  selector:
+    app: database
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kampusumden-backend-service
+spec:
+  type: LoadBalancer # Dışarıdan erişime açmak için (AWS'de bu satır gerçek bir Load Balancer yaratır)
+  selector:
+    app: kampusumden-backend # Hangi deployment'a trafik göndereceğini bu etiketle bulur
+  ports:
+    - protocol: TCP
+      port: 80 # Dışarıdaki kullanıcıların geleceği port (Standart HTTP)
+      targetPort: 3000 # Trafiği içerideki NestJS'in 3000 portuna yönlendir

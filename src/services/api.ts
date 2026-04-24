@@ -92,7 +92,7 @@ class ApiService {
     return result;
   }
 
-  async register(data: RegisterData): Promise<AuthResponse> {
+  async register(data: RegisterData): Promise<any> {
     const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -104,10 +104,14 @@ class ApiService {
       throw new Error(errorData.message || 'Kayıt işlemi başarısız oldu');
     }
 
-    const result = (await response.json()) as AuthResponse;
-    // 🛡️ Şifreli hafızaya yazma
-    await EncryptedStorage.setItem('token', result.access_token);
-    await EncryptedStorage.setItem('user', JSON.stringify(result.user));
+    // 👑 DÜZELTME BURADA: "as any" diyerek TypeScript'in kızmasını engelliyoruz
+    const result = (await response.json()) as any;
+    
+    if (result.access_token && result.user) {
+      await EncryptedStorage.setItem('token', result.access_token);
+      await EncryptedStorage.setItem('user', JSON.stringify(result.user));
+    }
+    
     return result;
   }
 
@@ -702,7 +706,6 @@ class ApiService {
   }
  
   async getSentOffers(): Promise<any[]> {
-    // 👑 Backend endpointinle birebir uyumlu hale getirildi
     const response = await fetch(`${API_URL}/offers/made`, { 
       headers: await this.getAuthHeaders(),
     });
@@ -772,6 +775,116 @@ class ApiService {
     }
     return response.json();
   }
+  async getProductComments(productId: string): Promise<any[]> {
+    const response = await fetch(`${API_URL}/comments/product/${productId}/auth`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { message?: string };
+      throw new Error(err.message || 'Yorumlar yüklenemedi');
+    }
+    return response.json();
+  }
+ 
+  /** Yeni ana yorum oluştur */
+  async createComment(productId: string, content: string): Promise<any> {
+    const response = await fetch(`${API_URL}/comments`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify({ productId, content }),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { message?: string };
+      throw new Error(err.message || 'Yorum gönderilemedi');
+    }
+    return response.json();
+  }
+ 
+  /** Yoruma yanıt ver */
+  async replyToComment(parentId: string, content: string): Promise<any> {
+    const response = await fetch(`${API_URL}/comments/reply`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify({ parentId, content }),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { message?: string };
+      throw new Error(err.message || 'Yanıt gönderilemedi');
+    }
+    return response.json();
+  }
+ 
+  /** Yorum sil */
+  async deleteComment(commentId: string): Promise<any> {
+    const response = await fetch(`${API_URL}/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { message?: string };
+      throw new Error(err.message || 'Yorum silinemedi');
+    }
+    return response.json();
+  }
+
+  async getNotifications(page: number, limit: number): Promise<{ notifications: any[]; total: number; page: number }> {
+    const response = await fetch(`${API_URL}/notifications?page=${page}&limit=${limit}`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as any;
+      throw new Error(errorData.message || 'Bildirimler yüklenemedi');
+    }
+
+    const data = await response.json();
+    
+    return data as { notifications: any[]; total: number; page: number };
+  }
+ 
+  async getUnreadNotificationCount(): Promise<{ unreadCount: number }> {
+    const response = await fetch(`${API_URL}/notifications/unread-count`, {
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as any;
+      throw new Error(errorData.message || 'Okunmamış bildirim sayısı alınamadı');
+    }
+
+    const data = await response.json();
+    return data as { unreadCount: number };
+  }
+ 
+  async markAllNotificationsAsRead(): Promise<{ marked: number }> {
+    const response = await fetch(`${API_URL}/notifications/read-all`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = (await response.json().catch(() => ({}))) as any;
+      throw new Error(errorData.message || 'Bildirimler okundu işaretlenemedi');
+    }
+
+    const data = await response.json();
+    return data as { marked: number };
+  }
+ 
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    const response = await fetch(
+      `${API_URL}/notifications/${notificationId}/read`,
+      {
+        method: 'PATCH',
+        headers: await this.getAuthHeaders(),
+      },
+    );
+ 
+    if (!response.ok) {
+      throw new Error('Bildirim okundu yapılamadı');
+    }
+  }
+  
 }
 
 export default new ApiService();

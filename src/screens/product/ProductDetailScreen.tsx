@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { CommentsSection } from '../../components/CommentsSection';
+
 
 const { width } = Dimensions.get('window');
 const API_URL = Platform.OS === 'android' 
@@ -331,6 +333,11 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
             </ScrollView>
         </View>
       )}
+      {/* Sorular & Yorumlar Bölümü */}
+   <CommentsSection
+     productId={product.id}
+     sellerId={product.seller.id}
+   />
 
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>

@@ -16,8 +16,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { Listing } from '../../types/listing.types';
-// 👑 Mimari Kural: Tüm istekler sadece api.ts üzerinden!
 import api from '../../services/api';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 interface Category {
   id: number;
@@ -51,6 +52,8 @@ const UserHomeScreen = ({ navigation }: any) => {
   const [tempMinPrice, setTempMinPrice] = useState('');
   const [tempMaxPrice, setTempMaxPrice] = useState('');
   const [tempSortBy, setTempSortBy] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
 
   // İlk açılışta kategorileri ve favorileri çek
   useEffect(() => {
@@ -79,7 +82,23 @@ const UserHomeScreen = ({ navigation }: any) => {
     return () => { isMounted = false; };
   }, [token]);
 
-  // 👑 SENIOR DOKUNUŞU: Debounced Search ve Listing Fetch
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUnreadCount = async () => {
+        try {
+          const result = await api.getUnreadNotificationCount();
+          setUnreadNotifCount(result.unreadCount);
+        } catch (error) {
+          console.error('Bildirim sayısı alınamadı:', error);
+        }
+      };
+   
+      if (token) {
+        fetchUnreadCount();
+      }
+    }, [token])
+  );
+
   useEffect(() => {
     let isMounted = true;
 
@@ -247,23 +266,43 @@ const UserHomeScreen = ({ navigation }: any) => {
           <Text style={styles.userName}>{user?.fullName || 'Misafir'}</Text>
         </View>
         <View style={styles.headerButtons}>
-          {user?.role === 'ADMIN' && (
-            <TouchableOpacity 
-              style={styles.headerButton}
-              onPress={() => navigation.navigate('AdminDashboard')}
-            >
-              <Text style={styles.headerButtonIcon}>🛡️</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Offers')}>
-            <Text style={styles.headerButtonIcon}>🏷️</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Chats')}>
-            <Text style={styles.headerButtonIcon}>💬</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('UserProfile')}>
-            <Text style={styles.headerButtonIcon}>👤</Text>
-          </TouchableOpacity>
+            {user?.role === 'ADMIN' && (
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={() => navigation.navigate('AdminDashboard')}
+        >
+          <Text style={styles.headerButtonIcon}>🛡️</Text>
+        </TouchableOpacity>
+      )}
+      
+      {/* ✅ YENİ: Çan İkonu + Kırmızı Badge */}
+      <TouchableOpacity 
+        style={styles.headerButton} 
+        onPress={() => {
+          setUnreadNotifCount(0); // Anında sıfırla (Optimistic UI)
+          navigation.navigate('Notifications');
+        }}
+      >
+        <Text style={styles.headerButtonIcon}>🔔</Text>
+        {unreadNotifCount > 0 && (
+          <View style={styles.notifBadge}>
+            <Text style={styles.notifBadgeText}>
+              {unreadNotifCount > 99 ? '99+' : unreadNotifCount}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Offers')}>
+        <Text style={styles.headerButtonIcon}>🏷️</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Chats')}>
+        <Text style={styles.headerButtonIcon}>💬</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('UserProfile')}>
+        <Text style={styles.headerButtonIcon}>👤</Text>
+      </TouchableOpacity>
+
         </View>
       </View>
 
@@ -449,6 +488,26 @@ const styles = StyleSheet.create({
   applyFilterText: { color: '#fff', fontWeight: 'bold' },
   floatingAddButton: { position: 'absolute', bottom: 20, right: 20, width: 60, height: 60, borderRadius: 30, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, zIndex: 999 },
   floatingAddButtonText: { color: '#fff', fontSize: 32, fontWeight: '300', marginTop: -2 },
+  notifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  notifBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    lineHeight: 12,
+  },
 });
 
 export default UserHomeScreen;

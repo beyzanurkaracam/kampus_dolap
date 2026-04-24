@@ -1,3 +1,5 @@
+// backend/src/app.module.ts
+
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -19,8 +21,8 @@ import { ProductImage } from './entities/product-image.entity';
 import { Favorite } from './entities/favorite.entity';
 import { ChatModule } from './modules/chat/chat.module';
 import { RedisModule } from './modules/redis/redis.module';
-import { Chat } from './entities/chat.entity'; // ✅ EKLE
-import { Message } from './entities/message.entity'; // ✅ EKLE
+import { Chat } from './entities/chat.entity';
+import { Message } from './entities/message.entity';
 import { PaymentModule } from './modules/payment/payment.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { Offer } from './entities/offer.entity';
@@ -28,13 +30,14 @@ import { OfferModule } from './modules/offer/offer.module';
 import { FollowModule } from './modules/follow/follow.module';
 import { Follow } from './entities/follow.entity';
 import { CampusLocation } from './entities/campus-location.entity';
+import { Comment } from './entities/comment.entity';
+import { CommentModule } from './modules/comment/comment.module';
+import { Notification } from './entities/notification.entity';           // ✅ YENİ
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule, RedisModule],
       useFactory: (configService: ConfigService) => ({
@@ -45,20 +48,11 @@ import { CampusLocation } from './entities/campus-location.entity';
         password: configService.get('DATABASE_PASSWORD', 'beyza123'),
         database: configService.get('DATABASE_NAME', 'secondhand_db'),
         entities: [
-          User,
-          Admin,
-          University,
-          Category,
-          Product,
-          ProductImage,
-          Favorite,
-          Chat,
-          Message,
-          Offer,
-          Follow,
-          CampusLocation
-        ], 
-       
+          User, Admin, University, Category, Product, ProductImage,
+          Favorite, Chat, Message, Offer, Follow, CampusLocation,
+          Comment,
+          Notification, // ✅ YENİ
+        ],
         synchronize: true,
         logging: true,
       }),
@@ -74,7 +68,8 @@ import { CampusLocation } from './entities/campus-location.entity';
     TasksModule,
     OfferModule,
     FollowModule,
-    
+    CommentModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,134 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  transition: width 0.3s ease;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+
+  &.collapsed {
+    width: 72px;
+  }
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 72px;
+
+  .brand-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .brand-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 0;
+  }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+
+  .nav-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+  }
+
+  &.active {
+    background: #1e40af;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+  }
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  .admin-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+
+    .admin-avatar {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .admin-email {
+      font-size: 12px;
+      color: #64748b;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+  }
+}

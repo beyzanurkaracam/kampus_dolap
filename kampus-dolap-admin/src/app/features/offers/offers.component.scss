@@ -1,0 +1,32 @@
+.page { display: flex; flex-direction: column; gap: 20px; }
+.page-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.status-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 20px;
+  background: #fff; color: #64748b; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  &:hover { background: #f1f5f9; }
+  &.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+}
+.stat-chip { padding: 8px 14px; background: #f1f5f9; border-radius: 10px; font-size: 13px; font-weight: 600; color: #475569; }
+
+.table-container { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow-x: auto; }
+.data-table {
+  width: 100%; border-collapse: collapse;
+  th { text-align: left; padding: 14px 20px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; background: #f8fafc; white-space: nowrap; }
+  td { padding: 14px 20px; font-size: 14px; color: #334155; border-bottom: 1px solid #f1f5f9; }
+  tbody tr { transition: background 0.15s; &:hover { background: #f8fafc; } &:last-child td { border-bottom: none; } }
+}
+.product-name { font-weight: 600; color: #0f172a; }
+.price { font-weight: 700; color: #0f172a; }
+.status-badge { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
+.status-pending { background: #fef3c7; color: #92400e; }
+.status-accepted { background: #dcfce7; color: #166534; }
+.status-rejected { background: #fee2e2; color: #991b1b; }
+.status-countered { background: #e0e7ff; color: #3730a3; }
+.status-meeting_confirmed { background: #dbeafe; color: #1e40af; }
+.status-cancelled { background: #f1f5f9; color: #475569; }
+.meeting-info { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.meeting-time { font-size: 11px; color: #94a3b8; }
+.text-muted { color: #94a3b8; }
+.empty-row { text-align: center; color: #94a3b8; padding: 48px 20px !important; }

@@ -46,6 +46,14 @@ lerna-debug.log*
 .temp
 .tmp
 
+# Git and version control
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+
 # Runtime data
 pids
 *.pid

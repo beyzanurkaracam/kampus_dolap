@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kampusumden-backend-deployment
+spec:
+  replicas: 2 # Yüksek erişilebilirlik! Uygulamandan aynı anda 2 kopya çalışacak.
+  selector:
+    matchLabels:
+      app: kampusumden-backend
+  template: # Buradan aşağısı, oluşturulacak kopyaların (Pod'ların) tarifidir
+    metadata:
+      labels:
+        app: kampusumden-backend
+    spec:
+      containers:
+      - name: backend-container
+        image: beyzanurkaracamm/kampusumden-backend:latest 
+        imagePullPolicy: Always 
+        ports:
+        - containerPort: 3000 
+        # Eski "env:" bloğunu sildik, yerine bunu ekledik:
+        envFrom:
+        - secretRef:
+            name: kampusumden-secrets

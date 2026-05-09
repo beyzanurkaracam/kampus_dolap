@@ -5,7 +5,6 @@ import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
-import { Admin } from 'src/entities/admin.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UniversityService } from '../university/university.service';
@@ -16,8 +15,6 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Admin)
-    private adminRepository: Repository<Admin>,
     private jwtService: JwtService,
     private universityService: UniversityService,
     private emailService: EmailService,
@@ -79,7 +76,6 @@ export class AuthService {
 
   async registerUser(registerDto: RegisterDto) {
     await this.validateUserEmail(registerDto.email);
-    console.log('RegisterDto alındı2232:', registerDto);
     const existingUser = await this.userRepository.findOne({ where: { email: registerDto.email } });
 
     if (existingUser) {
@@ -187,7 +183,6 @@ export class AuthService {
       { expiresIn: '7d' },
     );
 
-    console.log('Verification token oluşturuldu:', { userId: savedUser.id, email: savedUser.email });
 
     return {
       access_token: token,
@@ -197,10 +192,10 @@ export class AuthService {
         fullName: userWithUniversity.fullName,
         phone: userWithUniversity.phone,
         department: userWithUniversity.department,
-        university: {
+        university: userWithUniversity.university ? {
           id: userWithUniversity.university.id,
           name: userWithUniversity.university.name
-        },
+        } : null,
         emailVerified: userWithUniversity.emailVerified,
         role: userWithUniversity.role
       },
@@ -238,85 +233,46 @@ export class AuthService {
     };
   }
 
-  async loginUser(loginDto: LoginDto) {
-    const user = await this.userRepository.findOne({ 
+  async login(loginDto: LoginDto) {
+    // Check User table first (handles both USER and ADMIN roles)
+    const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
       relations: ['university']
     });
 
-    if (!user) {
-      throw new UnauthorizedException('Email veya şifre hatalı');
-    }
-
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Email veya şifre hatalı');
-    }
-
-    console.log('Login - JWT_SECRET:', process.env.JWT_SECRET);
-    const token = this.jwtService.sign(
-      { 
-        sub: user.id, 
-        email: user.email, 
-        role: user.role,
-        universityId: user.universityId 
+    if (user) {
+      const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Email veya şifre hatalı');
       }
-    );
 
-    console.log('Login token oluşturuldu:', { userId: user.id, email: user.email, tokenPreview: token.substring(0, 50) });
-return {
-      access_token: token,
-      user: {
-        id: user.id,
+      const token = this.jwtService.sign({
+        sub: user.id,
         email: user.email,
-        fullName: user.fullName,
-        profilePhoto: user.profilePhoto, // 👑 SENIOR DOKUNUŞU: Resim verisini Frontend'e yolluyoruz!
-        isPremium: user.isPremium,
-        department: user.department,
-        university: {
-          id: user.university.id,
-          name: user.university.name,
-          city: user.university.city,
-        },
         role: user.role,
-      },
-    };
-  }
+        universityId: user.universityId
+      });
 
-  async loginAdmin(loginDto: LoginDto) {
-    console.log('loginAdmin çağrıldı, email:', loginDto.email);
-    
-    const admin = await this.adminRepository.findOne({ where: { email: loginDto.email } });
-
-    if (!admin) {
-      console.log('Admin bulunamadı');
-      throw new UnauthorizedException('Admin bulunamadı');
+      return {
+        access_token: token,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          profilePhoto: user.profilePhoto,
+          isPremium: user.isPremium,
+          department: user.department,
+          university: user.university ? {
+            id: user.university.id,
+            name: user.university.name,
+            city: user.university.city,
+          } : null,
+          role: user.role,
+        },
+      };
     }
 
-    console.log('Admin bulundu:', admin.email);
-    const isPasswordValid = await bcrypt.compare(loginDto.password, admin.password);
-
-    if (!isPasswordValid) {
-      console.log('Şifre hatalı');
-      throw new UnauthorizedException('Şifre hatalı');
-    }
-
-    console.log('Admin login başarılı');
-    const token = this.jwtService.sign(
-      { sub: admin.id, email: admin.email, role: 'ADMIN' },
-      { expiresIn: '7d' },
-    );
-
-   return {
-      access_token: token,
-      // 👑 SENIOR DOKUNUŞU: Frontend'in beklediği formatta (Sözleşmeye uygun) dönüyoruz.
-      user: { 
-        id: admin.id,
-        email: admin.email,
-        role: 'ADMIN',
-      },
-    };
+    throw new UnauthorizedException('Email veya şifre hatalı');
   }
 
   async validateToken(token: string) {
@@ -329,14 +285,10 @@ return {
   }
 
   async getUserProfile(userId: string) {
-    console.log('getUserProfile çağrıldı, userId:', userId);
-    
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['university'],
     });
-
-    console.log('Kullanıcı bulundu:', user ? 'Evet' : 'Hayır');
 
     if (!user) {
       throw new UnauthorizedException('Kullanıcı bulunamadı');
@@ -353,11 +305,11 @@ return {
       phone: user.phone,
       profilePhoto: user.profilePhoto,
       isPremium: user.isPremium,
-      university: {
+      university: user.university ? {
         id: user.university.id,
         name: user.university.name,
         city: user.university.city,
-      },
+      } : null,
     };
   }
 
@@ -387,8 +339,6 @@ return {
   }
 
   async getFullProfile(userId: string) {
-    console.log('getFullProfile çağrıldı, userId:', userId);
-    
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['university'],

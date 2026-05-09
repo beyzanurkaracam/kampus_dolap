@@ -14,7 +14,7 @@ interface AuthContextType {
   userId: string | null;
   loading: boolean;
   isLoggedIn: boolean;
-  login: (email: string, password: string, userType: 'user' | 'admin') => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -89,31 +89,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [checkAuth]);
 
   const login = useCallback(
-    async (email: string, password: string, userType: 'user' | 'admin') => {
+    async (email: string, password: string) => {
       try {
-        const response = await api.login({ email, password }, userType);
-        
+        const response = await api.login({ email, password });
+
         if (!response || !response.access_token || !response.user) {
           throw new Error('Sunucudan geçersiz yanıt alındı');
         }
-        
+
         const userData: User = {
           ...response.user,
-          role: (response.user.role?.toUpperCase() || userType.toUpperCase()) as 'USER' | 'ADMIN'
+          role: (response.user.role?.toUpperCase() || 'USER') as 'USER' | 'ADMIN'
         };
 
-        // Donanımsal Şifreli Veritabanına Yazma
         await EncryptedStorage.setItem('token', response.access_token);
-        await EncryptedStorage.setItem('userType', userType);
         await EncryptedStorage.setItem('user_profile', JSON.stringify(userData));
-        
+
         setToken(response.access_token);
         setUser(userData);
-        
+
       } catch (error: any) {
         setToken(null);
         setUser(null);
-        throw error; 
+        throw error;
       }
     },
     [],

@@ -15,23 +15,13 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(
-    @Body() dto: RegisterDto
-  ) {
-    console.log('RegisterDto alındı2232:');
-
+  async register(@Body() dto: RegisterDto) {
     return this.authService.registerUser(dto);
   }
 
   @Post('login')
   async login(@Body() dto: LoginDto) {
-    return this.authService.loginUser(dto);
-  }
-
-  @Post('admin-login')
-  async adminLogin(@Body() dto: LoginDto) {
-    console.log('Admin login attempt for:', dto.email);
-    return this.authService.loginAdmin(dto);
+    return this.authService.login(dto);
   }
 
   @Get('verify')
@@ -57,10 +47,7 @@ export class AuthController {
   @UseGuards(JwtGuard)
   @Get('profile')
   async getProfile(@Request() req, @Headers() headers) {
-    console.log('Profile endpoint çağrıldı');
-    console.log('req.user:', req.user);
-    // JWT payload'daki 'sub' userId'dir
-    return this.authService.getFullProfile(req.user.sub);
+    return this.authService.getFullProfile(req.user.userId);
   }
 
   @UseGuards(JwtGuard)
@@ -69,10 +56,9 @@ export class AuthController {
     return this.authService.updateUserProfile(req.user.userId, updateData);
   }
 
-  @UseGuards(JwtGuard) // Sadece giriş yapmış kullanıcılar token kaydedebilir
+  @UseGuards(JwtGuard)
   @Post('fcm-token')
   async saveFcmToken(@Request() req, @Body() body: { token: string }) {
-    console.log(`FCM Token Kaydı İsteği: User ${req.user.userId}`);
     return this.authService.saveFcmToken(req.user.userId, body.token);
   }
 

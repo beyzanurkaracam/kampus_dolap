@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/build/intermediates/cxx/Debug/104j1y2b/obj/x86_64/libappmodules.so"
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/build/intermediates/cxx/Debug/104j1y2b/obj/arm64-v8a/libappmodules.so"
 		}
 	],
 	"backtrace" : 3,
@@ -314,27 +314,27 @@
 			},
 			{
 				"backtrace" : 4,
-				"fragment" : "C:\\Users\\Beyza\\Desktop\\kampus_dolap\\android\\app\\build\\intermediates\\cxx\\Debug\\104j1y2b\\obj\\x86_64\\libreact_codegen_safeareacontext.so",
+				"fragment" : "C:\\Users\\Beyza\\Desktop\\kampus_dolap\\android\\app\\build\\intermediates\\cxx\\Debug\\104j1y2b\\obj\\arm64-v8a\\libreact_codegen_safeareacontext.so",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 4,
-				"fragment" : "C:\\Users\\Beyza\\Desktop\\kampus_dolap\\android\\app\\build\\intermediates\\cxx\\Debug\\104j1y2b\\obj\\x86_64\\libreact_codegen_rnscreens.so",
+				"fragment" : "C:\\Users\\Beyza\\Desktop\\kampus_dolap\\android\\app\\build\\intermediates\\cxx\\Debug\\104j1y2b\\obj\\arm64-v8a\\libreact_codegen_rnscreens.so",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 5,
-				"fragment" : "C:\\Users\\Beyza\\.gradle\\caches\\8.13\\transforms\\3b73c148cb6afa0cfb3b1591b077dda1\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86_64\\libfbjni.so",
+				"fragment" : "C:\\Users\\Beyza\\.gradle\\caches\\8.13\\transforms\\3b73c148cb6afa0cfb3b1591b077dda1\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.arm64-v8a\\libfbjni.so",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 5,
-				"fragment" : "C:\\Users\\Beyza\\.gradle\\caches\\8.13\\transforms\\9e838b3d20d2d3e131d7dbe8d9c0ee26\\transformed\\react-android-0.82.0-debug\\prefab\\modules\\jsi\\libs\\android.x86_64\\libjsi.so",
+				"fragment" : "C:\\Users\\Beyza\\.gradle\\caches\\8.13\\transforms\\9e838b3d20d2d3e131d7dbe8d9c0ee26\\transformed\\react-android-0.82.0-debug\\prefab\\modules\\jsi\\libs\\android.arm64-v8a\\libjsi.so",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 5,
-				"fragment" : "C:\\Users\\Beyza\\.gradle\\caches\\8.13\\transforms\\9e838b3d20d2d3e131d7dbe8d9c0ee26\\transformed\\react-android-0.82.0-debug\\prefab\\modules\\reactnative\\libs\\android.x86_64\\libreactnative.so",
+				"fragment" : "C:\\Users\\Beyza\\.gradle\\caches\\8.13\\transforms\\9e838b3d20d2d3e131d7dbe8d9c0ee26\\transformed\\react-android-0.82.0-debug\\prefab\\modules\\reactnative\\libs\\android.arm64-v8a\\libreactnative.so",
 				"role" : "libraries"
 			},
 			{
@@ -410,127 +410,127 @@
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/ComponentDescriptors.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/ComponentDescriptors.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/EventEmitters.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/EventEmitters.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/Props.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/Props.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/ShadowNodes.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/ShadowNodes.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/States.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/States.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/rnasyncstorageJSI-generated.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/react/renderer/components/rnasyncstorage/rnasyncstorageJSI-generated.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/rnasyncstorage-generated.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/rnasyncstorage_autolinked_build/CMakeFiles/react_codegen_rnasyncstorage.dir/rnasyncstorage-generated.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/RNDatePickerSpecs-generated.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/RNDatePickerSpecs-generated.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/ComponentDescriptors.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/ComponentDescriptors.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/EventEmitters.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/EventEmitters.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/Props.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/Props.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/RNDatePickerSpecsJSI-generated.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/RNDatePickerSpecsJSI-generated.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/ShadowNodes.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/ShadowNodes.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/States.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNDatePickerSpecs_autolinked_build/CMakeFiles/react_codegen_RNDatePickerSpecs.dir/react/renderer/components/RNDatePickerSpecs/States.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/RNImagePickerSpec-generated.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/RNImagePickerSpec-generated.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/ComponentDescriptors.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/ComponentDescriptors.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/EventEmitters.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/EventEmitters.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/Props.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/Props.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/RNImagePickerSpecJSI-generated.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/RNImagePickerSpecJSI-generated.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/ShadowNodes.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/ShadowNodes.cpp.o",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/x86_64/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/States.cpp.o",
+			"path" : "C:/Users/Beyza/Desktop/kampus_dolap/android/app/.cxx/Debug/104j1y2b/arm64-v8a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir/react/renderer/components/RNImagePickerSpec/States.cpp.o",
 			"sourceGroupIndex" : 1
 		}
 	],

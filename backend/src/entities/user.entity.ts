@@ -33,12 +33,12 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   premiumExpiresAt: Date | null;
 
-  @ManyToOne(() => University, (university) => university.users)
+  @ManyToOne(() => University, (university) => university.users, { nullable: true })
   @JoinColumn({ name: 'universityId' })
-  university: University;
+  university: University | null;
 
-  @Column()
-  universityId: string;
+  @Column({ nullable: true })
+  universityId: string | null;
 
   @Column({ nullable: true })
   studentId: string;

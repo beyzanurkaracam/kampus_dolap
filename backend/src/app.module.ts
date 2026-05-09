@@ -10,7 +10,6 @@ import { AdminModule } from './modules/admin/admin.module';
 import { UploadModule } from './modules/upload/upload.module';
 
 import { User } from './entities/user.entity';
-import { Admin } from './entities/admin.entity';
 import { University } from './entities/university.entity';
 import { Category } from './entities/category.entity';
 import { Product } from './entities/product.entity';
@@ -35,6 +34,7 @@ import { BlockedUser } from './entities/blocked-user.entity';
 import { BlockModule } from './modules/block/block.module';
 import { Review } from './entities/review.entity';
 import { ReviewModule } from './modules/review/review.module';
+import { Admin } from './entities/admin.entity';
 
 @Module({
   imports: [
@@ -49,9 +49,9 @@ import { ReviewModule } from './modules/review/review.module';
         password: configService.get('DATABASE_PASSWORD', 'beyza123'),
         database: configService.get('DATABASE_NAME', 'secondhand_db'),
         entities: [
-          User, Admin, University, Category, Product, ProductImage,
+          User, University, Category, Product, ProductImage,
           Favorite, Chat, Message, Offer, Follow, CampusLocation,
-          Comment, Notification, BlockedUser, Review,
+          Comment, Notification, BlockedUser, Review, Admin,
         ],
         synchronize: true,
         logging: true,

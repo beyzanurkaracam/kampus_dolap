@@ -11,11 +11,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET || 'your-super-secret-key-change-this',
     });
-    console.log('JwtStrategy initialized with secret:', process.env.JWT_SECRET || 'your-super-secret-key-change-this');
   }
 
   async validate(payload: any) {
-    console.log('JWT Strategy validate çağrıldı, payload:', payload);
     return {
       userId: payload.sub,
       email: payload.email,

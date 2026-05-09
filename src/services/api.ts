@@ -1,4 +1,3 @@
-import { Product } from "backend/src/entities/product.entity";
 import { Platform } from "react-native";
 // 🛡️ GÜVENLİK GÜNCELLEMESİ: AsyncStorage yerine EncryptedStorage import edildi
 import EncryptedStorage from 'react-native-encrypted-storage';
@@ -71,10 +70,8 @@ class ApiService {
     };
   }
 
-  async login(data: LoginData, userType: 'user' | 'admin' = 'user'): Promise<AuthResponse> {
-    const endpoint = userType === 'admin' ? 'admin-login' : 'login';
-    
-    const response = await fetch(`${API_URL}/auth/${endpoint}`, {
+  async login(data: LoginData): Promise<AuthResponse> {
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -286,6 +283,17 @@ class ApiService {
     });
     if (!response.ok) {
         throw new Error('Ürünler alınamadı');
+    }
+    const data = await response.json();
+    return data as any[];
+  }
+
+  async getMyProducts(): Promise<any[]> {
+    const response = await fetch(`${API_URL}/products/my-products`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error('Ürünler alınamadı');
     }
     const data = await response.json();
     return data as any[];

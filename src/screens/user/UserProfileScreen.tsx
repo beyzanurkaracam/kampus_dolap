@@ -102,7 +102,9 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
         setIsFollowing(followStatus.isFollowing);
       }
 
-      const userProducts = await api.getUserProducts(targetUserId);
+      const userProducts = isOwner
+        ? await api.getMyProducts()
+        : await api.getUserProducts(targetUserId);
       setProducts(userProducts as Product[]);
 
     } catch (error) {
@@ -295,34 +297,55 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
     </View>
   );
 
-  const renderProduct = ({ item }: { item: Product }) => (
-    <TouchableOpacity 
-        style={styles.productCard}
-        onPress={() => navigation.push('ProductDetail', { productId: item.id })}
-    >
-        <Image 
-            source={{ uri: getImageUrl(item.images?.[0]?.imageUrl) || 'https://via.placeholder.com/150' }} 
-            style={styles.productImage} 
-        />
-        
-        {activeTab === 'favorites' && (
-            <TouchableOpacity 
-                style={styles.removeButton}
-                onPress={(e) => {
-                    e.stopPropagation();
-                    handleRemoveFavorite(item.id);
-                }}
-            >
-                <Text style={styles.removeButtonText}>✕</Text>
-            </TouchableOpacity>
-        )}
-        
-        <View style={styles.productInfo}>
-            <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.productPrice}>₺{item.price}</Text>
-        </View>
-    </TouchableOpacity>
-  );
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'active':   return { text: 'Aktif',          color: '#34C759', bgColor: '#E8F5E9' };
+      case 'pending':  return { text: 'Onay Bekliyor',  color: '#FF9500', bgColor: '#FFF3E0' };
+      case 'sold':     return { text: 'Satıldı',        color: '#8E8E93', bgColor: '#F0F0F0' };
+      case 'reserved': return { text: 'Rezerve',        color: '#007AFF', bgColor: '#E3F2FD' };
+      case 'removed':  return { text: 'Reddedildi',     color: '#FF3B30', bgColor: '#FFEBEE' };
+      default:         return { text: status,            color: '#999',    bgColor: '#F5F5F5' };
+    }
+  };
+
+  const renderProduct = ({ item }: { item: Product }) => {
+    const statusInfo = isOwner && (item as any).status ? getStatusInfo((item as any).status) : null;
+
+    return (
+      <TouchableOpacity
+          style={styles.productCard}
+          onPress={() => navigation.push('ProductDetail', { productId: item.id })}
+      >
+          <Image
+              source={{ uri: getImageUrl(item.images?.[0]?.imageUrl) || 'https://via.placeholder.com/150' }}
+              style={styles.productImage}
+          />
+
+          {activeTab === 'favorites' && (
+              <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFavorite(item.id);
+                  }}
+              >
+                  <Text style={styles.removeButtonText}>✕</Text>
+              </TouchableOpacity>
+          )}
+
+          {statusInfo && (
+              <View style={[styles.statusBadge, { backgroundColor: statusInfo.bgColor }]}>
+                  <Text style={[styles.statusText, { color: statusInfo.color }]}>{statusInfo.text}</Text>
+              </View>
+          )}
+
+          <View style={styles.productInfo}>
+              <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
+              <Text style={styles.productPrice}>₺{item.price}</Text>
+          </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -397,4 +420,6 @@ const styles = StyleSheet.create({
   emptyContainer: { padding: 40, alignItems: 'center' },
   emptyText: { color: '#999', fontSize: 16, marginBottom: 8 },
   emptySubtext: { color: '#ccc', fontSize: 14, textAlign: 'center' },
+  statusBadge: { position: 'absolute', top: 8, left: 8, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+  statusText: { fontSize: 10, fontWeight: '700' },
 });

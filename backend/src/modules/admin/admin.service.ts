@@ -1,10 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { Product } from 'src/entities/product.entity';
-import { Admin } from 'src/entities/admin.entity';
-import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class AdminService {
@@ -13,8 +11,6 @@ export class AdminService {
     private userRepository: Repository<User>,
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
-    @InjectRepository(Admin)
-    private adminRepository: Repository<Admin>,
   ) {}
 
   async getDashboardStats() {
@@ -22,7 +18,7 @@ export class AdminService {
       this.userRepository.count(),
       this.productRepository.count(),
       this.productRepository.count({ where: { status: 'active' } }),
-      this.adminRepository.count(),
+      this.userRepository.count({ where: { role: 'ADMIN' } }),
       this.productRepository.count({ where: { status: 'pending' } }),
     ]);
 

@@ -21,32 +21,48 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
+type Condition = 'new' | 'like_new' | 'good' | 'fair' | 'poor';
+type ModalType = 'mainCategory' | 'subCategory' | 'brand' | 'color' | null;
+
 interface SelectedImage { uri: string; name: string; type: string; }
 interface Category { id: number; name: string; brandCategory?: string; mainCategory?: string; subCategory?: string; }
 interface Brand { id: string; name: string; }
 interface Color { id: string; name: string; hex: string; }
 
-type ModalType = 'mainCategory' | 'subCategory' | 'brand' | 'color' | null;
+const CONDITION_OPTIONS: { value: Condition; label: string }[] = [
+  { value: 'new', label: 'Sıfır' },
+  { value: 'like_new', label: 'Sıfır Gibi' },
+  { value: 'good', label: 'İyi' },
+  { value: 'fair', label: 'Orta' },
+  { value: 'poor', label: 'Eski' },
+];
+
+const MODAL_TITLES: Record<NonNullable<ModalType>, string> = {
+  mainCategory: 'Ana Kategori Seçin',
+  subCategory: 'Alt Kategori Seçin',
+  brand: 'Marka Seçin',
+  color: 'Renk Seçin',
+};
 
 export const AddProductScreen = ({ navigation }: any) => {
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
-  
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [condition, setCondition] = useState<'new' | 'like_new' | 'good' | 'fair' | 'poor'>('good');
-  
+  const [condition, setCondition] = useState<Condition>('good');
+
   const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
+  const [selectedMainCategory, setSelectedMainCategory] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  
+
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-  
+
   const [colors, setColors] = useState<Color[]>([]);
   const [selectedColor, setSelectedColor] = useState<Color | null>(null);
-  
+
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,110 +70,81 @@ export const AddProductScreen = ({ navigation }: any) => {
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
-  const mainCategories = useMemo(() => {
-    return [...new Set(allCategories.map(cat => cat.mainCategory))].filter(Boolean) as string[];
-  }, [allCategories]);
+  const mainCategories = useMemo(
+    () => [...new Set(allCategories.map(c => c.mainCategory))].filter(Boolean) as string[],
+    [allCategories],
+  );
 
-  const subCategories = useMemo(() => {
-    if (!selectedMainCategory) return [];
-    return allCategories.filter(cat => cat.mainCategory === selectedMainCategory);
-  }, [allCategories, selectedMainCategory]);
+  const subCategories = useMemo(
+    () => selectedMainCategory ? allCategories.filter(c => c.mainCategory === selectedMainCategory) : [],
+    [allCategories, selectedMainCategory],
+  );
 
   useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [categoriesRes, colorsRes] = await Promise.all([
+          api.getCategories(),
+          api.getColors(),
+        ]);
+        setAllCategories(categoriesRes.categories ?? []);
+        setColors(colorsRes.colors ?? []);
+      } catch {
+        Alert.alert('Hata', 'Kategori ve renk verileri yüklenemedi');
+      } finally {
+        setDataLoading(false);
+      }
+    };
     fetchInitialData();
   }, []);
 
   useEffect(() => {
-    if (selectedCategory) {
-      fetchBrands(selectedCategory.brandCategory || 'giyim');
-    } else {
+    if (!selectedCategory) {
       setBrands([]);
       setSelectedBrand(null);
+      return;
     }
+    api.getBrands(selectedCategory.brandCategory ?? 'giyim')
+      .then(res => setBrands(res.brands ?? []))
+      .catch(() => {});
   }, [selectedCategory]);
-
-  const fetchInitialData = async () => {
-    try {
-      const [categoriesRes, colorsRes] = await Promise.all([
-        api.getCategories(),
-        api.getColors(),
-      ]);
-      setAllCategories(categoriesRes.categories || []);
-      setColors(colorsRes.colors || []);
-    } catch (error) {
-      Alert.alert('Hata', 'Kategori ve renk verileri yüklenemedi');
-    } finally {
-      setDataLoading(false);
-    }
-  };
-
-  const fetchBrands = async (brandCategoryId: string) => {
-    try {
-      const response = await api.getBrands(brandCategoryId);
-      setBrands(response.brands || []);
-    } catch (error) {
-      console.error('Markalar yüklenirken hata:', error);
-    }
-  };
 
   const selectImages = () => {
     ImagePicker.launchImageLibrary(
       { mediaType: 'photo', selectionLimit: 5, quality: 0.8 },
       (response: ImagePickerResponse) => {
-        if (response.didCancel) return;
-        if (response.errorCode) {
-          Alert.alert('Hata', response.errorMessage || 'Resim seçilirken hata oluştu');
+        if (response.didCancel || response.errorCode) {
+          if (response.errorCode) Alert.alert('Hata', response.errorMessage ?? 'Resim seçilirken hata oluştu');
           return;
         }
         if (response.assets) {
-          const images: SelectedImage[] = response.assets.map((asset: Asset) => ({
-            uri: asset.uri!,
-            name: asset.fileName || `image_${Date.now()}.jpg`,
-            type: asset.type || 'image/jpeg',
-          }));
-          setSelectedImages(images);
+          setSelectedImages(
+            response.assets.map((asset: Asset) => ({
+              uri: asset.uri!,
+              name: asset.fileName ?? `image_${Date.now()}.jpg`,
+              type: asset.type ?? 'image/jpeg',
+            })),
+          );
         }
-      }
+      },
     );
   };
 
-  const removeImage = (index: number) => setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  const removeImage = (index: number) =>
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
 
   const uploadImages = async (): Promise<string[]> => {
-    if (selectedImages.length === 0) return [];
     setUploadingImages(true);
     const uploadedUrls: string[] = [];
-
     try {
       for (const image of selectedImages) {
         const formData = new FormData();
-        
-        // 👑 SENIOR FIX: iOS ve Android URI farklılıklarını gideriyoruz
-        // Android'de file:// prefix olduğu gibi kalmalı, iOS'ta kaldırılmalı
-        const safeUri = Platform.OS === 'android' 
-          ? image.uri  // Android'de file:// prefix olduğu gibi kalmalı
-          : image.uri.replace('file://', ''); // iOS'ta kaldır
-
-        formData.append('file', {
-          uri: safeUri,
-          name: image.name,
-          type: image.type,
-        } as any);
-
+        const uri = Platform.OS === 'ios' ? image.uri.replace('file://', '') : image.uri;
+        formData.append('file', { uri, name: image.name, type: image.type } as any);
         const response = await api.uploadImage(formData);
-        
-        // DİKKAT: Backend'in tam olarak "imageUrl" döndüğünden emin ol. Eğer farklıysa burayı güncelle.
-        if (response.imageUrl) {
-            uploadedUrls.push(response.imageUrl);
-        } else {
-            console.warn('Backend başarılı dedi ama imageUrl dönmedi:', response);
-        }
+        if (response.imageUrl) uploadedUrls.push(response.imageUrl);
       }
       return uploadedUrls;
-    } catch (error: any) {
-      // GERÇEK HATAYI YAKALA VE GÖSTER
-      console.error('RESİM YÜKLEME DETAYLI HATA:', error);
-      throw new Error(error.message || 'Resim sunucuya iletilemedi.');
     } finally {
       setUploadingImages(false);
     }
@@ -168,28 +155,21 @@ export const AddProductScreen = ({ navigation }: any) => {
       Alert.alert('Hata', 'Lütfen tüm zorunlu alanları doldurun');
       return;
     }
-    
-    const safePrice = price.replace(',', '.');
-    const priceNum = parseFloat(safePrice);
-    
+
+    const priceNum = parseFloat(price.replace(',', '.'));
     if (isNaN(priceNum) || priceNum <= 0) {
       Alert.alert('Hata', 'Lütfen geçerli bir fiyat girin');
       return;
     }
-    
+
+    if (!token) {
+      navigation.replace('Login');
+      return;
+    }
+
     setLoading(true);
-    
     try {
-      if (!token) {
-        navigation.replace('Login');
-        return;
-      }
-    
-      let imageUrls: string[] = [];
-      if (selectedImages.length > 0) {
-        imageUrls = await uploadImages();
-      }
-    
+      const imageUrls = selectedImages.length > 0 ? await uploadImages() : [];
       await api.createProduct({
         title: title.trim(),
         description: description.trim(),
@@ -203,41 +183,82 @@ export const AddProductScreen = ({ navigation }: any) => {
         color: selectedColor?.name,
         images: imageUrls,
       });
-    
-      Alert.alert('Başarılı', 'Ürün eklendi 🎉', [
-        {
-          text: 'Tamam',
-          onPress: () => {
-            navigation.navigate('UserProfile');
-          }
-        },
+      Alert.alert('Başarılı', 'Ürün eklendi', [
+        { text: 'Tamam', onPress: () => navigation.navigate('UserProfile') },
       ]);
-    
     } catch (error: any) {
       if (error.status === 403) {
         Alert.alert(
-          'Limit Aşıldı 🔒',
-          'Ücretsiz üyelik ile en fazla 3 ürün yükleyebilirsiniz. Sınırsız ilan için Premium\'a geçin!',
+          'Limit Aşıldı',
+          "Ücretsiz üyelik ile en fazla 3 ürün yükleyebilirsiniz. Sınırsız ilan için Premium'a geçin!",
           [
             { text: 'İptal', style: 'cancel' },
-            { text: 'Premium\'a Geç', onPress: () => navigation.navigate('Premium') }
-          ]
+            { text: "Premium'a Geç", onPress: () => navigation.navigate('Premium') },
+          ],
         );
       } else {
-        Alert.alert('Ürün Eklenemedi', error.message || 'Bilinmeyen bir hata oluştu');
+        Alert.alert('Ürün Eklenemedi', error.message ?? 'Bilinmeyen bir hata oluştu');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const conditionOptions = [
-    { value: 'new', label: 'Sıfır' },
-    { value: 'like_new', label: 'Sıfır Gibi' },
-    { value: 'good', label: 'İyi' },
-    { value: 'fair', label: 'Orta' },
-    { value: 'poor', label: 'Eski' },
-  ];
+  const getModalData = (): any[] => {
+    switch (activeModal) {
+      case 'mainCategory': return mainCategories;
+      case 'subCategory': return subCategories;
+      case 'brand': return brands;
+      case 'color': return colors;
+      default: return [];
+    }
+  };
+
+  const renderModalItem = ({ item }: { item: any }) => {
+    switch (activeModal) {
+      case 'mainCategory':
+        return (
+          <TouchableOpacity
+            style={styles.modalItem}
+            onPress={() => { setSelectedMainCategory(item); setSelectedCategory(null); setActiveModal(null); }}
+          >
+            <Text style={styles.modalItemText}>{item as string}</Text>
+          </TouchableOpacity>
+        );
+      case 'subCategory':
+        return (
+          <TouchableOpacity
+            style={styles.modalItem}
+            onPress={() => { setSelectedCategory(item as Category); setActiveModal(null); }}
+          >
+            <Text style={styles.modalItemText}>{(item as Category).subCategory}</Text>
+          </TouchableOpacity>
+        );
+      case 'brand':
+        return (
+          <TouchableOpacity
+            style={styles.modalItem}
+            onPress={() => { setSelectedBrand(item as Brand); setActiveModal(null); }}
+          >
+            <Text style={styles.modalItemText}>{(item as Brand).name}</Text>
+          </TouchableOpacity>
+        );
+      case 'color':
+        return (
+          <TouchableOpacity
+            style={styles.modalItem}
+            onPress={() => { setSelectedColor(item as Color); setActiveModal(null); }}
+          >
+            <View style={styles.colorItem}>
+              <View style={[styles.colorBox, { backgroundColor: (item as Color).hex }]} />
+              <Text style={styles.modalItemText}>{(item as Color).name}</Text>
+            </View>
+          </TouchableOpacity>
+        );
+      default:
+        return null;
+    }
+  };
 
   if (dataLoading) {
     return (
@@ -247,24 +268,21 @@ export const AddProductScreen = ({ navigation }: any) => {
     );
   }
 
+  const isBusy = loading || uploadingImages;
+
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={styles.backButton}>‹ Geri</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Ürün Ekle</Text>
-        <View style={{ width: 50 }} />
+        <Text style={styles.headerTitle}>Ürün Ekle</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView 
-          style={styles.form} 
-          contentContainerStyle={styles.formContent}
-          keyboardShouldPersistTaps="handled">
-          
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView style={styles.form} contentContainerStyle={styles.formContent} keyboardShouldPersistTaps="handled">
+
           <View style={styles.field}>
             <Text style={styles.label}>Başlık *</Text>
             <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Ürün başlığı" maxLength={100} />
@@ -284,10 +302,9 @@ export const AddProductScreen = ({ navigation }: any) => {
             <Text style={styles.label}>Ürün Resimleri (Maksimum 5)</Text>
             <TouchableOpacity style={styles.imagePickerButton} onPress={selectImages} activeOpacity={0.8}>
               <Text style={styles.imagePickerText}>
-                {selectedImages.length > 0 ? `${selectedImages.length} resim seçildi` : '📷 Resim Seç'}
+                {selectedImages.length > 0 ? `${selectedImages.length} resim seçildi` : 'Resim Seç'}
               </Text>
             </TouchableOpacity>
-            
             {selectedImages.length > 0 && (
               <ScrollView horizontal style={styles.imagePreviewContainer} showsHorizontalScrollIndicator={false}>
                 {selectedImages.map((image, index) => (
@@ -305,7 +322,9 @@ export const AddProductScreen = ({ navigation }: any) => {
           <View style={styles.field}>
             <Text style={styles.label}>Ana Kategori *</Text>
             <TouchableOpacity style={styles.selectButton} onPress={() => setActiveModal('mainCategory')}>
-              <Text style={selectedMainCategory ? styles.selectedText : styles.placeholderText}>{selectedMainCategory || 'Ana kategori seçin'}</Text>
+              <Text style={selectedMainCategory ? styles.selectedText : styles.placeholderText}>
+                {selectedMainCategory || 'Ana kategori seçin'}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -313,7 +332,9 @@ export const AddProductScreen = ({ navigation }: any) => {
             <View style={styles.field}>
               <Text style={styles.label}>Alt Kategori *</Text>
               <TouchableOpacity style={styles.selectButton} onPress={() => setActiveModal('subCategory')}>
-                <Text style={selectedCategory ? styles.selectedText : styles.placeholderText}>{selectedCategory ? selectedCategory.subCategory : 'Alt kategori seçin'}</Text>
+                <Text style={selectedCategory ? styles.selectedText : styles.placeholderText}>
+                  {selectedCategory?.subCategory ?? 'Alt kategori seçin'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -322,7 +343,9 @@ export const AddProductScreen = ({ navigation }: any) => {
             <View style={styles.field}>
               <Text style={styles.label}>Marka</Text>
               <TouchableOpacity style={styles.selectButton} onPress={() => setActiveModal('brand')}>
-                <Text style={selectedBrand ? styles.selectedText : styles.placeholderText}>{selectedBrand ? selectedBrand.name : 'Marka seçin (opsiyonel)'}</Text>
+                <Text style={selectedBrand ? styles.selectedText : styles.placeholderText}>
+                  {selectedBrand?.name ?? 'Marka seçin (opsiyonel)'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -332,7 +355,9 @@ export const AddProductScreen = ({ navigation }: any) => {
             <TouchableOpacity style={styles.selectButton} onPress={() => setActiveModal('color')}>
               <View style={styles.colorSelectContent}>
                 {selectedColor && <View style={[styles.colorPreview, { backgroundColor: selectedColor.hex }]} />}
-                <Text style={selectedColor ? styles.selectedText : styles.placeholderText}>{selectedColor ? selectedColor.name : 'Renk seçin (opsiyonel)'}</Text>
+                <Text style={selectedColor ? styles.selectedText : styles.placeholderText}>
+                  {selectedColor?.name ?? 'Renk seçin (opsiyonel)'}
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -340,19 +365,31 @@ export const AddProductScreen = ({ navigation }: any) => {
           <View style={styles.field}>
             <Text style={styles.label}>Durum *</Text>
             <View style={styles.conditionContainer}>
-              {conditionOptions.map((option) => (
-                <TouchableOpacity key={option.value} style={[styles.conditionButton, condition === option.value && styles.conditionButtonActive]} onPress={() => setCondition(option.value as any)} activeOpacity={0.8}>
-                  <Text style={[styles.conditionText, condition === option.value && styles.conditionTextActive]}>{option.label}</Text>
+              {CONDITION_OPTIONS.map(option => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[styles.conditionButton, condition === option.value && styles.conditionButtonActive]}
+                  onPress={() => setCondition(option.value)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.conditionText, condition === option.value && styles.conditionTextActive]}>
+                    {option.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          <TouchableOpacity style={[styles.submitButton, (loading || uploadingImages) && styles.submitButtonDisabled]} onPress={handleSubmit} disabled={loading || uploadingImages} activeOpacity={0.8}>
-            {(loading || uploadingImages) ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={[styles.submitButton, isBusy && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={isBusy}
+            activeOpacity={0.8}
+          >
+            {isBusy ? (
+              <View style={styles.submitBusyContent}>
                 <ActivityIndicator color="#fff" />
-                {uploadingImages && <Text style={[styles.submitButtonText, { marginLeft: 10 }]}>Resimler yükleniyor...</Text>}
+                {uploadingImages && <Text style={styles.submitBusyText}>Resimler yükleniyor...</Text>}
               </View>
             ) : (
               <Text style={styles.submitButtonText}>Ürünü Ekle</Text>
@@ -366,57 +403,15 @@ export const AddProductScreen = ({ navigation }: any) => {
           <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setActiveModal(null)} />
           <View style={styles.modalContentSide}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {activeModal === 'mainCategory' && 'Ana Kategori Seçin'}
-                {activeModal === 'subCategory' && 'Alt Kategori Seçin'}
-                {activeModal === 'brand' && 'Marka Seçin'}
-                {activeModal === 'color' && 'Renk Seçin'}
-              </Text>
+              <Text style={styles.modalTitle}>{activeModal ? MODAL_TITLES[activeModal] : ''}</Text>
               <TouchableOpacity onPress={() => setActiveModal(null)}>
                 <Text style={styles.modalClose}>✕</Text>
               </TouchableOpacity>
             </View>
-            
             <FlatList
-              data={(activeModal === 'mainCategory' ? mainCategories : activeModal === 'subCategory' ? subCategories : activeModal === 'brand' ? brands : activeModal === 'color' ? colors : []) as any[]}
-              keyExtractor={(item: any, index) => (typeof item === 'string' ? item : String(item.id || index))}
-              renderItem={({ item }: { item: any }) => {
-                if (activeModal === 'mainCategory') {
-                  return (
-                    <TouchableOpacity style={styles.modalItem} onPress={() => { setSelectedMainCategory(item as string); setSelectedCategory(null); setActiveModal(null); }}>
-                      <Text style={styles.modalItemText}>{item as string}</Text>
-                    </TouchableOpacity>
-                  );
-                }
-                if (activeModal === 'subCategory') {
-                  const cat = item as Category;
-                  return (
-                    <TouchableOpacity style={styles.modalItem} onPress={() => { setSelectedCategory(cat); setActiveModal(null); }}>
-                      <Text style={styles.modalItemText}>{cat.subCategory}</Text>
-                    </TouchableOpacity>
-                  );
-                }
-                if (activeModal === 'brand') {
-                  const brand = item as Brand;
-                  return (
-                    <TouchableOpacity style={styles.modalItem} onPress={() => { setSelectedBrand(brand); setActiveModal(null); }}>
-                      <Text style={styles.modalItemText}>{brand.name}</Text>
-                    </TouchableOpacity>
-                  );
-                }
-                if (activeModal === 'color') {
-                  const color = item as Color;
-                  return (
-                    <TouchableOpacity style={styles.modalItem} onPress={() => { setSelectedColor(color); setActiveModal(null); }}>
-                      <View style={styles.colorItem}>
-                        <View style={[styles.colorBox, { backgroundColor: color.hex }]} />
-                        <Text style={styles.modalItemText}>{color.name}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }
-                return null;
-              }}
+              data={getModalData()}
+              keyExtractor={(item, index) => (typeof item === 'string' ? item : String(item.id ?? index))}
+              renderItem={renderModalItem}
             />
           </View>
         </View>
@@ -426,11 +421,13 @@ export const AddProductScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, paddingBottom: 15, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e0e0e0' },
   backButton: { fontSize: 18, color: '#007AFF', fontWeight: '500' },
-  title: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  headerSpacer: { width: 50 },
   form: { flex: 1 },
   formContent: { flexGrow: 1, padding: 20, paddingBottom: 100 },
   field: { marginBottom: 20 },
@@ -450,6 +447,8 @@ const styles = StyleSheet.create({
   submitButton: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 30, marginBottom: 50 },
   submitButtonDisabled: { opacity: 0.6 },
   submitButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  submitBusyContent: { flexDirection: 'row', alignItems: 'center' },
+  submitBusyText: { color: '#fff', fontSize: 16, marginLeft: 10 },
   modalContainerSide: { flex: 1, flexDirection: 'row', justifyContent: 'flex-end' },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   modalContentSide: { width: '75%', backgroundColor: '#fff', height: '100%', shadowColor: '#000', shadowOffset: { width: -2, height: 0 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 5 },

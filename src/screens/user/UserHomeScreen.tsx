@@ -18,6 +18,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Listing } from '../../types/listing.types';
 import api from '../../services/api';
 import { useFocusEffect } from '@react-navigation/native';
+import { getImageUrl } from '../../utils/productHelpers';
+
 
 
 interface Category {
@@ -55,13 +57,31 @@ const UserHomeScreen = ({ navigation }: any) => {
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
 
+  const hasMounted = useRef(false);
+
+  const fetchListings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params: any = { sort: activeSortBy };
+      if (searchQuery.trim()) params.search = searchQuery;
+      if (selectedCategory) params.categoryId = selectedCategory;
+      if (activeMinPrice.trim()) params.minPrice = activeMinPrice;
+      if (activeMaxPrice.trim()) params.maxPrice = activeMaxPrice;
+      const response = await api.getListings(params);
+      setListings(response);
+    } catch {
+      console.error('Ürünler yüklenemedi');
+    } finally {
+      setLoading(false);
+    }
+  }, [activeSortBy, searchQuery, selectedCategory, activeMinPrice, activeMaxPrice]);
+
   // İlk açılışta kategorileri ve favorileri çek
   useEffect(() => {
-    let isMounted = true; // Memory Leak koruması
+    let isMounted = true;
 
     const loadInitialData = async () => {
       try {
-        // 👑 SENIOR DOKUNUŞU: 'any' diyerek tip çatışmasını (never hatasını) önlüyoruz
         const [catsResponse, favsResponse] = await Promise.all<any>([
           api.getCategories(),
           token ? api.getFavorites() : Promise.resolve([])
@@ -69,7 +89,6 @@ const UserHomeScreen = ({ navigation }: any) => {
 
         if (isMounted) {
           setCategories(catsResponse?.categories || catsResponse || []);
-          // Güvenli özellik (property) okuması için '?.' (Optional Chaining) kullanıyoruz
           const favArray = Array.isArray(favsResponse) ? favsResponse : (favsResponse?.favorites || []);
           setFavoriteIds(new Set(favArray.map((p: any) => p.id?.toString())));
         }
@@ -82,55 +101,31 @@ const UserHomeScreen = ({ navigation }: any) => {
     return () => { isMounted = false; };
   }, [token]);
 
+  // Filtre/arama değişince listings'i yeniden çek (search için debounce)
+  useEffect(() => {
+    const timeoutId = setTimeout(fetchListings, 500);
+    return () => clearTimeout(timeoutId);
+  }, [fetchListings]);
+
+  // Profil/ürün ekranlarından geri dönünce listings'i yenile
   useFocusEffect(
     useCallback(() => {
-      const fetchUnreadCount = async () => {
-        try {
-          const result = await api.getUnreadNotificationCount();
-          setUnreadNotifCount(result.unreadCount);
-        } catch (error) {
-          console.error('Bildirim sayısı alınamadı:', error);
-        }
-      };
-   
-      if (token) {
-        fetchUnreadCount();
+      if (!hasMounted.current) {
+        hasMounted.current = true;
+        return;
       }
-    }, [token])
+      fetchListings();
+    }, [fetchListings])
   );
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchListings = async () => {
-      setLoading(true);
-      try {
-        const params: any = { sort: activeSortBy };
-
-        if (searchQuery.trim()) params.search = searchQuery;
-        if (selectedCategory) params.categoryId = selectedCategory;
-        if (activeMinPrice.trim()) params.minPrice = activeMinPrice;
-        if (activeMaxPrice.trim()) params.maxPrice = activeMaxPrice;
-
-        const response = await api.getListings(params);
-        if (isMounted) setListings(response);
-      } catch (error) {
-        console.error('Ürünler yüklenemedi:', error);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    // Arama yazarken her harfte API'ye gitmemesi için 500ms gecikme (Debounce)
-    const timeoutId = setTimeout(() => {
-      fetchListings();
-    }, 500);
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [selectedCategory, searchQuery, activeMinPrice, activeMaxPrice, activeSortBy]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!token) return;
+      api.getUnreadNotificationCount()
+        .then(result => setUnreadNotifCount(result.unreadCount))
+        .catch(() => {});
+    }, [token])
+  );
 
 
   const toggleFavorite = async (productId: string) => {
@@ -167,21 +162,23 @@ const UserHomeScreen = ({ navigation }: any) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // State değişimi triggerlayarak fetchListings useEffect'ini tetikleriz
-    setActiveSortBy(prev => prev); 
-    
-    if (token) {
-      try {
-        // 'any' ile okumaya zorluyoruz
-        const favs: any = await api.getFavorites();
-        const favArray = Array.isArray(favs) ? favs : (favs?.favorites || []);
-        setFavoriteIds(new Set(favArray.map((p: any) => p.id?.toString())));
-      } catch (e) {
-        console.error('Refresh favori hatası', e);
+    try {
+      const promises: Promise<any>[] = [fetchListings()];
+      if (token) {
+        promises.push(
+          api.getFavorites()
+            .then((favs: any) => {
+              const favArray = Array.isArray(favs) ? favs : (favs?.favorites || []);
+              setFavoriteIds(new Set(favArray.map((p: any) => p.id?.toString())));
+            })
+            .catch(() => {})
+        );
       }
+      await Promise.all(promises);
+    } finally {
+      setRefreshing(false);
     }
-    setRefreshing(false);
-  }, [token]);
+  }, [fetchListings, token]);
 
   // --- Modal Logic ---
   const openFilterModal = () => {
@@ -211,7 +208,7 @@ const UserHomeScreen = ({ navigation }: any) => {
   // 👑 Performans için render Item Memoize edildi
   const renderListing = useCallback(({ item }: { item: Listing }) => {
     const isFavorite = favoriteIds.has(item.id.toString());
-    const primaryImage = item.images && item.images.length > 0 ? item.images[0].imageUrl : null;
+    const primaryImage = item.images && item.images.length > 0 ? getImageUrl(item.images[0].imageUrl) : null;
     
     return (
       <TouchableOpacity 

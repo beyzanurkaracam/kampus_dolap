@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,121 +9,129 @@ import {
   ActivityIndicator,
   FlatList,
   Alert,
-  Platform,
 } from 'react-native';
-import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
+// ─── Types ───────────────────────────────────────────────────────────────────
 
-const API_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:3000' 
-  : 'http://localhost:3000';
+interface PublicProfile {
+  id: string;
+  fullName: string;
+  profilePhoto?: string;
+  university?: { id?: string; name: string; domain?: string } | string;
+}
 
-export const PublicProfileScreen = ({ route, navigation }: any) => {
-  const { userId } = route.params; // Hedef kullanıcının ID'si
-  const { token, userId: currentUserId } = useAuth(); // Benim ID'm
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  images?: Array<{ imageUrl: string }>;
+  seller?: PublicProfile;
+}
 
-  const [profile, setProfile] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
+type Navigation = {
+  goBack: () => void;
+  push: (screen: string, params: Record<string, unknown>) => void;
+};
+
+type Route = { params: { userId: string } };
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getUniversityName(university: PublicProfile['university']): string {
+  if (!university) return '';
+  return typeof university === 'string' ? university : university.name;
+}
+
+// ─── ProductCard ─────────────────────────────────────────────────────────────
+
+interface ProductCardProps {
+  item: Product;
+  onPress: () => void;
+}
+
+const ProductCard = memo(({ item, onPress }: ProductCardProps) => (
+  <TouchableOpacity style={styles.productItem} onPress={onPress}>
+    <Image
+      source={{ uri: item.images?.[0]?.imageUrl ?? 'https://via.placeholder.com/150' }}
+      style={styles.productImage}
+    />
+    <View style={styles.productInfo}>
+      <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
+      <Text style={styles.productPrice}>₺{item.price}</Text>
+    </View>
+  </TouchableOpacity>
+));
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
+export const PublicProfileScreen = ({ route, navigation }: { route: Route; navigation: Navigation }) => {
+  const { userId } = route.params;
+  const { userId: currentUserId } = useAuth();
+
+  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Takip State'leri
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
   const [followLoading, setFollowLoading] = useState(false);
 
-  // Bu benim kendi profilim mi?
   const isMe = userId === currentUserId;
 
   useEffect(() => {
-    fetchPublicProfile();
-    checkFollowStatus();
-    fetchStats();
-  }, [userId]);
+    const load = async () => {
+      try {
+        const [allProducts, stats, followStatus] = await Promise.all([
+          api.getUserProducts(userId),
+          api.getFollowStats(userId),
+          isMe ? Promise.resolve({ isFollowing: false }) : api.checkIsFollowing(userId),
+        ]);
 
-  const fetchPublicProfile = async () => {
-    try {
-      // 1. Kullanıcı bilgilerini al (Bunun için backend'de public endpoint olması gerekir, 
-      // yoksa şimdilik admin/user endpointi veya mock kullanıyoruz)
-      // Şimdilik ürünlerden satıcı bilgisini de alacağımız için ürünleri çekiyoruz.
-      
-      const response = await axios.get(`${API_URL}/products`, {
-        params: { sellerId: userId } // Backend'de bu filtreyi desteklediğini varsayıyoruz
-      });
-      
-      // Eğer backend filtrelemeyi desteklemiyorsa manuel filtreleme (Geçici)
-      const userProducts = response.data.filter((p: any) => p.seller.id === userId);
-      setProducts(userProducts);
+        const userProducts = allProducts.filter((p: Product) => p.seller?.id === userId);
+        setProducts(userProducts);
+        if (userProducts.length > 0) setProfile(userProducts[0].seller ?? null);
 
-      if (userProducts.length > 0) {
-        setProfile(userProducts[0].seller);
+        setFollowStats(stats);
+        setIsFollowing(followStatus.isFollowing);
+      } catch {
+        Alert.alert('Hata', 'Kullanıcı bilgileri alınamadı.');
+      } finally {
+        setLoading(false);
       }
-      
-    } catch (error) {
-      console.error('Profil yüklenirken hata:', error);
-      Alert.alert('Hata', 'Kullanıcı bilgileri alınamadı.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const checkFollowStatus = async () => {
-    if (isMe) return;
-    try {
-      const res = await api.checkIsFollowing(userId);
-      setIsFollowing(res.isFollowing);
-    } catch (error) {
-      console.log('Takip durumu alınamadı');
-    }
-  };
+    load();
+  }, [userId, isMe]);
 
-  const fetchStats = async () => {
-    try {
-      const stats = await api.getFollowStats(userId);
-      setFollowStats(stats);
-    } catch (error) {
-      console.log('İstatistik hatası');
-    }
-  };
-
-  const handleFollowToggle = async () => {
+  const handleFollowToggle = useCallback(async () => {
     if (followLoading) return;
     setFollowLoading(true);
-
     try {
       if (isFollowing) {
-        // Takipten Çık
         await api.unfollowUser(userId);
         setIsFollowing(false);
-        setFollowStats(prev => ({ ...prev, followers: prev.followers - 1 }));
+        setFollowStats((prev) => ({ ...prev, followers: prev.followers - 1 }));
       } else {
-        // Takip Et
         await api.followUser(userId);
         setIsFollowing(true);
-        setFollowStats(prev => ({ ...prev, followers: prev.followers + 1 }));
+        setFollowStats((prev) => ({ ...prev, followers: prev.followers + 1 }));
       }
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'İşlem başarısız');
+      Alert.alert('Hata', error?.message ?? 'İşlem başarısız');
     } finally {
       setFollowLoading(false);
     }
-  };
+  }, [userId, isFollowing, followLoading]);
 
-  const renderProductItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.productItem}
-      onPress={() => navigation.push('ProductDetail', { productId: item.id })}
-    >
-      <Image
-        source={{ uri: item.images?.[0]?.imageUrl || 'https://via.placeholder.com/150' }}
-        style={styles.productImage}
+  const renderProduct = useCallback(
+    ({ item }: { item: Product }) => (
+      <ProductCard
+        item={item}
+        onPress={() => navigation.push('ProductDetail', { productId: item.id })}
       />
-      <View style={styles.productInfo}>
-        <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.productPrice}>₺{item.price}</Text>
-      </View>
-    </TouchableOpacity>
+    ),
+    [navigation],
   );
 
   if (loading) {
@@ -136,7 +144,6 @@ export const PublicProfileScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backButtonText}>‹ Geri</Text>
@@ -144,22 +151,20 @@ export const PublicProfileScreen = ({ route, navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profil Bilgileri */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             {profile?.profilePhoto ? (
-               <Image source={{ uri: profile.profilePhoto }} style={styles.avatar} />
+              <Image source={{ uri: profile.profilePhoto }} style={styles.avatar} />
             ) : (
-               <View style={[styles.avatar, styles.placeholderAvatar]}>
-                 <Text style={styles.avatarText}>{profile?.fullName?.charAt(0) || 'U'}</Text>
-               </View>
+              <View style={[styles.avatar, styles.placeholderAvatar]}>
+                <Text style={styles.avatarText}>{profile?.fullName?.charAt(0) ?? 'U'}</Text>
+              </View>
             )}
           </View>
-          
-          <Text style={styles.name}>{profile?.fullName || 'Kullanıcı'}</Text>
-          <Text style={styles.university}>Sakarya Üniversitesi</Text>
 
-          {/* İstatistikler */}
+          <Text style={styles.name}>{profile?.fullName ?? 'Kullanıcı'}</Text>
+          <Text style={styles.university}>{getUniversityName(profile?.university)}</Text>
+
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{products.length}</Text>
@@ -177,23 +182,18 @@ export const PublicProfileScreen = ({ route, navigation }: any) => {
             </View>
           </View>
 
-          {/* Takip Et Butonu */}
           {!isMe && (
-            <TouchableOpacity 
-              style={[
-                styles.followButton, 
-                isFollowing && styles.followingButton
-              ]}
+            <TouchableOpacity
+              style={[styles.followButton, isFollowing && styles.followingButton]}
               onPress={handleFollowToggle}
               disabled={followLoading}
+              accessibilityRole="button"
+              accessibilityLabel={isFollowing ? 'Takipten çık' : 'Takip et'}
             >
               {followLoading ? (
-                <ActivityIndicator color={isFollowing ? "#007AFF" : "#fff"} />
+                <ActivityIndicator color={isFollowing ? '#007AFF' : '#fff'} />
               ) : (
-                <Text style={[
-                  styles.followButtonText, 
-                  isFollowing && styles.followingButtonText
-                ]}>
+                <Text style={[styles.followButtonText, isFollowing && styles.followingButtonText]}>
                   {isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
                 </Text>
               )}
@@ -201,7 +201,6 @@ export const PublicProfileScreen = ({ route, navigation }: any) => {
           )}
         </View>
 
-        {/* Ürünler Listesi */}
         <View style={styles.productsSection}>
           <Text style={styles.sectionTitle}>Satıştaki Ürünler ({products.length})</Text>
           {products.length === 0 ? (
@@ -209,10 +208,10 @@ export const PublicProfileScreen = ({ route, navigation }: any) => {
           ) : (
             <FlatList
               data={products}
-              renderItem={renderProductItem}
-              keyExtractor={item => item.id}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id}
               numColumns={2}
-              scrollEnabled={false} // Ana ScrollView içinde olduğu için
+              scrollEnabled={false}
               columnWrapperStyle={styles.listRow}
             />
           )}
@@ -222,6 +221,8 @@ export const PublicProfileScreen = ({ route, navigation }: any) => {
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9f9f9' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -229,7 +230,6 @@ const styles = StyleSheet.create({
   backButton: { padding: 5 },
   backButtonText: { fontSize: 18, color: '#007AFF' },
   scrollContent: { paddingBottom: 30 },
-  
   profileHeader: {
     backgroundColor: '#fff',
     alignItems: 'center',
@@ -244,7 +244,6 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 40, color: '#666', fontWeight: 'bold' },
   name: { fontSize: 22, fontWeight: 'bold', color: '#333' },
   university: { fontSize: 14, color: '#888', marginTop: 5 },
-  
   statsContainer: {
     flexDirection: 'row',
     marginTop: 20,
@@ -256,7 +255,6 @@ const styles = StyleSheet.create({
   statNumber: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   statLabel: { fontSize: 12, color: '#888' },
   statDivider: { width: 1, height: '100%', backgroundColor: '#eee' },
-
   followButton: {
     backgroundColor: '#007AFF',
     paddingHorizontal: 40,
@@ -266,13 +264,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   followButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  followingButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#007AFF',
-  },
+  followingButton: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#007AFF' },
   followingButtonText: { color: '#007AFF' },
-
   productsSection: { padding: 15 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333' },
   listRow: { justifyContent: 'space-between' },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import React, { memo, useCallback, useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,165 +9,335 @@ import {
   FlatList,
   Alert,
   RefreshControl,
-  Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { AvatarPicker } from '../../components/AvatarPicker';
+import { getImageUrl } from '../../utils/productHelpers';
 
-// --- TİP TANIMLAMALARI ---
+// ─── Types ───────────────────────────────────────────────────────────────────
+
 interface Product {
   id: string;
   title: string;
   price: number;
+  status?: string;
   images?: { imageUrl: string }[];
 }
 
-interface UserProfile {
-  fullName: string; // Backend'deki DTO ile aynı yapıldı
+interface Profile {
+  fullName: string;
   profilePhoto?: string;
   isPremium?: boolean;
-  university?: { name: string };
+  university?: { id?: string; name: string; domain?: string } | string;
 }
 
-// --- YARDIMCI FONKSİYONLAR ---
-const getImageUrl = (url?: string) => {
-  if (!url) return null;
-  if (Platform.OS === 'android' && url.includes('localhost')) {
-    return url.replace('localhost', '10.0.2.2');
-  }
-  return url;
+type TabType = 'products' | 'favorites';
+
+type Navigation = {
+  setOptions: (options: Record<string, unknown>) => void;
+  navigate: (screen: string, params?: Record<string, unknown>) => void;
+  push: (screen: string, params: Record<string, unknown>) => void;
 };
 
-export const UserProfileScreen = ({ navigation, route }: any) => {
-  const { user: currentUser, token, logout, userId: myId } = useAuth();
-  
-  const targetUserId = route?.params?.userId || myId;
+type Route = { params?: { userId?: string } };
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+type StatusInfo = { text: string; color: string; bgColor: string };
+
+function getStatusInfo(status: string): StatusInfo {
+  switch (status) {
+    case 'active':   return { text: 'Aktif',         color: '#34C759', bgColor: '#E8F5E9' };
+    case 'pending':  return { text: 'Onay Bekliyor', color: '#FF9500', bgColor: '#FFF3E0' };
+    case 'sold':     return { text: 'Satıldı',       color: '#8E8E93', bgColor: '#F0F0F0' };
+    case 'reserved': return { text: 'Rezerve',       color: '#007AFF', bgColor: '#E3F2FD' };
+    case 'removed':  return { text: 'Reddedildi',    color: '#FF3B30', bgColor: '#FFEBEE' };
+    default:         return { text: status,           color: '#999',    bgColor: '#F5F5F5' };
+  }
+}
+
+function getUniversityName(university: Profile['university']): string {
+  if (!university) return '';
+  return typeof university === 'string' ? university : university.name;
+}
+
+// ─── UserProductCard ──────────────────────────────────────────────────────────
+
+interface UserProductCardProps {
+  item: Product;
+  tab: TabType;
+  onPress: () => void;
+  onRemoveFavorite?: () => void;
+}
+
+const UserProductCard = memo(({ item, tab, onPress, onRemoveFavorite }: UserProductCardProps) => {
+  const statusInfo = tab === 'products' && item.status ? getStatusInfo(item.status) : null;
+
+  return (
+    <TouchableOpacity style={styles.productCard} onPress={onPress}>
+      <Image
+        source={{ uri: getImageUrl(item.images?.[0]?.imageUrl) ?? 'https://via.placeholder.com/150' }}
+        style={styles.productImage}
+      />
+
+      {tab === 'favorites' && onRemoveFavorite && (
+        <TouchableOpacity
+          style={styles.removeButton}
+          onPress={(e) => { e.stopPropagation(); onRemoveFavorite(); }}
+        >
+          <Text style={styles.removeButtonText}>✕</Text>
+        </TouchableOpacity>
+      )}
+
+      {statusInfo && (
+        <View style={[styles.statusBadge, { backgroundColor: statusInfo.bgColor }]}>
+          <Text style={[styles.statusText, { color: statusInfo.color }]}>{statusInfo.text}</Text>
+        </View>
+      )}
+
+      <View style={styles.productInfo}>
+        <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.productPrice}>₺{item.price}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
+export const UserProfileScreen = ({ navigation, route }: { navigation: Navigation; route: Route }) => {
+  const { user: currentUser, logout, userId: myId } = useAuth();
+
+  const targetUserId = route?.params?.userId ?? myId;
   const isOwner = targetUserId === myId;
 
-  // --- State'ler ---
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
   const [followLoading, setFollowLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'favorites'>('products');
+  const [activeTab, setActiveTab] = useState<TabType>('products');
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: profile?.fullName || 'Profil', // Düzeltildi
-      headerRight: () => isOwner ? (
-        <TouchableOpacity onPress={handleLogout} style={{ marginRight: 10 }}>
-            <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Çıkış</Text>
-        </TouchableOpacity>
-      ) : null,
-    });
-  }, [navigation, isOwner, profile]);
-
-  const fetchFavorites = async () => {
-    if (!isOwner) return;
-    
-    try {
-      const fetchedFavorites = await api.getFavorites();
-      setFavorites(fetchedFavorites);
-    } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Favoriler yüklenemedi');
-      setFavorites([]); 
-    }
-  };
+  // --- Data fetching ---
 
   const fetchAllData = useCallback(async () => {
     try {
       if (isOwner) {
-        // 👑 SENIOR DOKUNUŞU: Kendi profilimiz için API'ye gitmek yerine
-        // doğrudan AuthContext içindeki en güncel (Trafik Polisi'nden) datasını kullanıyoruz!
-        setProfile(currentUser as unknown as UserProfile); 
-        await fetchFavorites();
+        const [userProducts, favs, stats] = await Promise.all([
+          api.getMyProducts(),
+          api.getFavorites(),
+          api.getFollowStats(targetUserId ?? ''),
+        ]);
+        setProfile(currentUser as Profile);
+        setProducts(userProducts as Product[]);
+        setFavorites(favs as Product[]);
+        setFollowStats(stats);
       } else {
-        const userProfile = await api.getPublicUserProfile(targetUserId);
-        if (userProfile) {
-          setProfile(userProfile as unknown as UserProfile);
-        }
-      }
-
-      const stats = await api.getFollowStats(targetUserId);
-      setFollowStats(stats);
-
-      if (!isOwner) {
-        const followStatus = await api.checkIsFollowing(targetUserId);
+        const [userProducts, stats, followStatus, userProfile] = await Promise.all([
+          api.getUserProducts(targetUserId ?? ''),
+          api.getFollowStats(targetUserId ?? ''),
+          api.checkIsFollowing(targetUserId ?? ''),
+          api.getPublicUserProfile(targetUserId ?? ''),
+        ]);
+        setProducts(userProducts as Product[]);
+        setFollowStats(stats);
         setIsFollowing(followStatus.isFollowing);
+        if (userProfile) setProfile(userProfile as Profile);
       }
-
-      const userProducts = isOwner
-        ? await api.getMyProducts()
-        : await api.getUserProducts(targetUserId);
-      setProducts(userProducts as Product[]);
-
-    } catch (error) {
-      console.error('Profil verileri alınamadı:', error);
+    } catch {
+      // fail silently — UI shows empty state
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [targetUserId, isOwner]);
+  }, [targetUserId, isOwner, currentUser]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-        fetchAllData();
-    });
-    return unsubscribe;
-  }, [navigation, fetchAllData]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchAllData();
+    }, [fetchAllData]),
+  );
 
-  const handleFollowToggle = async () => {
+  // --- Handlers ---
+
+  const handleLogout = useCallback(() => {
+    Alert.alert('Çıkış Yap', 'Emin misiniz?', [
+      { text: 'İptal', style: 'cancel' },
+      { text: 'Çıkış', style: 'destructive', onPress: logout },
+    ]);
+  }, [logout]);
+
+  const handleFollowToggle = useCallback(async () => {
     if (followLoading) return;
     setFollowLoading(true);
     try {
       if (isFollowing) {
-        await api.unfollowUser(targetUserId);
+        await api.unfollowUser(targetUserId ?? '');
         setIsFollowing(false);
-        setFollowStats(prev => ({ ...prev, followers: Math.max(0, prev.followers - 1) }));
+        setFollowStats((prev) => ({ ...prev, followers: Math.max(0, prev.followers - 1) }));
       } else {
-        await api.followUser(targetUserId);
+        await api.followUser(targetUserId ?? '');
         setIsFollowing(true);
-        setFollowStats(prev => ({ ...prev, followers: prev.followers + 1 }));
+        setFollowStats((prev) => ({ ...prev, followers: prev.followers + 1 }));
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Hata', 'İşlem gerçekleştirilemedi');
     } finally {
       setFollowLoading(false);
     }
-  };
+  }, [targetUserId, isFollowing, followLoading]);
 
-  const handleMessage = () => {
-    Alert.alert('Mesaj', 'Bu özellik yakında eklenecek!');
-  };
-
-  const handleLogout = () => {
-    Alert.alert('Çıkış Yap', 'Emin misiniz?', [
-      { text: 'İptal', style: 'cancel' },
-      { 
-        text: 'Çıkış', 
-        style: 'destructive', 
-        onPress: async () => {
-            await logout();
-           
-        }
-      }
-    ]);
-  };
-
-  const handleRemoveFavorite = async (productId: string) => {
+  const handleRemoveFavorite = useCallback(async (productId: string) => {
     try {
       await api.removeFavorite(productId);
-      setFavorites(prev => prev.filter(p => p.id !== productId));
+      setFavorites((prev) => prev.filter((p) => p.id !== productId));
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Favorilerden kaldırılamadı');
+      Alert.alert('Hata', error?.message ?? 'Favorilerden kaldırılamadı');
     }
-  };
+  }, []);
+
+  const handleFavoritesTabPress = useCallback(() => {
+    setActiveTab('favorites');
+  }, []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: profile?.fullName ?? 'Profil',
+      headerRight: () =>
+        isOwner ? (
+          <TouchableOpacity onPress={handleLogout} style={{ marginRight: 10 }}>
+            <Text style={{ color: '#FF3B30', fontSize: 16, fontWeight: '500' }}>Çıkış</Text>
+          </TouchableOpacity>
+        ) : null,
+    });
+  }, [navigation, isOwner, profile, handleLogout]);
+
+  // --- Render helpers ---
+
+  const renderProduct = useCallback(
+    ({ item }: { item: Product }) => (
+      <UserProductCard
+        item={item}
+        tab={activeTab}
+        onPress={() => navigation.push('ProductDetail', { productId: item.id })}
+        onRemoveFavorite={activeTab === 'favorites' ? () => handleRemoveFavorite(item.id) : undefined}
+      />
+    ),
+    [activeTab, navigation, handleRemoveFavorite],
+  );
+
+  const renderHeader = useCallback(() => (
+    <View style={styles.profileContainer}>
+      <View style={styles.avatarWrapper}>
+        {isOwner ? (
+          <AvatarPicker
+            avatarUrl={getImageUrl(profile?.profilePhoto) ?? undefined}
+            onUploadSuccess={(url) => setProfile((prev) => prev ? { ...prev, profilePhoto: url } : null)}
+            size={90}
+          />
+        ) : profile?.profilePhoto ? (
+          <Image source={{ uri: getImageUrl(profile.profilePhoto)! }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.placeholderAvatar]}>
+            <Text style={styles.avatarText}>
+              {profile?.fullName?.charAt(0).toUpperCase() ?? 'U'}
+            </Text>
+          </View>
+        )}
+        {profile?.isPremium && (
+          <View style={styles.premiumBadge}>
+            <Text style={styles.premiumText}>PRO</Text>
+          </View>
+        )}
+      </View>
+
+      <Text style={styles.fullName}>{profile?.fullName ?? 'Kullanıcı'}</Text>
+      <Text style={styles.universityText}>{getUniversityName(profile?.university)}</Text>
+
+      <View style={styles.statsRow}>
+        {[
+          { value: products.length, label: 'İlanlar' },
+          { value: followStats.followers, label: 'Takipçi' },
+          { value: followStats.following, label: 'Takip' },
+        ].map((stat, i, arr) => (
+          <React.Fragment key={stat.label}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stat.value}</Text>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+            </View>
+            {i < arr.length - 1 && <View style={styles.verticalDivider} />}
+          </React.Fragment>
+        ))}
+      </View>
+
+      <View style={styles.actionButtons}>
+        {isOwner ? (
+          <>
+            <TouchableOpacity style={[styles.button, styles.editButton]}>
+              <Text style={styles.buttonTextBlack}>Profili Düzenle</Text>
+            </TouchableOpacity>
+            {!profile?.isPremium && (
+              <TouchableOpacity
+                style={[styles.button, styles.premiumButton]}
+                onPress={() => navigation.navigate('Premium')}
+              >
+                <Text style={styles.buttonTextWhite}>Premium'a Geç</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[styles.button, isFollowing ? styles.followingButton : styles.followButton]}
+              onPress={handleFollowToggle}
+              disabled={followLoading}
+            >
+              {followLoading ? (
+                <ActivityIndicator color={isFollowing ? '#007AFF' : '#fff'} />
+              ) : (
+                <Text style={isFollowing ? styles.followingButtonText : styles.buttonTextWhite}>
+                  {isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
+                </Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.button, styles.messageButton]}>
+              <Text style={styles.buttonTextBlack}>Mesaj</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'products' && styles.activeTab]}
+          onPress={() => setActiveTab('products')}
+        >
+          <Text style={[styles.tabText, activeTab === 'products' && styles.activeTabText]}>
+            İlanlar ({products.length})
+          </Text>
+        </TouchableOpacity>
+        {isOwner && (
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'favorites' && styles.activeTab]}
+            onPress={handleFavoritesTabPress}
+          >
+            <Text style={[styles.tabText, activeTab === 'favorites' && styles.activeTabText]}>
+              Favoriler ({favorites.length})
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  ), [
+    isOwner, profile, products.length, favorites.length,
+    followStats, isFollowing, followLoading, activeTab,
+    handleFollowToggle, handleFavoritesTabPress, navigation,
+  ]);
 
   if (loading) {
     return (
@@ -177,205 +347,40 @@ export const UserProfileScreen = ({ navigation, route }: any) => {
     );
   }
 
-  const renderProfileHeader = () => (
-    <View style={styles.profileContainer}>
-        <View style={styles.avatarWrapper}>
-            {isOwner ? (
-                 <AvatarPicker 
-                    avatarUrl={getImageUrl(profile?.profilePhoto) || undefined}
-                    onUploadSuccess={(url) => setProfile(prev => prev ? {...prev, profilePhoto: url} : null)}
-                    size={90}
-                 />
-            ) : (
-                profile?.profilePhoto ? (
-                    <Image source={{ uri: getImageUrl(profile.profilePhoto)! }} style={styles.avatar} />
-                ) : (
-                    <View style={[styles.avatar, styles.placeholderAvatar]}>
-                        {/* Avatar'da ismin ilk harfini göstermek için düzeltildi */}
-                        <Text style={styles.avatarText}>
-                            {profile?.fullName ? profile.fullName.charAt(0).toUpperCase() : 'U'}
-                        </Text>
-                    </View>
-                )
-            )}
-            {profile?.isPremium && (
-                <View style={styles.premiumBadge}>
-                    <Text style={styles.premiumText}>PRO</Text>
-                </View>
-            )}
-        </View>
-
-        {/* Ekranda ismin düzgün görünmesi için düzeltildi */}
-        <Text style={styles.fullName}>
-            {profile?.fullName || 'Kullanıcı'} 
-        </Text>
-        <Text style={styles.universityText}>
-            {profile?.university?.name || 'Sakarya Üniversitesi'}
-        </Text>
-        
-        <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{products.length}</Text>
-                <Text style={styles.statLabel}>İlanlar</Text>
-            </View>
-            <View style={styles.verticalDivider} />
-            <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{followStats.followers}</Text>
-                <Text style={styles.statLabel}>Takipçi</Text>
-            </View>
-            <View style={styles.verticalDivider} />
-            <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{followStats.following}</Text>
-                <Text style={styles.statLabel}>Takip</Text>
-            </View>
-        </View>
-
-        <View style={styles.actionButtons}>
-            {isOwner ? (
-                <>
-                    <TouchableOpacity style={[styles.button, styles.editButton]}>
-                        <Text style={styles.buttonTextBlack}>Profili Düzenle</Text>
-                    </TouchableOpacity>
-                    {!profile?.isPremium && (
-                        <TouchableOpacity 
-                            style={[styles.button, styles.premiumButton]}
-                            onPress={() => navigation.navigate('Premium')}
-                        >
-                            <Text style={styles.buttonTextWhite}>Premium'a Geç</Text>
-                        </TouchableOpacity>
-                    )}
-                </>
-            ) : (
-                <>
-                    <TouchableOpacity 
-                        style={[styles.button, isFollowing ? styles.followingButton : styles.followButton]}
-                        onPress={handleFollowToggle}
-                        disabled={followLoading}
-                    >
-                        {followLoading ? (
-                            <ActivityIndicator color={isFollowing ? "#007AFF" : "#fff"} />
-                        ) : (
-                            <Text style={isFollowing ? styles.followingButtonText : styles.buttonTextWhite}>
-                                {isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
-                            </Text>
-                        )}
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={[styles.button, styles.messageButton]}
-                        onPress={handleMessage}
-                    >
-                        <Text style={styles.buttonTextBlack}>Mesaj</Text>
-                    </TouchableOpacity>
-                </>
-            )}
-        </View>
-
-        <View style={styles.tabContainer}>
-            <TouchableOpacity 
-                style={[styles.tab, activeTab === 'products' && styles.activeTab]}
-                onPress={() => setActiveTab('products')}
-            >
-                <Text style={[styles.tabText, activeTab === 'products' && styles.activeTabText]}>
-                    İlanlar ({products.length})
-                </Text>
-            </TouchableOpacity>
-            
-            {isOwner && (
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'favorites' && styles.activeTab]}
-                    onPress={() => {
-                        setActiveTab('favorites');
-                        fetchFavorites();
-                    }}
-                >
-                    <Text style={[styles.tabText, activeTab === 'favorites' && styles.activeTabText]}>
-                        Favoriler ({favorites.length})
-                    </Text>
-                </TouchableOpacity>
-            )}
-        </View>
-    </View>
-  );
-
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'active':   return { text: 'Aktif',          color: '#34C759', bgColor: '#E8F5E9' };
-      case 'pending':  return { text: 'Onay Bekliyor',  color: '#FF9500', bgColor: '#FFF3E0' };
-      case 'sold':     return { text: 'Satıldı',        color: '#8E8E93', bgColor: '#F0F0F0' };
-      case 'reserved': return { text: 'Rezerve',        color: '#007AFF', bgColor: '#E3F2FD' };
-      case 'removed':  return { text: 'Reddedildi',     color: '#FF3B30', bgColor: '#FFEBEE' };
-      default:         return { text: status,            color: '#999',    bgColor: '#F5F5F5' };
-    }
-  };
-
-  const renderProduct = ({ item }: { item: Product }) => {
-    const statusInfo = isOwner && (item as any).status ? getStatusInfo((item as any).status) : null;
-
-    return (
-      <TouchableOpacity
-          style={styles.productCard}
-          onPress={() => navigation.push('ProductDetail', { productId: item.id })}
-      >
-          <Image
-              source={{ uri: getImageUrl(item.images?.[0]?.imageUrl) || 'https://via.placeholder.com/150' }}
-              style={styles.productImage}
-          />
-
-          {activeTab === 'favorites' && (
-              <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFavorite(item.id);
-                  }}
-              >
-                  <Text style={styles.removeButtonText}>✕</Text>
-              </TouchableOpacity>
-          )}
-
-          {statusInfo && (
-              <View style={[styles.statusBadge, { backgroundColor: statusInfo.bgColor }]}>
-                  <Text style={[styles.statusText, { color: statusInfo.color }]}>{statusInfo.text}</Text>
-              </View>
-          )}
-
-          <View style={styles.productInfo}>
-              <Text style={styles.productTitle} numberOfLines={1}>{item.title}</Text>
-              <Text style={styles.productPrice}>₺{item.price}</Text>
-          </View>
-      </TouchableOpacity>
-    );
-  };
-
   return (
     <View style={styles.container}>
       <FlatList
         data={activeTab === 'products' ? products : favorites}
-        keyExtractor={(item, index) => item?.id ? item.id.toString() : index.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={renderProduct}
         numColumns={2}
-        ListHeaderComponent={renderProfileHeader}
-        ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                    {activeTab === 'products' ? 'Henüz ilan yok.' : 'Favori ürün yok.'}
-                </Text>
-                {activeTab === 'favorites' && (
-                    <Text style={styles.emptySubtext}>
-                        Beğendiğin ürünleri buradan takip edebilirsin
-                    </Text>
-                )}
-            </View>
-        }
+        ListHeaderComponent={renderHeader}
         columnWrapperStyle={styles.listColumnWrapper}
         contentContainerStyle={{ paddingBottom: 50 }}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              {activeTab === 'products' ? 'Henüz ilan yok.' : 'Favori ürün yok.'}
+            </Text>
+            {activeTab === 'favorites' && (
+              <Text style={styles.emptySubtext}>
+                Beğendiğin ürünleri buradan takip edebilirsin
+              </Text>
+            )}
+          </View>
+        }
         refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAllData(); }} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); fetchAllData(); }}
+          />
         }
       />
     </View>
   );
 };
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
@@ -415,11 +420,11 @@ const styles = StyleSheet.create({
   productInfo: { padding: 8 },
   productTitle: { fontSize: 13, fontWeight: '500', color: '#333', marginBottom: 4 },
   productPrice: { fontSize: 15, fontWeight: 'bold', color: '#007AFF' },
-  removeButton: { position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255, 59, 48, 0.9)', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3, elevation: 4 },
+  removeButton: { position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,59,48,0.9)', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3, elevation: 4 },
   removeButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', lineHeight: 16 },
+  statusBadge: { position: 'absolute', top: 8, left: 8, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+  statusText: { fontSize: 10, fontWeight: '700' },
   emptyContainer: { padding: 40, alignItems: 'center' },
   emptyText: { color: '#999', fontSize: 16, marginBottom: 8 },
   emptySubtext: { color: '#ccc', fontSize: 14, textAlign: 'center' },
-  statusBadge: { position: 'absolute', top: 8, left: 8, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
-  statusText: { fontSize: 10, fontWeight: '700' },
 });

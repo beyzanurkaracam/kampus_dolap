@@ -161,13 +161,7 @@ export const ChatScreen = ({ navigation }: any) => {
       <TouchableOpacity
         style={styles.chatItem}
         activeOpacity={0.8}
-        onPress={() => {
-          navigation.navigate('ChatDetail', { 
-            chatId: item.id,
-            otherUser: otherUser,
-            product: item.product,
-          });
-        }}
+        onPress={() => navigation.navigate('ChatDetail', { chatId: item.id })}
       >
         {/* DOĞRU UX: En Solda Kullanıcı Avatarı Olmalı */}
         <View style={styles.avatarContainer}>

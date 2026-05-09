@@ -7,8 +7,10 @@ import { Category } from 'src/entities/category.entity';
 import { Favorite } from 'src/entities/favorite.entity';
 import * as brandsData from '../add-product/brands.json';
 import * as colorsData from '../add-product/colors.json';
-import { User } from 'src/entities/user.entity'; 
+import { User } from 'src/entities/user.entity';
 import { Offer, OfferStatus } from 'src/entities/offer.entity';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType } from 'src/entities/notification.entity';
 
 export interface CreateProductDto {
   title: string;
@@ -37,8 +39,9 @@ export class ProductService {
     private favoriteRepository: Repository<Favorite>,
     @InjectRepository(User) //User repository inject edildi
     private userRepository: Repository<User>,
-    @InjectRepository(Offer) 
+    @InjectRepository(Offer)
     private offerRepository: Repository<Offer>,
+    private notificationService: NotificationService,
   ) {}
 
 // getAllActiveProducts fonksiyonunu güncelle
@@ -119,22 +122,20 @@ async getAllActiveProducts(query: any = {}): Promise<Product[]> {
       throw new NotFoundException('Ürün bulunamadı');
     }
 
-    // Ürün verisini normal objeye çevir (genişletmek için)
     const productData: any = { ...product };
 
-    // Eğer ürünü görüntüleyen bir kullanıcı varsa, kabul edilmiş teklifi var mı bak
     if (viewerId) {
       const acceptedOffer = await this.offerRepository.findOne({
         where: {
           productId: id,
           buyerId: viewerId,
-          status: OfferStatus.ACCEPTED
-        }
+          status: OfferStatus.ACCEPTED,
+        },
       });
 
       if (acceptedOffer) {
-        // ✅ Kabul edilmiş teklif fiyatını ekle
         productData.acceptedOfferPrice = acceptedOffer.offerAmount;
+        productData.acceptedOfferId = acceptedOffer.id;
       }
     }
 
@@ -375,23 +376,99 @@ async getAllActiveProducts(query: any = {}): Promise<Product[]> {
     return favorites.map(fav => fav.product);
   }
 
-  // Ürün durumunu güncelle
+  // Ürün durumunu güncelle (genel kullanım — admin/edge case)
   async updateProductStatus(productId: string, userId: string, status: string): Promise<Product> {
-    const product = await this.productRepository.findOne({ 
-      where: { id: productId, sellerId: userId }
+    const product = await this.productRepository.findOne({
+      where: { id: productId, sellerId: userId },
     });
 
     if (!product) {
       throw new NotFoundException('Ürün bulunamadı veya size ait değil');
     }
 
-    const validStatuses = ['active', 'pending', 'sold', 'rejected'];
+    const validStatuses = ['active', 'pending', 'sold', 'rejected', 'removed'];
     if (!validStatuses.includes(status)) {
       throw new BadRequestException('Geçersiz durum');
     }
 
     product.status = status;
     return await this.productRepository.save(product);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // FAZ 2: Anlaşma Sağlandı → Rezerve et (sadece satıcı)
+  // ─────────────────────────────────────────────────────────────
+  async markAsReserved(productId: string, sellerId: string): Promise<Product> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId, sellerId },
+    });
+    if (!product) throw new NotFoundException('Ürün bulunamadı veya size ait değil');
+    if (product.status === 'sold') throw new BadRequestException('Satılmış ürün rezerve edilemez');
+    if (product.status === 'reserved') return product;
+
+    product.status = 'reserved';
+    product.reservedAt = new Date();
+    product.reservedReminderSent = false;
+    return this.productRepository.save(product);
+  }
+
+  // FAZ 2: Satışa geri dön (sadece satıcı)
+  async unreserveProduct(productId: string, sellerId: string): Promise<Product> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId, sellerId },
+    });
+    if (!product) throw new NotFoundException('Ürün bulunamadı veya size ait değil');
+    if (product.status !== 'reserved') {
+      throw new BadRequestException('Sadece rezerve durumundaki ürün geri açılabilir');
+    }
+    product.status = 'active';
+    product.reservedAt = null;
+    product.reservedReminderSent = false;
+    return this.productRepository.save(product);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // FAZ 3: Manuel "Satıldı" — alıcı = ACCEPTED teklifin sahibi.
+  // Geriye değerlendirme tetiklemek için alıcı + offer bilgisini döner.
+  // ─────────────────────────────────────────────────────────────
+  async markAsSold(
+    productId: string,
+    sellerId: string,
+  ): Promise<{ product: Product; buyerId: string | null; offerId: string | null }> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId, sellerId },
+    });
+    if (!product) throw new NotFoundException('Ürün bulunamadı veya size ait değil');
+    if (product.status === 'sold') {
+      return { product, buyerId: null, offerId: null };
+    }
+
+    const acceptedOffer = await this.offerRepository.findOne({
+      where: { productId, sellerId, status: OfferStatus.ACCEPTED },
+      order: { updatedAt: 'DESC' },
+    });
+
+    product.status = 'sold';
+    product.soldAt = new Date();
+    const saved = await this.productRepository.save(product);
+
+    if (acceptedOffer) {
+      await this.notificationService.createNotification({
+        recipientId: acceptedOffer.buyerId,
+        senderId: sellerId,
+        type: NotificationType.SYSTEM,
+        title: 'Satış Tamamlandı',
+        message: `${product.title} ürününü değerlendirin (1-5 yıldız).`,
+        referenceId: acceptedOffer.id,
+        referenceType: 'review_request',
+      });
+    }
+
+    return {
+      product: saved,
+      buyerId: acceptedOffer?.buyerId ?? null,
+      offerId: acceptedOffer?.id ?? null,
+    };
   }
 
 

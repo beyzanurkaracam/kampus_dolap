@@ -122,7 +122,7 @@ export const LoginScreen = ({ navigation }: any) => {
 
                 <TouchableOpacity 
                     style={[styles.debugButton, { backgroundColor: '#5856D6' }]}
-                    onPress={() => fillTestUser('beyzanur.karacam@ogr.sakarya.edu.tr', 'beyza123')}
+                    onPress={() => fillTestUser('beyzanur.karacam@ogr.sakarya.edu.tr', '267453')}
                 >
                     <Text style={styles.debugButtonText}>Beyza (Satıcı)</Text>
                 </TouchableOpacity>

@@ -4,6 +4,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../../entities/user.entity';
 import { Product } from '../../entities/product.entity';
 import { Repository, LessThan, In } from 'typeorm';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType } from '../../entities/notification.entity';
+
+const RESERVED_REMINDER_DAYS = 3;
 
 @Injectable()
 export class TasksService {
@@ -14,60 +18,69 @@ export class TasksService {
     private userRepository: Repository<User>,
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
+    private notificationService: NotificationService,
   ) {}
 
-  // Runs every day at midnight
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handlePremiumExpiration() {
-    this.logger.debug('Checking for expired premium memberships...');
+  // ─────────────────────────────────────────────────────────────
+  // 3 günden fazla rezerve kalan ürünler için satıcıya tek seferlik
+  // "Bu ürünü sattınız mı?" hatırlatması.
+  // ─────────────────────────────────────────────────────────────
+  @Cron(CronExpression.EVERY_HOUR)
+  async remindLongReserved() {
+    const threshold = new Date(Date.now() - RESERVED_REMINDER_DAYS * 24 * 60 * 60 * 1000);
 
-    const now = new Date();
-
-    // 1. Find users whose premium has expired AND are still marked as premium
-    const expiredUsers = await this.userRepository.find({
+    const stale = await this.productRepository.find({
       where: {
-        isPremium: true,
-        premiumExpiresAt: LessThan(now),
+        status: 'reserved',
+        reservedReminderSent: false,
+        reservedAt: LessThan(threshold),
       },
     });
 
-    if (expiredUsers.length === 0) {
-        this.logger.debug('No expired memberships found.');
-        return;
+    if (stale.length === 0) return;
+    this.logger.debug(`Found ${stale.length} stale reserved products.`);
+
+    for (const product of stale) {
+      await this.notificationService.createNotification({
+        recipientId: product.sellerId,
+        type: NotificationType.SYSTEM,
+        title: 'Hala satışta mı?',
+        message: `"${product.title}" 3 günden uzun süredir rezerve. Sattıysanız ürünü satıldı olarak işaretleyin.`,
+        referenceId: product.id,
+        referenceType: 'product',
+      });
+      product.reservedReminderSent = true;
+      await this.productRepository.save(product);
     }
+  }
 
-    this.logger.debug(`Found ${expiredUsers.length} users with expired premium.`);
+  // (Mevcut) Premium üyelik bitişlerini her gece kontrol et.
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async handlePremiumExpiration() {
+    this.logger.debug('Checking for expired premium memberships...');
+    const now = new Date();
 
-    // 2. Process each expired user
+    const expiredUsers = await this.userRepository.find({
+      where: { isPremium: true, premiumExpiresAt: LessThan(now) },
+    });
+    if (expiredUsers.length === 0) return;
+
     for (const user of expiredUsers) {
-      // Downgrade user
       user.isPremium = false;
-      user.premiumExpiresAt = null; // or keep the date for history
+      user.premiumExpiresAt = null;
       await this.userRepository.save(user);
 
-      this.logger.log(`Downgraded user ${user.id} (${user.email}) to free plan.`);
-
-      // 3. Check their product count
       const activeProducts = await this.productRepository.find({
-        where: {
-          sellerId: user.id,
-          status: In(['active', 'pending']), // Check active and pending
-        },
-        order: { createdAt: 'DESC' }, // Keep the newest ones
+        where: { sellerId: user.id, status: In(['active', 'pending']) },
+        order: { createdAt: 'DESC' },
       });
 
       const LIMIT = 3;
-
       if (activeProducts.length > LIMIT) {
-        // Identify products to deactivate (keep the first 3)
-        const productsToDeactivate = activeProducts.slice(LIMIT);
-
-        for (const product of productsToDeactivate) {
-          product.status = 'inactive'; // Or a specific status like 'suspended'
-          await this.productRepository.save(product);
+        for (const p of activeProducts.slice(LIMIT)) {
+          p.status = 'removed';
+          await this.productRepository.save(p);
         }
-
-        this.logger.log(`Deactivated ${productsToDeactivate.length} products for user ${user.id} due to limit.`);
       }
     }
   }

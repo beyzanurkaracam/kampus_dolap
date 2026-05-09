@@ -116,17 +116,25 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
   };
 
   const handleMarkAsSold = async () => {
-    try {
-      await axios.patch(
-        `${API_URL}/products/${productId}/status`,
-        { status: 'sold' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      Alert.alert('Başarılı', 'Ürün satıldı olarak işaretlendi');
-      fetchProductDetail();
-    } catch (error) {
-      Alert.alert('Hata', 'İşlem başarısız');
-    }
+    Alert.alert('Satıldı olarak işaretle', 'Onaylıyor musunuz?', [
+      { text: 'Vazgeç', style: 'cancel' },
+      {
+        text: 'Evet, Satıldı',
+        onPress: async () => {
+          try {
+            await axios.patch(
+              `${API_URL}/products/${productId}/sold`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            Alert.alert('Başarılı', 'Ürün satıldı olarak işaretlendi');
+            fetchProductDetail();
+          } catch (error) {
+            Alert.alert('Hata', 'İşlem başarısız');
+          }
+        },
+      },
+    ]);
   };
 
   const handleMakeOffer = () => {
@@ -146,27 +154,8 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
-  const handleContactSeller = async () => {
-    try {
-      const response = await axios.post(
-        `${API_URL}/chats`,
-        { sellerId: product?.seller.id, productId: product?.id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      navigation.navigate('ChatDetail', { 
-        chatId: response.data.id,
-        otherUser: product?.seller,
-        product: product,
-      });
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        Alert.alert('Hata', error.response.data.message);
-      } else {
-        Alert.alert('Hata', 'Sohbet başlatılamadı');
-      }
-    }
-  };
+  // Altın Yol: Sohbet ancak teklif kabul edilince açılır.
+  // Eski "Satıcıyla Mesajlaş" butonu kaldırıldı.
 
   if (loading) {
     return (
@@ -374,14 +363,7 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
                   style={[styles.actionButton, styles.primaryButton]}
                   onPress={handleMakeOffer}
                 >
-                  <Text style={styles.actionButtonText}>Teklif Ver</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.secondaryButton]}
-                  onPress={handleContactSeller}
-                >
-                  <Text style={styles.actionButtonText}>Satıcıyla Mesajlaş</Text>
+                  <Text style={styles.actionButtonText}>Teklif Ver / Satın Al</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -394,7 +376,13 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
                 </TouchableOpacity>
               </>
             )}
-            
+
+            {product.status === 'reserved' && (
+              <View style={styles.soldNotice}>
+                <Text style={styles.soldNoticeText}>Bu ürün rezerve edildi</Text>
+              </View>
+            )}
+
             {product.status === 'sold' && (
               <View style={styles.soldNotice}>
                 <Text style={styles.soldNoticeText}>Bu ürün satılmıştır</Text>

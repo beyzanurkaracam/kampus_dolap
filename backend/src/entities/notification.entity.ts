@@ -12,14 +12,13 @@ import {
   import { User } from './user.entity';
   
   export enum NotificationType {
-    COMMENT = 'comment',           // Ürüne yorum yapıldı
-    COMMENT_REPLY = 'comment_reply', // Yoruma yanıt verildi
-    OFFER = 'offer',               // Teklif geldi
+    COMMENT = 'comment',
+    COMMENT_REPLY = 'comment_reply',
+    OFFER = 'offer',
     OFFER_ACCEPTED = 'offer_accepted',
     OFFER_REJECTED = 'offer_rejected',
-    MEETING_CONFIRMED = 'meeting_confirmed',
-    FOLLOW = 'follow',             // Biri seni takip etti
-    SYSTEM = 'system',             // Sistem bildirimi
+    FOLLOW = 'follow',
+    SYSTEM = 'system',
   }
   
   @Entity('notifications')

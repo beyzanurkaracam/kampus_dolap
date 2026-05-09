@@ -7,7 +7,6 @@ import { EmailService } from './email.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
-import { Admin } from 'src/entities/admin.entity';
 import { UniversityModule } from '../university/university.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -17,17 +16,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        const secret = configService.get('JWT_SECRET') || 'your-super-secret-key-change-this';
-        console.log('JwtModule configured with secret:', secret);
-        return {
-          secret: secret,
-          signOptions: { expiresIn: '7d' },
-        };
-      },
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET') || 'your-super-secret-key-change-this',
+        signOptions: { expiresIn: '7d' },
+      }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User, Admin]),
+    TypeOrmModule.forFeature([User]),
     UniversityModule,
   ],
   controllers: [AuthController],

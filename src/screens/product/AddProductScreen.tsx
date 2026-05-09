@@ -205,11 +205,10 @@ export const AddProductScreen = ({ navigation }: any) => {
       });
     
       Alert.alert('Başarılı', 'Ürün eklendi 🎉', [
-        { 
-          text: 'Tamam', 
+        {
+          text: 'Tamam',
           onPress: () => {
-            // 👑 SENIOR FIX: Sadece geri gitme, MyProducts sayfasına git ve ona yenileme sinyali gönder!
-            navigation.navigate('MyProducts', { refresh: Date.now() });
+            navigation.navigate('UserProfile');
           }
         },
       ]);

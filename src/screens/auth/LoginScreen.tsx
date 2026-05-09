@@ -15,11 +15,10 @@ export const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [userType, setUserType] = useState<'user' | 'admin'>('user');
 
   const handleLogin = async () => {
-    const trimmedEmail = email.trim(); // Boşlukları temizle
-    
+    const trimmedEmail = email.trim();
+
     if (!trimmedEmail || !password) {
       Alert.alert('Hata', 'Lütfen tüm alanları doldurunuz');
       return;
@@ -27,11 +26,7 @@ export const LoginScreen = ({ navigation }: any) => {
 
     setLoading(true);
     try {
-      // 1. Sadece Context'e "Giriş yap" diyoruz.
-      await login(trimmedEmail, password, userType);
-      
-      // 2. BAŞKA HİÇBİR ŞEY YAPMIYORUZ! Yönlendirmeyi App.tsx otomatik yapacak.
-      
+      await login(trimmedEmail, password);
     } catch (error: any) {
       Alert.alert('Giriş Hatası', error.message || 'Giriş yapılamadı');
     } finally {
@@ -39,37 +34,14 @@ export const LoginScreen = ({ navigation }: any) => {
     }
   };
 
-  // ✅ TEST VERİLERİNİ DOLDURAN FONKSİYON
   const fillTestUser = (testEmail: string, testPass: string) => {
     setEmail(testEmail);
     setPassword(testPass);
-    setUserType('user'); // Genelde testler user ile yapılır
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>2.el Satış Platformu</Text>
-
-      <View style={styles.typeSelector}>
-        <TouchableOpacity
-          style={[
-            styles.typeButton,
-            userType === 'user' && styles.typeButtonActive,
-          ]}
-          onPress={() => setUserType('user')}
-        >
-          <Text style={styles.typeButtonText}>Kullanıcı</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.typeButton,
-            userType === 'admin' && styles.typeButtonActive,
-          ]}
-          onPress={() => setUserType('admin')}
-        >
-          <Text style={styles.typeButtonText}>Admin</Text>
-        </TouchableOpacity>
-      </View>
 
       <TextInput
         style={styles.input}
@@ -102,11 +74,9 @@ export const LoginScreen = ({ navigation }: any) => {
         )}
       </TouchableOpacity>
 
-      {userType === 'user' && (
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.registerLink}>Hesabın yok mu? Kaydol</Text>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+        <Text style={styles.registerLink}>Hesabın yok mu? Kaydol</Text>
+      </TouchableOpacity>
 
       {/* SADECE GELİŞTİRME MODUNDA GÖRÜNEN HIZLI GİRİŞ PANELİ */}
       {__DEV__ && (
@@ -146,26 +116,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
-    color: '#333',
-  },
-  typeSelector: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    backgroundColor: '#e0e0e0',
-    alignItems: 'center',
-  },
-  typeButtonActive: {
-    backgroundColor: '#007AFF',
-  },
-  typeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: '#333',
   },
   input: {

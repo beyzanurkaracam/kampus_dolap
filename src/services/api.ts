@@ -708,6 +708,38 @@ class ApiService {
     return response.json();
   }
 
+  async getProduct(productId: string): Promise<any> {
+    const response = await fetch(`${API_URL}/products/${productId}`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Ürün bilgileri yüklenemedi');
+    return response.json();
+  }
+
+  async deleteProduct(productId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/products/${productId}`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Ürün silinemedi');
+  }
+
+  async getSimilarProducts(productId: string): Promise<any[]> {
+    const response = await fetch(`${API_URL}/products/${productId}/similar`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as any[];
+  }
+
+  async addProductFavorite(productId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/products/${productId}/favorite`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Favorilere eklenemedi');
+  }
+
   async createProduct(data: any): Promise<any> {
     const response = await fetch(`${API_URL}/products/create`, {
       method: 'POST',

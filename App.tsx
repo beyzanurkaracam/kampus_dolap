@@ -21,6 +21,7 @@ import { PremiumScreen } from './src/screens/user/PremiumScreen';
 import { ChatDetailScreen } from './src/screens/chat/ChatDetailScreen';
 import { MakeOfferScreen } from './src/screens/offer/MakeOfferScreen';
 import { NotificationsScreen } from './src/screens/notification/NotificationsScreen';
+import { ReviewScreen } from './src/screens/review/ReviewScreen';
 
 // 👑 EKSİK OLAN SATIR BURASIYDI: OffersScreen'i süslü parantezle dahil ettik
 import { OffersScreen } from './src/screens/offer/OffersScreen'; // Klasör yolunu kendi projene göre teyit et
@@ -128,10 +129,16 @@ const RootNavigator = () => {
             }} 
           />
           
-          <Stack.Screen 
-            name="MakeOffer" 
-            component={MakeOfferScreen} 
-            options={{ headerShown: false, presentation: 'modal' }} 
+          <Stack.Screen
+            name="MakeOffer"
+            component={MakeOfferScreen}
+            options={{ headerShown: false, presentation: 'modal' }}
+          />
+
+          <Stack.Screen
+            name="Review"
+            component={ReviewScreen}
+            options={{ title: 'Değerlendirme', headerBackTitle: 'Geri', presentation: 'modal' }}
           />
         </Stack.Group>
       ) : (

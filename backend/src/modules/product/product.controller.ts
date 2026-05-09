@@ -115,7 +115,7 @@ export class ProductController {
     return this.productService.deleteProduct(id, req.user.userId);
   }
 
-  // Ürün durumunu güncelle
+  // Ürün durumunu güncelle (genel)
   @UseGuards(JwtGuard)
   @Patch(':id/status')
   async updateProductStatus(
@@ -124,6 +124,32 @@ export class ProductController {
     @Request() req
   ) {
     return this.productService.updateProductStatus(id, req.user.userId, status);
+  }
+
+  // FAZ 2: Anlaşma sağlandı (rezerve et)
+  @UseGuards(JwtGuard)
+  @Patch(':id/reserve')
+  reserve(@Param('id') id: string, @Request() req) {
+    return this.productService.markAsReserved(id, req.user.userId);
+  }
+
+  // FAZ 2: Satışa geri dön
+  @UseGuards(JwtGuard)
+  @Patch(':id/unreserve')
+  unreserve(@Param('id') id: string, @Request() req) {
+    return this.productService.unreserveProduct(id, req.user.userId);
+  }
+
+  // FAZ 3: Satıldı
+  @UseGuards(JwtGuard)
+  @Patch(':id/sold')
+  async sold(@Param('id') id: string, @Request() req) {
+    const result = await this.productService.markAsSold(id, req.user.userId);
+    return {
+      product: result.product,
+      buyerId: result.buyerId,
+      offerId: result.offerId,
+    };
   }
 
   // Favorilere ekle

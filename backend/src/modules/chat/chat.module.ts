@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config'; // ✅ EKLE
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
@@ -10,18 +10,20 @@ import { Chat } from '../../entities/chat.entity';
 import { Message } from '../../entities/message.entity';
 import { User } from '../../entities/user.entity';
 import { Product } from '../../entities/product.entity';
+import { BlockModule } from '../block/block.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Chat, Message, User, Product]),
-    ConfigModule, 
+    ConfigModule,
+    forwardRef(() => BlockModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({ 
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET') || 'your-super-secret-key-change-this',
         signOptions: { expiresIn: '7d' },
       }),
-      inject: [ConfigService], 
+      inject: [ConfigService],
     }),
   ],
   controllers: [ChatController],

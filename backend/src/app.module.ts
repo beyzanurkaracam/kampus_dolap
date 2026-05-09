@@ -1,5 +1,3 @@
-// backend/src/app.module.ts
-
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,7 +9,6 @@ import { ProductModule } from './modules/product/product.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { UploadModule } from './modules/upload/upload.module';
 
-// Entities
 import { User } from './entities/user.entity';
 import { Admin } from './entities/admin.entity';
 import { University } from './entities/university.entity';
@@ -32,8 +29,12 @@ import { Follow } from './entities/follow.entity';
 import { CampusLocation } from './entities/campus-location.entity';
 import { Comment } from './entities/comment.entity';
 import { CommentModule } from './modules/comment/comment.module';
-import { Notification } from './entities/notification.entity';           // ✅ YENİ
+import { Notification } from './entities/notification.entity';
 import { NotificationModule } from './modules/notification/notification.module';
+import { BlockedUser } from './entities/blocked-user.entity';
+import { BlockModule } from './modules/block/block.module';
+import { Review } from './entities/review.entity';
+import { ReviewModule } from './modules/review/review.module';
 
 @Module({
   imports: [
@@ -50,8 +51,7 @@ import { NotificationModule } from './modules/notification/notification.module';
         entities: [
           User, Admin, University, Category, Product, ProductImage,
           Favorite, Chat, Message, Offer, Follow, CampusLocation,
-          Comment,
-          Notification, // ✅ YENİ
+          Comment, Notification, BlockedUser, Review,
         ],
         synchronize: true,
         logging: true,
@@ -70,6 +70,8 @@ import { NotificationModule } from './modules/notification/notification.module';
     FollowModule,
     CommentModule,
     NotificationModule,
+    BlockModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService],

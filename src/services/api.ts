@@ -383,44 +383,7 @@ class ApiService {
     }
   }
 
-  async getUniversityLocations(universityId: string) {
-    const response = await fetch(`${API_URL}/university/${universityId}/locations`, {
-      headers: await this.getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error('Konumlar alınamadı');
-    return response.json();
-  }
-
-  async acceptOfferWithMeeting(offerId: string, meetingPointId: string, meetingTime: Date) {
-    const response = await fetch(`${API_URL}/offers/${offerId}/accept`, {
-      method: 'PATCH',
-      headers: await this.getAuthHeaders(),
-      body: JSON.stringify({
-        meetingPointId,
-        meetingTime: meetingTime.toISOString(), 
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
-      throw new Error(errorData.message || 'Teklif kabul edilemedi');
-    }
-    return response.json();
-  }
-  
-  /*async confirmMeeting(offerId: string) {
-    const response = await fetch(`${API_URL}/offers/${offerId}/confirm-meeting`, {
-      method: 'PATCH',
-      headers: await this.getAuthHeaders(),
-    });
-    if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
-        throw new Error(errorData.message || 'Onaylanamadı');
-    }
-    return response.json();
-  }
-*/
- async detectUniversity(email: string): Promise<DetectUniversityResponse> {
+  async detectUniversity(email: string): Promise<DetectUniversityResponse> {
     const response = await fetch(`${API_URL}/auth/detect-university?email=${email}`);
     
     if (!response.ok) {
@@ -624,14 +587,10 @@ class ApiService {
     return data as any[];
   }
 
-  async acceptOffer(id: string, data: any): Promise<any> {
+  async acceptOffer(id: string): Promise<{ offer: any; chatId: string }> {
     const response = await fetch(`${API_URL}/offers/${id}/accept`, {
       method: 'PATCH',
-      headers: {
-        ...(await this.getAuthHeaders()),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+      headers: await this.getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -639,7 +598,7 @@ class ApiService {
       throw new Error(errorData.message || 'Teklif kabul edilemedi');
     }
 
-    return response.json();
+    return (await response.json()) as { offer: any; chatId: string };
   }
 
   async rejectOffer(id: string): Promise<any> {
@@ -656,28 +615,14 @@ class ApiService {
     return response.json();
   }
 
-  async confirmMeeting(id: string): Promise<any> {
-    const response = await fetch(`${API_URL}/offers/${id}/confirm-meeting`, {
-      method: 'PATCH',
-      headers: await this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = (await response.json().catch(() => ({}))) as ErrorResponse;
-      throw new Error(errorData.message || 'Buluşma onaylanamadı');
-    }
-
-    return response.json();
-  }
-
-  async counterOffer(id: string, data: any): Promise<any> {
+  async counterOffer(id: string, amount: number): Promise<any> {
     const response = await fetch(`${API_URL}/offers/${id}/counter`, {
       method: 'POST',
       headers: {
         ...(await this.getAuthHeaders()),
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ amount }),
     });
 
     if (!response.ok) {
@@ -783,7 +728,7 @@ class ApiService {
       const err = (await response.json().catch(() => ({}))) as { message?: string };
       throw new Error(err.message || 'Yorumlar yüklenemedi');
     }
-    return response.json();
+    return (await response.json()) as any[];
   }
  
   /** Yeni ana yorum oluştur */
@@ -879,12 +824,144 @@ class ApiService {
         headers: await this.getAuthHeaders(),
       },
     );
- 
+
     if (!response.ok) {
       throw new Error('Bildirim okundu yapılamadı');
     }
   }
-  
+
+  // ==========================================================
+  // ÜRÜN: REZERVE / SATILDI
+  // ==========================================================
+
+  async reserveProduct(productId: string): Promise<any> {
+    const response = await fetch(`${API_URL}/products/${productId}/reserve`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(err.message || 'Ürün rezerve edilemedi');
+    }
+    return response.json();
+  }
+
+  async unreserveProduct(productId: string): Promise<any> {
+    const response = await fetch(`${API_URL}/products/${productId}/unreserve`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(err.message || 'İşlem başarısız');
+    }
+    return response.json();
+  }
+
+  async markProductSold(
+    productId: string,
+  ): Promise<{ product: any; buyerId: string | null; offerId: string | null }> {
+    const response = await fetch(`${API_URL}/products/${productId}/sold`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(err.message || 'Satış işaretlenemedi');
+    }
+    return (await response.json()) as { product: any; buyerId: string | null; offerId: string | null };
+  }
+
+  // ==========================================================
+  // ENGELLEME
+  // ==========================================================
+
+  async blockUser(userId: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_URL}/blocks/${userId}`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(err.message || 'Engelleme başarısız');
+    }
+    return (await response.json()) as { message: string };
+  }
+
+  async unblockUser(userId: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_URL}/blocks/${userId}`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(err.message || 'İşlem başarısız');
+    }
+    return (await response.json()) as { message: string };
+  }
+
+  async getBlockedUsers(): Promise<any[]> {
+    const response = await fetch(`${API_URL}/blocks`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Engelliler yüklenemedi');
+    return (await response.json()) as any[];
+  }
+
+  // ==========================================================
+  // CHAT DETAİL (Yeni)
+  // ==========================================================
+
+  async getChatDetail(chatId: string): Promise<any> {
+    const response = await fetch(`${API_URL}/chats/${chatId}`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(err.message || 'Sohbet bilgisi alınamadı');
+    }
+    return response.json();
+  }
+
+  // ==========================================================
+  // DEĞERLENDİRME (REVIEW)
+  // ==========================================================
+
+  async createReview(data: { offerId: string; rating: number; comment?: string }): Promise<any> {
+    const response = await fetch(`${API_URL}/reviews`, {
+      method: 'POST',
+      headers: {
+        ...(await this.getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(err.message || 'Değerlendirme gönderilemedi');
+    }
+    return response.json();
+  }
+
+  async getSellerReviews(sellerId: string): Promise<any[]> {
+    const response = await fetch(`${API_URL}/reviews/seller/${sellerId}`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Değerlendirmeler yüklenemedi');
+    return (await response.json()) as any[];
+  }
+
+  async getReviewByOffer(offerId: string): Promise<any | null> {
+    const response = await fetch(`${API_URL}/reviews/offer/${offerId}`, {
+      headers: await this.getAuthHeaders(),
+    });
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as ErrorResponse;
+      throw new Error(err.message || 'Değerlendirme alınamadı');
+    }
+    return response.json();
+  }
 }
 
 export default new ApiService();

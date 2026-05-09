@@ -60,6 +60,13 @@ export class Product {
   @Column({ default: 0 })
   viewCount: number;
 
+  @Column({ type: 'timestamp', nullable: true })
+  reservedAt: Date | null;
+
+  // Cron 3-günlük "Sattınız mı?" hatırlatmasını tek sefer atmak için.
+  @Column({ default: false })
+  reservedReminderSent: boolean;
+
   @Column({ nullable: true })
   soldAt: Date;
 

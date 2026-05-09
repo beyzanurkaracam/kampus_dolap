@@ -1,41 +1,106 @@
-import React, { useState } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Alert,
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import api from '../../services/api';
 
-export const ReviewScreen = ({ route, navigation }: any) => {
-  const { offerId, sellerName, productTitle } = route.params;
-  const [rating, setRating] = useState<number>(0);
-  const [comment, setComment] = useState('');
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type RootStackParamList = {
+  Review: {
+    offerId: string;
+    sellerName?: string;
+    productTitle?: string;
+  };
+};
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Review'>;
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const MAX_COMMENT_LENGTH = 500;
+const STAR_COUNT = 5;
+
+// ─── StarRating ───────────────────────────────────────────────────────────────
+
+interface StarRatingProps {
+  rating: number;
+  onRate: (value: number) => void;
+}
+
+const StarRating = memo(({ rating, onRate }: StarRatingProps) => (
+  <View style={styles.starsRow}>
+    {Array.from({ length: STAR_COUNT }, (_, i) => i + 1).map((n) => (
+      <TouchableOpacity
+        key={n}
+        onPress={() => onRate(n)}
+        activeOpacity={0.7}
+        accessibilityLabel={`${n} yıldız`}
+        accessibilityRole="button"
+      >
+        <Text style={[styles.star, n <= rating && styles.starActive]}>
+          {n <= rating ? '★' : '☆'}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+));
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+function useReviewSubmit(offerId: string, onSuccess: () => void) {
   const [submitting, setSubmitting] = useState(false);
 
-  const submit = async () => {
-    if (rating < 1) {
-      Alert.alert('Uyarı', 'Lütfen 1-5 arası bir yıldız seçin.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await api.createReview({ offerId, rating, comment: comment.trim() || undefined });
-      Alert.alert('Teşekkürler 🌟', 'Değerlendirmeniz kaydedildi.', [
-        { text: 'Tamam', onPress: () => navigation.goBack() },
-      ]);
-    } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Değerlendirme gönderilemedi.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const submit = useCallback(
+    async (rating: number, comment: string) => {
+      if (rating < 1) {
+        Alert.alert('Uyarı', 'Lütfen 1-5 arası bir yıldız seçin.');
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        await api.createReview({
+          offerId,
+          rating,
+          comment: comment.trim() || undefined,
+        });
+        Alert.alert('Teşekkürler', 'Değerlendirmeniz kaydedildi.', [
+          { text: 'Tamam', onPress: onSuccess },
+        ]);
+      } catch (error: any) {
+        Alert.alert('Hata', error?.message ?? 'Değerlendirme gönderilemedi.');
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [offerId, onSuccess],
+  );
+
+  return { submitting, submit };
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
+export const ReviewScreen = ({ route, navigation }: Props) => {
+  const { offerId, sellerName, productTitle } = route.params;
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+
+  const handleSuccess = useCallback(() => navigation.goBack(), [navigation]);
+  const { submitting, submit } = useReviewSubmit(offerId, handleSuccess);
+
+  const isDisabled = submitting || rating < 1;
 
   return (
     <KeyboardAvoidingView
@@ -47,15 +112,7 @@ export const ReviewScreen = ({ route, navigation }: any) => {
         {sellerName && <Text style={styles.subtitle}>{sellerName}</Text>}
         {productTitle && <Text style={styles.product}>📦 {productTitle}</Text>}
 
-        <View style={styles.starsRow}>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <TouchableOpacity key={n} onPress={() => setRating(n)} activeOpacity={0.7}>
-              <Text style={[styles.star, n <= rating && styles.starActive]}>
-                {n <= rating ? '★' : '☆'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <StarRating rating={rating} onRate={setRating} />
 
         <Text style={styles.label}>Yorum (opsiyonel)</Text>
         <TextInput
@@ -65,16 +122,20 @@ export const ReviewScreen = ({ route, navigation }: any) => {
           placeholder="Alışveriş deneyimini birkaç cümleyle anlat"
           placeholderTextColor="#8E8E93"
           multiline
-          maxLength={500}
+          maxLength={MAX_COMMENT_LENGTH}
         />
-        <Text style={styles.counter}>{comment.length}/500</Text>
+        <Text style={styles.counter}>
+          {comment.length}/{MAX_COMMENT_LENGTH}
+        </Text>
       </ScrollView>
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.button, (submitting || rating < 1) && styles.buttonDisabled]}
-          onPress={submit}
-          disabled={submitting || rating < 1}
+          style={[styles.button, isDisabled && styles.buttonDisabled]}
+          onPress={() => submit(rating, comment)}
+          disabled={isDisabled}
+          accessibilityLabel="Değerlendirmeyi gönder"
+          accessibilityRole="button"
         >
           {submitting ? (
             <ActivityIndicator color="#FFF" />
@@ -86,6 +147,8 @@ export const ReviewScreen = ({ route, navigation }: any) => {
     </KeyboardAvoidingView>
   );
 };
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },

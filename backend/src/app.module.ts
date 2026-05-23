@@ -53,8 +53,9 @@ import { Admin } from './entities/admin.entity';
           Favorite, Chat, Message, Offer, Follow, CampusLocation,
           Comment, Notification, BlockedUser, Review, Admin,
         ],
-        synchronize: true,
-        logging: true,
+        synchronize: false,
+        logging: process.env.NODE_ENV !== 'production',
+        
       }),
       inject: [ConfigService],
     }),

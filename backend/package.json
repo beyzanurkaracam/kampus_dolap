@@ -12,7 +12,7 @@
     "start:prod": "node dist/main",
     "build": "nest build",
     "seed": "ts-node src/seed/index.ts",
-    "seed:admin": "ts-node -r tsconfig-paths/register src/seeds/create-admin.ts",
+    "seed:admin": "ts-node src/scripts/seed-admin.ts",
     "migrate:admins": "ts-node -r tsconfig-paths/register src/seeds/migrate-admins.ts",
     "test": "jest",
     "test:watch": "jest --watch",

@@ -14,7 +14,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  console.log('JWT_SECRET:', process.env.JWT_SECRET);
   
   // Admin kullanıcısını oluştur
   const dataSource = app.get(DataSource);

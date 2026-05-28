@@ -1,0 +1,8 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: kampusumden-managed-cert
+spec:
+  domains:
+    - api.kampusumden.online
+    - staging.kampusumden.online

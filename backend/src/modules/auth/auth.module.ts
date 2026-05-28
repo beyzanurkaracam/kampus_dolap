@@ -6,7 +6,7 @@ import { AuthService } from './auth.service';
 import { EmailService } from './email.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'src/entities/user.entity';
+import { User } from '../../entities/user.entity';
 import { UniversityModule } from '../university/university.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 

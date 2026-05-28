@@ -7,7 +7,7 @@ import { Category } from 'src/entities/category.entity';
 import { Favorite } from 'src/entities/favorite.entity';
 import * as brandsData from '../add-product/brands.json';
 import * as colorsData from '../add-product/colors.json';
-import { User } from 'src/entities/user.entity';
+import { User } from '../../entities/user.entity';
 import { Offer, OfferStatus } from 'src/entities/offer.entity';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from 'src/entities/notification.entity';

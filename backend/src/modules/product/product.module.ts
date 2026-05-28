@@ -5,7 +5,7 @@ import { Product } from 'src/entities/product.entity';
 import { ProductImage } from 'src/entities/product-image.entity';
 import { Category } from 'src/entities/category.entity';
 import { Favorite } from 'src/entities/favorite.entity';
-import { User } from 'src/entities/user.entity';
+import { User } from '../../entities/user.entity';
 import { Offer } from 'src/entities/offer.entity';
 import { ProductController } from './product.controller';
 import { ProductService } from './product.service';

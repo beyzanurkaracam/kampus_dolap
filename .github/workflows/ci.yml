@@ -19,7 +19,7 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: cd backend && npm ci
-      - run: cd backend && npm run lint
+      - run: cd backend && npm run lint:check
       - run: cd backend && npx tsc --noEmit
 
   test:

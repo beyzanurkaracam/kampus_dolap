@@ -54,7 +54,7 @@ export class UniversityService implements OnModuleInit {
 
     // Alt domain kontrolü için base domain'i de çıkar
     const domainParts = emailDomain.split('.');
-    let possibleDomains: string[] = [emailDomain];
+    const possibleDomains: string[] = [emailDomain];
     
     if (domainParts.length >= 3) {
       const baseDomain = domainParts.slice(-2).join('.');

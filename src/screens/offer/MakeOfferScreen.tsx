@@ -15,6 +15,7 @@ import {
 
 // 👑 MİMARİ KURAL: Axios SİLİNDİ, api.ts import edildi
 import api from '../../services/api';
+import { AppConfig } from '../../config/env';
 
 // 👑 SENIOR DOKUNUŞU: Resim linklerini güvenli hale getiren yardımcı fonksiyon
 const getImageUrl = (url?: string) => {
@@ -28,7 +29,7 @@ const getImageUrl = (url?: string) => {
 
   if (finalUrl.startsWith('http')) return finalUrl;
   
-  const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+  const API_URL = AppConfig.API_URL;
   const cleanPath = finalUrl.startsWith('/') ? finalUrl.substring(1) : finalUrl;
   return `${API_URL}/${cleanPath}`;
 };

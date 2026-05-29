@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-import { Platform } from 'react-native';
+import { AppConfig } from '../config/env';
 
-const API_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:3000' 
-  : 'http://localhost:3000';
+// Socket kök adresi ortam değişkenlerinden (react-native-config) gelir.
+const SOCKET_URL = AppConfig.SOCKET_URL;
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
@@ -33,7 +32,7 @@ export const SocketProvider = ({ children }: any) => {
       return;
     }
 
-    const newSocket = io(`${API_URL}/chat`, {
+    const newSocket = io(`${SOCKET_URL}/chat`, {
       // 👑 SENIOR DOKUNUŞU: transports satırını sildik. 
       // Socket.io önce polling ile bağlanıp sonra websocket'e güvenle geçecek.
       auth: { token },

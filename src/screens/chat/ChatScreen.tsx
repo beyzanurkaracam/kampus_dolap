@@ -15,6 +15,7 @@ import {
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { AppConfig } from '../../config/env';
 
 // --- TİP TANIMLAMALARI ---
 interface ProductImage { id: string; imageUrl: string; isPrimary: boolean; }
@@ -41,7 +42,7 @@ const getImageUrl = (url?: string) => {
 
   if (finalUrl.startsWith('http')) return finalUrl;
   
-  const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+  const API_URL = AppConfig.API_URL;
   const cleanPath = finalUrl.startsWith('/') ? finalUrl.substring(1) : finalUrl;
   return `${API_URL}/${cleanPath}`;
 };

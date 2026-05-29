@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { AppConfig } from '../config/env';
 
 export interface OfferItemProps {
   offer: any;
@@ -29,7 +30,7 @@ const getImageUrl = (url?: string) => {
     else if (finalUrl.includes('127.0.0.1')) finalUrl = finalUrl.replace('127.0.0.1', '10.0.2.2');
   }
   if (finalUrl.startsWith('http')) return finalUrl;
-  const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+  const API_URL = AppConfig.API_URL;
   const cleanPath = finalUrl.startsWith('/') ? finalUrl.substring(1) : finalUrl;
   return `${API_URL}/${cleanPath}`;
 };

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
+import { AppConfig } from '../../config/env';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -19,8 +20,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Premium'>;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-// TODO: API_BASE_URL should be in a shared config (e.g. src/config.ts)
-const API_BASE = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+// Merkezi config (src/config/env.ts) → react-native-config üzerinden ortam değişkeni.
+const API_BASE = AppConfig.API_URL;
 
 const MONTHLY_PRODUCT = {
   productId: 'com.dolapkampus.premium.monthly',

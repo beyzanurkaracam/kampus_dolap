@@ -7,6 +7,7 @@ import {
     Logger,
   } from '@nestjs/common';
   import { Request, Response } from 'express';
+  import * as Sentry from '@sentry/nestjs';
   
   @Catch()
   export class GlobalExceptionFilter implements ExceptionFilter {
@@ -36,7 +37,8 @@ import {
         message = exception.message;
       }
   
-      // Sadece 5xx hataları logla (4xx kullanıcı hatası, loglamaya gerek yok)
+      // Sadece 5xx hataları logla + Sentry'e gönder.
+      // 4xx kullanıcı hatasıdır (validation, yetki vb.) — log/Sentry gürültüsü yaratmaz.
       if (status >= 500) {
         this.logger.error(
           {
@@ -47,6 +49,13 @@ import {
           },
           `Unhandled exception: ${message}`,
         );
+
+        // Sentry'e yalnızca sunucu hatalarını raporla. SENTRY_DSN yoksa init
+        // çalışmadığından bu çağrı sessizce yok sayılır (no-op).
+        Sentry.captureException(exception, {
+          tags: { path: request.url, method: request.method },
+          extra: { statusCode: status },
+        });
       }
   
       response.status(status).json({

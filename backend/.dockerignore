@@ -4,5 +4,14 @@ node_modules/
 dist/
 npm-debug.log
 .env
+.env.*
 Dockerfile
 docker-compose.yml
+*.md
+.vscode
+.idea
+coverage
+test
+__tests__
+.husky
+*.log

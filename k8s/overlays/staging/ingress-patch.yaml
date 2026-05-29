@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kampusumden-ingress
+spec:
+  rules:
+    - host: staging.kampusumden.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kampusumden-backend-service
+                port:
+                  number: 80

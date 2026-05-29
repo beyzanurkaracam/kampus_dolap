@@ -1,0 +1,150 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'k8s/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+env:
+  IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/kampusumden-backend
+
+jobs:
+  test:
+    name: CI Checks
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    name: Build & Push Image
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.version }}
+      image-digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - id: push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: 0
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+        continue-on-error: true
+
+  deploy-staging:
+    name: Deploy → Staging
+    needs: build
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    environment: staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: kampusumden-cluster
+          location: europe-west3
+
+      - name: Deploy to staging
+        run: |
+          cd k8s/overlays/staging
+          kustomize edit set image kampusumden-backend=${{ env.IMAGE }}:sha-${{ needs.build.outputs.image-tag }}
+          kubectl apply -k .
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/kampusumden-backend -n staging --timeout=5m
+
+      - name: Smoke test
+        run: |
+          for i in {1..10}; do
+            curl -fsS https://staging.kampusumden.online/api/health && break
+            sleep 5
+          done
+
+  deploy-prod:
+    name: Deploy → Production
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: kampusumden-cluster
+          location: europe-west3
+
+      - name: Deploy to production
+        run: |
+          cd k8s/overlays/prod
+          kustomize edit set image kampusumden-backend=${{ env.IMAGE }}:sha-${{ needs.build.outputs.image-tag }}
+          kubectl apply -k .
+
+      - name: Wait for rollout (auto-rollback on failure)
+        run: |
+          if ! kubectl rollout status deployment/kampusumden-backend -n production --timeout=5m; then
+            echo "Rollout failed — rolling back"
+            kubectl rollout undo deployment/kampusumden-backend -n production
+            kubectl rollout status deployment/kampusumden-backend -n production
+            exit 1
+          fi
+
+      - name: Smoke test production
+        run: |
+          for i in {1..10}; do
+            curl -fsS https://api.kampusumden.online/api/health && break
+            sleep 5
+          done

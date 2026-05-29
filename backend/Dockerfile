@@ -1,31 +1,34 @@
-# --- AŞAMA 1: BUILD (Derleme) Aşaması ---
-# 'alpine' yerine 'bullseye-slim' kullanıyoruz (C++ derleme sorunlarını çözer)
 FROM node:20-bullseye-slim AS builder
 
 WORKDIR /usr/src/app
 
-# Sadece paket dosyalarını kopyala
 COPY package*.json ./
-
-# HIZLANDIRICI: npm install yerine npm ci (Clean Install) kullanıyoruz
 RUN npm ci
 
-# Tüm kodları kopyala ve derle
 COPY . .
 RUN npm run build
 
-# --- AŞAMA 2: PRODUCTION (Canlı Ortam) Aşaması ---
 FROM node:20-bullseye-slim
+
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 app
 
 WORKDIR /usr/src/app
 
-# Sadece canlı ortam paketlerini hızlıca kur
+ENV NODE_ENV=production
+
 COPY package*.json ./
 RUN npm ci --only=production
 
-# Builder'dan gelen derlenmiş (dist) kodları kopyala
 COPY --from=builder /usr/src/app/dist ./dist
 
+RUN chown -R app:nodejs /usr/src/app
+
+USER app
+
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/api/health/live',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
 
 CMD ["node", "dist/main.js"]

@@ -36,22 +36,23 @@ export class RedisIoAdapter extends IoAdapter {
     };
 
     const pubClient = new Redis(redisOptions);
-    const subClient = pubClient.duplicate();
+    // enableReadyCheck: false — subscriber mode'da reconnect sırasında
+    // INFO komutu gönderilmez; aksi hâlde "Connection in subscriber mode" crash'i olur.
+    const subClient = new Redis({ ...redisOptions, enableReadyCheck: false });
 
-    // Bağlantı kontrolü
     await Promise.all([
       new Promise<void>((resolve, reject) => {
-        pubClient.on('connect', () => resolve());
-        pubClient.on('error', (err) => reject(err));
+        pubClient.once('ready', resolve);
+        pubClient.once('error', reject);
       }),
       new Promise<void>((resolve, reject) => {
-        subClient.on('connect', () => resolve());
-        subClient.on('error', (err) => reject(err));
+        subClient.once('connect', resolve);
+        subClient.once('error', reject);
       }),
     ]);
 
     this.adapterConstructor = createAdapter(pubClient, subClient);
-    console.log(' Socket.io Redis Adapter bağlantısı kuruldu');
+    console.log('Socket.io Redis Adapter bağlantısı kuruldu');
   }
 
   createIOServer(port: number, options?: Partial<ServerOptions>) {

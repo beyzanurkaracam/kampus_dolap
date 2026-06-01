@@ -19,6 +19,7 @@ module "wif" {
 }
 
 module "monitoring" {
-  source     = "./modules/monitoring"
-  project_id = var.project_id
+  source      = "./modules/monitoring"
+  project_id  = var.project_id
+  alert_email = var.alert_email
 }

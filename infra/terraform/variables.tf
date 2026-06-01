@@ -25,3 +25,9 @@ variable "github_repo" {
   type        = string
   default     = "beyzanurkaracam/kampus_dolap"
 }
+
+variable "alert_email" {
+  description = "Email address that receives Cloud Monitoring alerts"
+  type        = string
+  default     = "beyzanurkaracam0@gmail.com"
+}

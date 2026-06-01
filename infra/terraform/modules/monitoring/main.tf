@@ -107,7 +107,7 @@ resource "google_monitoring_alert_policy" "pod_restarts" {
   conditions {
     display_name = "Pod restart count > 3 in 10 minutes"
     condition_threshold {
-      filter          = "metric.type=\"kubernetes.io/container/restart_count\" resource.type=\"k8s_container\" resource.label.\"cluster_name\"=\"kampusumden-cluster\""
+      filter          = "metric.type=\"kubernetes.io/container/restart_count\" resource.type=\"k8s_container\" resource.label.\"cluster_name\"=\"kampusumden-cluster\" resource.label.\"namespace_name\"=monitoring.regex.full_match(\"production|staging\")"
       duration        = "0s"
       comparison      = "COMPARISON_GT"
       threshold_value = 3
@@ -133,7 +133,7 @@ resource "google_monitoring_alert_policy" "high_memory" {
   conditions {
     display_name = "Container memory request utilization > 85%"
     condition_threshold {
-      filter          = "metric.type=\"kubernetes.io/container/memory/request_utilization\" resource.type=\"k8s_container\" resource.label.\"cluster_name\"=\"kampusumden-cluster\""
+      filter          = "metric.type=\"kubernetes.io/container/memory/request_utilization\" resource.type=\"k8s_container\" resource.label.\"cluster_name\"=\"kampusumden-cluster\" resource.label.\"namespace_name\"=monitoring.regex.full_match(\"production|staging\")"
       duration        = "300s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0.85

@@ -6,7 +6,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build
+RUN npm run build && npm prune --omit=dev
 
 FROM node:20-bullseye-slim
 
@@ -17,10 +17,9 @@ WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
 
-COPY package*.json ./
-RUN npm ci --only=production
-
+COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
+COPY package*.json ./
 
 RUN chown -R app:nodejs /usr/src/app
 

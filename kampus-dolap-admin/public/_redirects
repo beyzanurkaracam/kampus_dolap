@@ -1,0 +1,4 @@
+# Angular client-side routing icin SPA fallback (Cloudflare Pages).
+# Tum yollar index.html'e 200 ile yonlendirilir; /dashboard gibi route'lara
+# dogrudan gidildiginde veya F5 atildiginda 404 olmaz.
+/*    /index.html   200

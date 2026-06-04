@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(node -e \"console.log\\(require\\('@sentry/nestjs/package.json'\\).version\\)\")",
+      "Bash(node -e \"const s=require\\('@sentry/nestjs/setup'\\); console.log\\('SentryModule:', typeof s.SentryModule, '| SentryGlobalFilter:', typeof s.SentryGlobalFilter\\)\")",
+      "Bash(node -e \"const s=require\\('@sentry/nestjs'\\); console.log\\('init:', typeof s.init, '| captureException:', typeof s.captureException, '| SentryExceptionCaptured:', typeof s.SentryExceptionCaptured\\)\")",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('package.json','utf8'\\)\\); console.log\\('root package.json: VALID'\\)\")",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('backend/package.json','utf8'\\)\\); console.log\\('backend package.json: VALID'\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(echo \"===HEAD App.tsx'te aynı hata var mı? \\(pre-existing doğrulaması\\)===\" && git show HEAD:App.tsx > /tmp/App_orig.tsx 2>/dev/null && grep -n \"component={PremiumScreen}\\\\|component={ReviewScreen}\" /tmp/App_orig.tsx && echo \"\\(bu satırlar HEAD'de de var → hata bana ait değil\\)\" && echo \"\" && echo \"===.claude/ içeriği \\(commit edilmeyecek\\)===\" && ls -la .claude/ 2>/dev/null && echo \"\" && echo \"===DİFFSTAT===\" && git diff --stat && echo \"===UNTRACKED===\" && git status --short | grep '^??')"
+    ]
+  }
+}

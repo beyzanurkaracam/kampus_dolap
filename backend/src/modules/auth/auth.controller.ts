@@ -28,6 +28,13 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  // Web admin paneli girişi: yalnızca ADMIN rolündeki kullanıcılar token alır
+  @Post('admin-login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  async adminLogin(@Body() dto: LoginDto) {
+    return this.authService.adminLogin(dto);
+  }
+
   @Get('verify')
   async verify(@Headers('authorization') authHeader: string) {
     const token = authHeader?.replace('Bearer ', '');

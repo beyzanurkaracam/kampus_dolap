@@ -1,4 +1,6 @@
 import React from 'react';
+import * as Sentry from '@sentry/react-native';
+import { initSentry } from './src/config/sentry';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -25,6 +27,9 @@ import { ReviewScreen } from './src/screens/review/ReviewScreen';
 
 // 👑 EKSİK OLAN SATIR BURASIYDI: OffersScreen'i süslü parantezle dahil ettik
 import { OffersScreen } from './src/screens/offer/OffersScreen'; // Klasör yolunu kendi projene göre teyit et
+
+// Sentry'i uygulama render edilmeden önce başlat (DSN yoksa no-op).
+initSentry();
 
 const Stack = createNativeStackNavigator();
 
@@ -180,4 +185,5 @@ function App() {
   );
 }
 
-export default App;
+// Sentry.wrap, hata sınırları ve performans izlemeyi kök bileşene bağlar.
+export default Sentry.wrap(App);

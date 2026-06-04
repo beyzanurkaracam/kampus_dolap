@@ -1,8 +1,9 @@
-import { Platform } from 'react-native';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import { AppConfig } from '../../config/env';
 
-export const API_URL =
-  Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+// API kök adresi artık ortam değişkenlerinden (react-native-config) gelir.
+// Geriye dönük uyumluluk için aynı isimle yeniden export ediliyor.
+export const API_URL = AppConfig.API_URL;
 
 export class ApiError extends Error {
   constructor(

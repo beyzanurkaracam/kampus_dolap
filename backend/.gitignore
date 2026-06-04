@@ -68,8 +68,7 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-
-# Android build artıkları
+# Android Native Build Cache
 android/app/.cxx/
-android/app/build/
+*.ninja*
+CMakeCache.txt

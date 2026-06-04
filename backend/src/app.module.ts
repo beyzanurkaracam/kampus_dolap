@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -43,6 +44,10 @@ import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
+    // ── Sentry ── NestJS enstrümantasyonunu kurar; EN BAŞTA olmalı.
+    // Asıl Sentry.init() src/instrument.ts içinde yapılır.
+    SentryModule.forRoot(),
+
     // ── Config ──
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
 

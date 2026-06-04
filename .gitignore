@@ -1,6 +1,21 @@
 node_modules/
+.env.*
 .env
+<<<<<<< HEAD
 .env*
+=======
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+>>>>>>> feature/admin-panel-cloudflare-access
 .DS_Store
 node_modules
 # React Native & iOS Dependencies
@@ -17,6 +32,14 @@ android/.gradle/
 *.so
 *.ap_
 *.dex
+
+=======
+
+# Android Native Build Cache
+android/app/.cxx/
+*.ninja*
+CMakeCache.txt
+
 # Android build artıkları
 android/app/.cxx/
 android/app/build/

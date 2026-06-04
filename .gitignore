@@ -1,5 +1,6 @@
 node_modules/
 .env
+.env*
 .DS_Store
 node_modules
 # React Native & iOS Dependencies
@@ -16,3 +17,6 @@ android/.gradle/
 *.so
 *.ap_
 *.dex
+# Android build artıkları
+android/app/.cxx/
+android/app/build/

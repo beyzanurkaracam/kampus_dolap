@@ -1,0 +1,6 @@
+project_id     = "project-98dfb67c-aff3-4c13-9e3"
+project_number = "232202788415"
+region         = "europe-west3"
+cluster_name   = "kampusumden-cluster"
+github_repo    = "beyzanurkaracam/kampus_dolap"
+alert_email    = "beyzanurkaracam0@gmail.com"

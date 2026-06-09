@@ -1,5 +1,5 @@
 // src/auth/auth.service.ts
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -273,6 +273,45 @@ export class AuthService {
     }
 
     throw new UnauthorizedException('Email veya şifre hatalı');
+  }
+
+  // Web admin paneli girişi: normal login ile aynı kimlik doğrulamasını yapar
+  // ancak yalnızca ADMIN rolündeki kullanıcılara token verir. USER rolündeki
+  // bir kullanıcı doğru şifreyle bile panele giremez (403 döner).
+  async adminLogin(loginDto: LoginDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: loginDto.email },
+      relations: ['university'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Email veya şifre hatalı');
+    }
+
+    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Email veya şifre hatalı');
+    }
+
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Bu panele erişim yetkiniz yok');
+    }
+
+    const token = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      universityId: user.universityId,
+    });
+
+    return {
+      access_token: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 
   async validateToken(token: string) {

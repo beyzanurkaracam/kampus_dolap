@@ -14,11 +14,11 @@ dotenv.config();
 const AppDataSource = new DataSource({
   type: 'postgres',
   // Senin .env dosyanla uyumlu hale getirildi
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'beyza123', // Buraya gerçek şifreni yazabilirsin
-  database: process.env.DB_DATABASE || 'kampus_dolap_db',
+  host: 'aws-1-eu-central-1.pooler.supabase.com',
+  port: parseInt('5432'),
+  username: 'postgres.helntuascsdkohdkcdue',
+  password: 'spHX6z33cK$A$id',
+  database: 'postgres',
   
   // __dirname ile mutlak yol kullanmak ts-node hatalarını önler
   entities: [__dirname + '/../entities/**/*.entity.{ts,js}'],

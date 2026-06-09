@@ -8,14 +8,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
-  Platform,
 } from 'react-native';
 
 // 👑 MİMARİ KURAL: Axios SİLİNDİ, api.ts import edildi
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
-import { AppConfig } from '../../config/env';
+import { getImageUrl } from '../../utils/productHelpers';
 
 // --- TİP TANIMLAMALARI ---
 interface ProductImage { id: string; imageUrl: string; isPrimary: boolean; }
@@ -29,23 +28,6 @@ interface Chat {
   lastMessage?: string;
   updatedAt: string;
 }
-
-// 👑 SENIOR DOKUNUŞU: Resim linklerini güvenli hale getiren yardımcı fonksiyon
-const getImageUrl = (url?: string) => {
-  if (!url) return undefined;
-  let finalUrl = url.trim();
-
-  if (Platform.OS === 'android') {
-    if (finalUrl.includes('localhost')) finalUrl = finalUrl.replace('localhost', '10.0.2.2');
-    else if (finalUrl.includes('127.0.0.1')) finalUrl = finalUrl.replace('127.0.0.1', '10.0.2.2');
-  }
-
-  if (finalUrl.startsWith('http')) return finalUrl;
-  
-  const API_URL = AppConfig.API_URL;
-  const cleanPath = finalUrl.startsWith('/') ? finalUrl.substring(1) : finalUrl;
-  return `${API_URL}/${cleanPath}`;
-};
 
 export const ChatScreen = ({ navigation }: any) => {
   const { userId } = useAuth(); // Token'a ihtiyacımız yok, api.ts hallediyor

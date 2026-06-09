@@ -16,3 +16,4 @@ images:
   - name: kampusumden-backend
     newName: beyzanurkaracamm/kampusumden-backend
     newTag: latest
+

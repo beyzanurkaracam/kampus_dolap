@@ -189,7 +189,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
         {detectedUniversity ? (
           <View style={styles.universityInfo}>
             <Text style={styles.universityInfoText}>
-              ✅ {detectedUniversity}
+               {detectedUniversity}
             </Text>
           </View>
         ) : null}
@@ -250,10 +250,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
 
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
-            🎓 Sadece üniversite email adresi ile kayıt yapabilirsiniz
+             Sadece üniversite email adresi ile kayıt yapabilirsiniz
           </Text>
           <Text style={styles.infoText}>
-            📧 Örnek: isim@sabanciuniv.edu, isim@sakarya.edu.tr
+             Örnek: isim@sabanciuniv.edu, isim@sakarya.edu.tr
           </Text>
         </View>
 

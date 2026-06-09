@@ -55,9 +55,9 @@ export class UploadService {
       if (isDevelopment) {
         const [folderName, fileNameOnly] = fileName.split('/');
         
-        // 👇 DEĞİŞİKLİK BURADA: 10.0.2.2 yerine localhost yapıyoruz.
-        // iOS 'localhost'u anlar. Android frontend tarafında bunu algılayıp değiştirecek.
-        const proxyUrl = `http://localhost:3000/upload/proxy/${folderName}/${fileNameOnly}`;
+        // 👇 iOS 'localhost'u anlar. Android frontend tarafında bunu algılayıp değiştirir.
+        // NOT: Backend global prefix 'api' kullandığı için proxy yolu /api ile başlamalı.
+        const proxyUrl = `http://localhost:3000/api/upload/proxy/${folderName}/${fileNameOnly}`;
         
         console.log(`🔗 Development Mode: Proxy URL döndürülüyor -> ${proxyUrl}`); 
         return proxyUrl;

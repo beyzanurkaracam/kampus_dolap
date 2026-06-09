@@ -31,3 +31,5 @@ spec:
           protocol: TCP
         - port: 6379
           protocol: TCP
+        - port: 465
+          protocol: TCP

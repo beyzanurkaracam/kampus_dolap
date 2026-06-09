@@ -280,6 +280,7 @@ import { NotificationService } from '../notification/notification.service';
   
         if ((this.emailService as any).transporter) {
           await (this.emailService as any).transporter.sendMail({
+            from: '"Kampüs Dolap" <no-reply@kampusumden.online>', // 👑 İŞTE HAYAT KURTARAN O EKSİK SATIR!
             to: recipient.email,
             subject: `Kampüs Dolap - ${productTitle} için yeni yorum`,
             html: `
@@ -308,6 +309,7 @@ import { NotificationService } from '../notification/notification.service';
         console.error('Yorum bildirim email hatası:', error);
       }
     }
+  
   
     private formatCommentResponse(comment: Comment, viewerId?: string): any {
       return {

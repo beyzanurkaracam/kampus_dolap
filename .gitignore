@@ -43,3 +43,5 @@ CMakeCache.txt
 # Android build artıkları
 android/app/.cxx/
 android/app/build/
+
+*.jpg

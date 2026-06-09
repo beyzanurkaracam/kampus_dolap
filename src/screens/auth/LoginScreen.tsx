@@ -85,16 +85,23 @@ export const LoginScreen = ({ navigation }: any) => {
             <View style={styles.debugButtons}>
                 <TouchableOpacity 
                     style={[styles.debugButton, { backgroundColor: '#FF9500' }]}
-                    onPress={() => fillTestUser('tarik.kalyoncu@ogr.sakarya.edu.tr', '267453')}
+                    onPress={() => fillTestUser('tarik.kalyoncu@ogr.sakarya.edu.tr', 'Galatasaray53-')}
                 >
-                    <Text style={styles.debugButtonText}>Tarık (Alıcı)</Text>
+                    <Text style={styles.debugButtonText}>Tarık-Alıcı</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
                     style={[styles.debugButton, { backgroundColor: '#5856D6' }]}
-                    onPress={() => fillTestUser('beyzanur.karacam@ogr.sakarya.edu.tr', '267453')}
+                    onPress={() => fillTestUser('beyzanur.karacam@ogr.sakarya.edu.tr', 'Beyza5358')}
                 >
-                    <Text style={styles.debugButtonText}>Beyza (Satıcı)</Text>
+                    <Text style={styles.debugButtonText}>Beyza-Admin</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    style={[styles.debugButton, { backgroundColor: '#5856D6' }]}
+                    onPress={() => fillTestUser('kenan.yaylacık@ogr.sakarya.edu.tr', 'Beyza5358')}
+                >
+                    <Text style={styles.debugButtonText}>Kenan-Alıcı</Text>
                 </TouchableOpacity>
             </View>
         </View>

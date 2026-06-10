@@ -64,6 +64,14 @@ export class ChatController {
       sellerId: chat.sellerId,
       firstMessageSent: chat.firstMessageSent,
       originOfferId: chat.originOfferId,
+      // Detay ekranı karşı tarafı (otherUser) buyer/seller'dan hesaplıyor;
+      // bu objeler olmadan header "Sohbet" ve durum "Çevrimdışı"da takılı kalıyordu.
+      buyer: chat.buyer
+        ? { id: chat.buyer.id, fullName: chat.buyer.fullName, profilePhoto: chat.buyer.profilePhoto }
+        : null,
+      seller: chat.seller
+        ? { id: chat.seller.id, fullName: chat.seller.fullName, profilePhoto: chat.seller.profilePhoto }
+        : null,
       product: chat.product
         ? {
             id: chat.product.id,

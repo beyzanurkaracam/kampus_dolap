@@ -1,11 +1,17 @@
 import { Platform } from 'react-native';
 import { AppConfig } from '../config/env';
 
+// S3 origin'inden gelen (eski DB kayıtları dahil) tüm görselleri Cloudflare CDN'e yönlendir.
+// Böylece DB migration olmadan eski görseller de edge cache'ten servis edilir.
+const S3_HOST = 'kampusumden.s3.eu-north-1.amazonaws.com';
+const CDN_HOST = 'cdn.kampusumden.online';
+
 /**
  * Bir görsel URL'ini mevcut çalışma ortamına göre güvenli ve yüklenebilir bir
  * adrese dönüştürür.
  *
  * Çözdüğü sorunlar:
+ *  - S3 origin'i Cloudflare CDN host'una çevrilir (edge cache + düşük gecikme).
  *  - S3 / harici tam URL'ler (amazonaws.com vb.) olduğu gibi kullanılır.
  *  - Backend'e ait görseller (ör. dev'de kaydedilmiş
  *    "http://localhost:3000/upload/proxy/...") MEVCUT API köküne göre yeniden
@@ -15,7 +21,8 @@ import { AppConfig } from '../config/env';
  */
 export const getImageUrl = (url?: string | null): string | undefined => {
   if (!url) return undefined;
-  const trimmed = url.trim();
+  // Eski/yeni S3 URL'lerini CDN'e çevir (host bazlı, http/https fark etmez)
+  const trimmed = url.trim().split(S3_HOST).join(CDN_HOST);
   if (!trimmed) return undefined;
 
   const isAbsolute = /^https?:\/\//i.test(trimmed);

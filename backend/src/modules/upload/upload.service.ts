@@ -62,7 +62,15 @@ export class UploadService {
         console.log(`🔗 Development Mode: Proxy URL döndürülüyor -> ${proxyUrl}`); 
         return proxyUrl;
       } else {
-        console.log(`🔗 Production Mode: Direct URL döndürülüyor -> ${s3DirectUrl}`); 
+        // CDN varsa (Cloudflare → S3) onun üzerinden servis et; yoksa direkt S3.
+        // MEDIA_BASE_URL=https://cdn.kampusumden.online  (Secret'a eklenir)
+        const mediaBase = this.configService.get<string>('MEDIA_BASE_URL');
+        if (mediaBase) {
+          const cdnUrl = `${mediaBase.replace(/\/+$/, '')}/${fileName}`;
+          console.log(`🔗 Production Mode: CDN URL döndürülüyor -> ${cdnUrl}`);
+          return cdnUrl;
+        }
+        console.log(`🔗 Production Mode: Direct S3 URL döndürülüyor -> ${s3DirectUrl}`);
         return s3DirectUrl;
       }
     } catch (error) {

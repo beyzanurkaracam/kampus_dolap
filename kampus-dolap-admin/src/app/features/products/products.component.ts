@@ -78,7 +78,7 @@ import { TrDatePipe, TrCurrencyPipe } from '../../shared/pipes/tr-pipes';
                   <div class="product-cell">
                     <div class="product-thumb">
                       @if (product.images?.length > 0) {
-                        <img [src]="product.images[0].imageUrl" alt="" />
+                        <img [src]="cdnUrl(product.images[0].imageUrl)" alt="" />
                       } @else {
                         <span>📦</span>
                       }
@@ -160,6 +160,12 @@ export class ProductsComponent implements OnInit {
 
   ngOnInit() {
     this.loadPending();
+  }
+
+  // Eski/yeni S3 URL'lerini Cloudflare CDN host'una çevirir (edge cache)
+  cdnUrl(url?: string): string {
+    if (!url) return '';
+    return url.split('kampusumden.s3.eu-north-1.amazonaws.com').join('cdn.kampusumden.online');
   }
 
   currentProducts() {

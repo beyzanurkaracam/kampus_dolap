@@ -1,4 +1,4 @@
-FROM node:20-bullseye-slim AS builder
+FROM node:25-bullseye-slim AS builder
 
 WORKDIR /usr/src/app
 
@@ -8,7 +8,7 @@ RUN npm ci
 COPY . .
 RUN npm run build && npm prune --omit=dev
 
-FROM node:20-bullseye-slim
+FROM node:25-bullseye-slim
 
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 app
